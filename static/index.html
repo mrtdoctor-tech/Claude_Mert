@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yerel Asistan</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <button id="new-chat" class="primary wide">+ Yeni sohbet</button>
+      <nav id="conversations" class="conversations"></nav>
+      <div class="sidebar-footer">
+        <button id="open-memory" class="ghost wide">🧠 Hafıza</button>
+        <button id="open-settings" class="ghost wide">⚙️ Ayarlar</button>
+        <p class="privacy">🔒 Her şey bu bilgisayarda saklanır.</p>
+      </div>
+    </aside>
+
+    <main class="chat">
+      <header class="chat-header">
+        <button id="toggle-sidebar" class="icon" title="Menü">☰</button>
+        <h1 id="chat-title">Yeni sohbet</h1>
+        <label class="toggle" title="Yanıtları sesli oku">
+          <input type="checkbox" id="speak-toggle"> 🔊 Sesli yanıt
+        </label>
+      </header>
+
+      <section id="messages" class="messages">
+        <div id="empty" class="empty">
+          <div class="empty-icon">✨</div>
+          <h2 id="greeting">Merhaba!</h2>
+          <p>Yaz ya da 🎤 butonuna basıp konuş. Söylediklerini hatırlarım.</p>
+        </div>
+      </section>
+
+      <div id="status" class="status" hidden></div>
+
+      <form id="composer" class="composer">
+        <button type="button" id="mic" class="icon mic" title="Konuşmak için bas, bitirince tekrar bas">🎤</button>
+        <textarea id="input" rows="1" placeholder="Mesajını yaz..." autofocus></textarea>
+        <button type="submit" id="send" class="primary">Gönder</button>
+      </form>
+    </main>
+  </div>
+
+  <dialog id="memory-dialog">
+    <div class="dialog-head">
+      <h2>🧠 Hafıza</h2>
+      <button class="icon close" data-close>✕</button>
+    </div>
+    <p class="hint">Asistan sohbetlerden önemli bilgileri kendiliğinden buraya kaydeder ve her yeni sohbette bunları bilir. Yanlış olanları silebilir, kendin de ekleyebilirsin.</p>
+    <form id="memory-form" class="row">
+      <input id="memory-input" placeholder="Örn: Kızımın adı Elif, 3 Mayıs'ta doğdu.">
+      <button class="primary">Ekle</button>
+    </form>
+    <ul id="memory-list" class="memory-list"></ul>
+  </dialog>
+
+  <dialog id="settings-dialog">
+    <div class="dialog-head">
+      <h2>⚙️ Ayarlar</h2>
+      <button class="icon close" data-close>✕</button>
+    </div>
+    <form id="settings-form" class="settings">
+      <label>Asistanın adı
+        <input name="assistant_name">
+      </label>
+      <label>Yapay zekâ modeli (Ollama)
+        <select name="model"></select>
+        <small id="models-hint"></small>
+      </label>
+      <label>Ses tanıma kalitesi
+        <select name="whisper_model">
+          <option value="base">Hızlı (base)</option>
+          <option value="small">Dengeli (small) — önerilen</option>
+          <option value="medium">En iyi (medium) — yavaş</option>
+        </select>
+      </label>
+      <label>Konuşma dili
+        <select name="language">
+          <option value="tr">Türkçe</option>
+          <option value="en">English</option>
+          <option value="">Otomatik algıla</option>
+        </select>
+      </label>
+      <button class="primary">Kaydet</button>
+    </form>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
