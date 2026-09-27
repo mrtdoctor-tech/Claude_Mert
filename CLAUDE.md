@@ -124,6 +124,27 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-28:** 2.4 doğrulandı (yeniden başlatma + Chrome önbelleği temizliği sonrası, başka program kapalı):
   saat/tarih soruları anında ve doğru; ses→yazı (`base`) ilk seferde 21,4 sn (model yükleme), sonra 6,2 sn.
 
+## SIRADAKİ ADIM (kullanıcının istediği, 2026-09-28): Ses ile kimlik doğrulama
+
+Kullanıcının isteği (onaylandı, "net"):
+1. Asistan kullanıcının sesini bir kez öğrenir (kayıt), sonra konuşanın o olup olmadığını sesten anlar.
+2. Doğrulanmış kişi → özel bilgiler (hafıza, adı, kişisel sorular) kullanılır.
+3. Doğrulanmamış (yazan ya da tanınmayan ses) → özel bilgileri açıklamaz ("adım ne?" yazana cevap vermez),
+   "kiminle konuşuyorum?" diye bilgi toplar, bu kişinin mesajları hafızaya karışmaz.
+4. Doğrulanmamış tüm girişler ayrı bir **güvenlik kaydına** (tarih/saat, yazılan/söylenen) yazılır; kullanıcı panelden görür.
+5. Yazarak kullanım için ayrı bir doğrulama yolu gerekir.
+
+Teknik fikir: tamamen yerel konuşmacı doğrulama (ör. SpeechBrain ECAPA-TDNN ya da Resemblyzer ile ses parmak izi;
+kayıtta birkaç örnek → ortalama vektör, her sesli mesajda kosinüs benzerliği + eşik). Yabancı modunda sistem istemi
+hafızasız kurulur ve hafıza öğrenmesi o mesajları atlar (mesajlara `speaker`/`verified` alanı).
+Kullanıcıya söylendi: ses doğrulaması caydırıcıdır, güçlü güvenlik değildir (kayıtla kandırılabilir; `data/` dosyaları
+doğrudan açılabilir → Windows hesap şifresi / disk şifreleme önerilecek).
+
+**Başlamadan önce kullanıcıya sorulacaklar (henüz cevaplanmadı):**
+- Sesle doğrulandıktan sonra bir süre (ör. 10 dk) yazılanlar da onun sayılsın mı, yoksa yazarak kullanım için PIN/şifre mi?
+- Yabancı genel sorular sorabilsin mi, yoksa hiç cevap verilmesin mi?
+- Başka kişilerin (aile) sesleri de ayrı hafızayla tanıtılacak mı?
+
 ## Sıradaki fikirler
 
 - 1b yetersiz kalırsa zayıf bilgisayar için başka küçük model dene (ör. `gemma3n:e2b`, `qwen3:1.7b`); sonucu kullanıcıdan öğren.
