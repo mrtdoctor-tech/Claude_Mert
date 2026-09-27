@@ -39,7 +39,7 @@ async def _catch_up_memory():
     log.info("Yerel Asistan sürüm %s hazır", config.VERSION)
     # Learn from messages that were not scanned before the app was last closed.
     memory.init_cursor()
-    memory.schedule(config.load()["model"])
+    memory.schedule(config.load())
 
 
 def _line(obj: dict) -> str:
@@ -67,6 +67,7 @@ class SettingsIn(BaseModel):
     language: str | None = None
     tts_voice: str | None = None
     auto_listen: bool | None = None
+    memory_model: str | None = None
 
 
 @app.get("/api/settings")
@@ -143,7 +144,7 @@ async def chat(body: ChatIn):
             yield _line({"type": "error", "message": str(e)})
             return
         finally:
-            memory.schedule(settings["model"])
+            memory.schedule(settings)
         reply = "".join(parts).strip()
         if reply:
             db.add_message(conversation_id, "assistant", reply)
@@ -175,7 +176,7 @@ def add_memory(body: MemoryIn):
 async def learn_memories():
     """Scan not-yet-processed messages right away (used when the memory panel opens)."""
     try:
-        added = await memory.learn_now(config.load()["model"])
+        added = await memory.learn_now(config.load())
     except llm.OllamaError as e:
         raise HTTPException(503, str(e))
     except Exception as e:
@@ -196,7 +197,7 @@ def delete_memory(memory_id: int):
 async def transcribe_warmup():
     """Load the speech model while the user is still talking."""
     settings = config.load()
-    memory.schedule(settings["model"])  # restart the idle countdown (it must never be dropped)
+    memory.schedule(settings)  # restart the idle countdown (it must never be dropped)
     try:
         await run_in_threadpool(stt.load, settings["whisper_model"])
     except Exception as e:
@@ -207,7 +208,7 @@ async def transcribe_warmup():
 @app.post("/api/transcribe")
 async def transcribe(audio: UploadFile = File(...)):
     settings = config.load()
-    memory.schedule(settings["model"])
+    memory.schedule(settings)
     suffix = Path(audio.filename or "").suffix or ".webm"
     # delete=False + manual cleanup: Windows cannot reopen a file that is still open.
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:

@@ -17,6 +17,7 @@ DEFAULTS = {
     "language": "tr",
     "tts_voice": "tr-TR-EmelNeural",  # "windows" = offline Windows voice in the browser
     "auto_listen": True,  # reopen the microphone after a spoken reply
+    "memory_model": "",  # model that learns facts in the background; "" = same as the chat model
 }
 
 

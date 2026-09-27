@@ -60,14 +60,14 @@ async def chat_stream(model: str, messages: list[dict]):
         raise OllamaError(_CONNECT_ERROR) from e
 
 
-async def chat_json(model: str, messages: list[dict]) -> dict:
+async def chat_json(model: str, messages: list[dict], keep_alive: str = KEEP_ALIVE) -> dict:
     """Ask for a JSON-only answer (used for memory extraction)."""
     payload = {
         "model": model,
         "messages": messages,
         "stream": False,
         "format": "json",
-        "keep_alive": KEEP_ALIVE,
+        "keep_alive": keep_alive,
         "options": {"temperature": 0, "num_predict": 300},
     }
     try:

@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import re
 from datetime import datetime
 
 from . import db, llm
@@ -16,13 +17,22 @@ BATCH_SIZE = 20
 _CURSOR_KEY = "memory_cursor"  # id of the last message already scanned for facts
 DAYS_TR = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
-EXTRACT_PROMPT = """You maintain the long-term memory of a personal assistant about its user.
-You get the facts already known and the latest messages between the user and the assistant.
-Extract only NEW, lasting facts about the user that will be useful in future conversations:
-name, family, friends, job, health, preferences, habits, goals, important dates, ongoing projects,
-and anything the user explicitly asks to be remembered.
-Skip small talk, one-off questions, temporary states and facts that are already known.
-Write each fact as one short standalone sentence in the language the user writes in.
+EXTRACT_PROMPT_TR = """Kişisel bir asistanın, kullanıcısı hakkındaki uzun süreli hafızasını tutuyorsun.
+Sana zaten bilinen bilgiler ve kullanıcının son mesajları verilecek.
+Yalnızca kullanıcının bu mesajlarda AÇIKÇA söylediği, YENİ ve kalıcı bilgileri çıkar: adı, ailesi, arkadaşları,
+işi, sağlığı, yaşadığı yer, tercihleri, alışkanlıkları, hedefleri, önemli tarihler, süren işleri ve
+"bunu hatırla" dediği her şey.
+Selamlaşma, sorular, geçici durumlar ve zaten bilinen bilgileri (başka kelimelerle de olsa) ATLA.
+Tahmin etme, uydurma. Her bilgiyi kısa, tek başına anlaşılır bir TÜRKÇE cümle olarak yaz ve kullanıcıdan
+"Kullanıcı" diye bahset (örnek: "Kullanıcının adı Mert.").
+Yalnızca JSON döndür: {"memories": ["..."]}. Yeni bilgi yoksa: {"memories": []}"""
+
+EXTRACT_PROMPT_EN = """You maintain the long-term memory of a personal assistant about its user.
+You get the facts already known and the user's latest messages.
+Extract only NEW, lasting facts the user EXPLICITLY states in these messages: name, family, friends, job, health,
+where they live, preferences, habits, goals, important dates, ongoing projects, and anything they ask to be remembered.
+SKIP greetings, questions, temporary states and facts already known (even if worded differently).
+Do not guess or invent. Write each fact as one short standalone sentence and refer to the user as "The user".
 Answer with JSON only: {"memories": ["..."]}. If there is nothing new: {"memories": []}"""
 
 
@@ -51,6 +61,11 @@ Hafızaya kaydı sen yapmazsın: yeni bilgiler sohbetten sonra kendiliğinden ka
 
 
 _pending: asyncio.Task | None = None
+_learning = asyncio.Lock()  # one scan at a time, otherwise parallel scans save the same facts twice
+
+
+def _model_for(settings: dict) -> str:
+    return settings.get("memory_model") or settings["model"]
 
 
 def init_cursor():
@@ -59,11 +74,11 @@ def init_cursor():
         db.set_meta(_CURSOR_KEY, str(db.last_message_id()))
 
 
-def schedule(model: str):
+def schedule(settings: dict):
     """(Re)start the idle countdown after which new messages are scanned for facts."""
     global _pending
     cancel()
-    _pending = asyncio.create_task(_run_when_idle(model))
+    _pending = asyncio.create_task(_run_when_idle(settings))
 
 
 def cancel():
@@ -72,49 +87,57 @@ def cancel():
         _pending.cancel()
 
 
-async def learn_now(model: str) -> int:
+async def learn_now(settings: dict) -> int:
     """Scan every unprocessed message now. Returns how many new facts were saved."""
     cancel()
-    return await _learn_all(model)
+    return await _learn_all(settings)
 
 
-async def _run_when_idle(model: str):
+async def _run_when_idle(settings: dict):
     await asyncio.sleep(IDLE_SECONDS)
     try:
-        await _learn_all(model)
+        await _learn_all(settings)
     except asyncio.CancelledError:
         raise
     except Exception:
         log.exception("Hafıza çıkarımı başarısız oldu")
 
 
-async def _learn_all(model: str) -> int:
-    added, more = 0, True
-    while more:
-        count, more = await _extract_batch(model)
-        added += count
-    return added
+async def _learn_all(settings: dict) -> int:
+    async with _learning:
+        added, more = 0, True
+        while more:
+            count, more = await _extract_batch(settings)
+            added += count
+        return added
 
 
-async def _extract_batch(model: str) -> tuple[int, bool]:
+async def _extract_batch(settings: dict) -> tuple[int, bool]:
     """Scan the next unprocessed messages. Returns (facts saved, more messages waiting)."""
     messages = db.messages_after(int(db.get_meta(_CURSOR_KEY) or 0), BATCH_SIZE)
     if not messages:
         return 0, False
     added = 0
 
-    if any(m["role"] == "user" for m in messages):
+    # Only the user's own words: the assistant's replies made small models "learn" things like
+    # "I saved your name to memory".
+    said = [m["content"] for m in messages if m["role"] == "user"]
+    if said:
         known = [m["content"] for m in db.list_memories()]
-        known_text = "\n".join(f"- {k}" for k in known) or "(none)"
-        dialogue = "\n\n".join(
-            f"{'User' if m['role'] == 'user' else 'Assistant'}: {m['content']}" for m in messages
-        )
+        turkish = settings.get("language", "tr") in ("tr", "")
+        known_text = "\n".join(f"- {k}" for k in known) or ("(yok)" if turkish else "(none)")
+        said_text = "\n".join(f"- {t}" for t in said)
+        if turkish:
+            prompt, request = EXTRACT_PROMPT_TR, f"Bilinen bilgiler:\n{known_text}\n\nKullanıcının mesajları:\n{said_text}"
+        else:
+            prompt, request = EXTRACT_PROMPT_EN, f"Known facts:\n{known_text}\n\nThe user's messages:\n{said_text}"
+        model = _model_for(settings)
+        # A separate memory model is only needed now and then: let Ollama free its RAM soon after.
+        keep_alive = llm.KEEP_ALIVE if model == settings["model"] else "2m"
         data = await llm.chat_json(
             model,
-            [
-                {"role": "system", "content": EXTRACT_PROMPT},
-                {"role": "user", "content": f"Known facts:\n{known_text}\n\nMessages:\n{dialogue}"},
-            ],
+            [{"role": "system", "content": prompt}, {"role": "user", "content": request}],
+            keep_alive=keep_alive,
         )
         added = _save(data, known)
 
@@ -143,13 +166,18 @@ def _facts(data) -> list[str]:
     return facts
 
 
+def _key(text: str) -> str:
+    """Comparison form: "Kullanıcının adı Mert." and "kullanıcının adı mert" are the same fact."""
+    return re.sub(r"[\s.!?,;:]+", " ", text).strip().casefold()
+
+
 def _save(data, known: list[str]) -> int:
-    seen = {k.casefold() for k in known}
+    seen = {_key(k) for k in known}
     added = 0
     for item in _facts(data):
         text = item.strip()
-        if text and len(text) <= 300 and text.casefold() not in seen:
+        if text and len(text) <= 300 and _key(text) not in seen:
             db.add_memory(text)
-            seen.add(text.casefold())
+            seen.add(_key(text))
             added += 1
     return added

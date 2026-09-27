@@ -530,6 +530,14 @@ $("#open-settings").onclick = async () => {
   for (const name of models) select.add(new Option(name, name));
   select.value = state.settings.model;
 
+  const memSelect = form.memory_model;
+  memSelect.innerHTML = "";
+  memSelect.add(new Option("Sohbet modeliyle aynı", ""));
+  const memModels = models.filter((m) => m !== state.settings.model || m === state.settings.memory_model);
+  if (state.settings.memory_model && !memModels.includes(state.settings.memory_model)) memModels.push(state.settings.memory_model);
+  for (const name of memModels) memSelect.add(new Option(name, name));
+  memSelect.value = state.settings.memory_model || "";
+
   els.settingsDialog.showModal();
 };
 
