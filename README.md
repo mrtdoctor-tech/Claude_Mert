@@ -55,6 +55,7 @@ Tüm sohbetler, hafıza ve ayarlar proje klasöründeki **`data`** klasöründe 
 | "Ollama'ya bağlanılamadı" | Başlat menüsünden Ollama'yı aç, sonra tekrar dene. |
 | "... modeli yüklü değil" | Komut isteminde mesajdaki `ollama pull ...` komutunu çalıştır. |
 | Yanıtlar çok yavaş | Yukarıdaki "Bilgisayarın yavaşsa" bölümüne bak. |
+| Kurulum Pinokio / Miniconda / Anaconda Python'unu kullanıyor | Python'u python.org'dan kur, `.venv` klasörünü sil, `kurulum.bat`'ı tekrar çalıştır. (`pyvenv.cfg`'yi elle düzenleme; yeni `kurulum.bat` bozuk `.venv`'i kendisi yeniler.) |
 | Mikrofon çalışmıyor | Tarayıcı adres çubuğundaki kilit/mikrofon simgesinden izin ver. |
 
 ## Teknik bilgi
