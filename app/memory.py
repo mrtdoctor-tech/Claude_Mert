@@ -45,7 +45,9 @@ Bugün: {today}
 Önceki sohbetlerden kullanıcı hakkında hatırladıkların:
 {known}
 
-Bu bilgileri doğal şekilde kullan; kullanıcı istemedikçe listeyi olduğu gibi tekrarlama."""
+Bu bilgileri doğal şekilde kullan; kullanıcı istemedikçe listeyi olduğu gibi tekrarlama.
+Hafızaya kaydı sen yapmazsın: yeni bilgiler sohbetten sonra kendiliğinden kaydedilir ve Hafıza bölümünde görünür.
+"Kaydettin mi?" diye sorulursa bunu dürüstçe söyle; kaydettiğini iddia etme."""
 
 
 _pending: asyncio.Task | None = None
@@ -70,22 +72,36 @@ def cancel():
         _pending.cancel()
 
 
+async def learn_now(model: str) -> int:
+    """Scan every unprocessed message now. Returns how many new facts were saved."""
+    cancel()
+    return await _learn_all(model)
+
+
 async def _run_when_idle(model: str):
     await asyncio.sleep(IDLE_SECONDS)
     try:
-        while await _extract_batch(model):
-            pass
+        await _learn_all(model)
     except asyncio.CancelledError:
         raise
     except Exception:
         log.exception("Hafıza çıkarımı başarısız oldu")
 
 
-async def _extract_batch(model: str) -> bool:
-    """Scan the next unprocessed messages. Returns True if more are waiting."""
+async def _learn_all(model: str) -> int:
+    added, more = 0, True
+    while more:
+        count, more = await _extract_batch(model)
+        added += count
+    return added
+
+
+async def _extract_batch(model: str) -> tuple[int, bool]:
+    """Scan the next unprocessed messages. Returns (facts saved, more messages waiting)."""
     messages = db.messages_after(int(db.get_meta(_CURSOR_KEY) or 0), BATCH_SIZE)
     if not messages:
-        return False
+        return 0, False
+    added = 0
 
     if any(m["role"] == "user" for m in messages):
         known = [m["content"] for m in db.list_memories()]
@@ -100,19 +116,40 @@ async def _extract_batch(model: str) -> bool:
                 {"role": "user", "content": f"Known facts:\n{known_text}\n\nMessages:\n{dialogue}"},
             ],
         )
-        _save(data, known)
+        added = _save(data, known)
 
     db.set_meta(_CURSOR_KEY, str(messages[-1]["id"]))
-    return len(messages) == BATCH_SIZE
+    return added, len(messages) == BATCH_SIZE
 
 
-def _save(data, known: list[str]):
-    items = data.get("memories", []) if isinstance(data, dict) else []
-    seen = {k.casefold() for k in known}
+def _facts(data) -> list[str]:
+    """Small models do not always follow the JSON shape exactly; accept the common variations."""
+    if isinstance(data, dict):
+        items = data.get("memories")
+        if items is None:  # another key name, e.g. {"facts": [...]}
+            items = next((v for v in data.values() if isinstance(v, (list, str))), [])
+    else:
+        items = data
+    if isinstance(items, str):
+        items = [items]
+    if not isinstance(items, list):
+        return []
+    facts = []
     for item in items:
-        if not isinstance(item, str):
-            continue
+        if isinstance(item, dict):  # e.g. {"fact": "..."}
+            item = next((v for v in item.values() if isinstance(v, str)), None)
+        if isinstance(item, str):
+            facts.append(item)
+    return facts
+
+
+def _save(data, known: list[str]) -> int:
+    seen = {k.casefold() for k in known}
+    added = 0
+    for item in _facts(data):
         text = item.strip()
         if text and len(text) <= 300 and text.casefold() not in seen:
             db.add_memory(text)
             seen.add(text.casefold())
+            added += 1
+    return added

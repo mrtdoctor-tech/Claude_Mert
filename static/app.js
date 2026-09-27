@@ -478,8 +478,18 @@ async function loadMemories() {
 }
 
 $("#open-memory").onclick = async () => {
+  const status = $("#memory-status");
   els.memoryDialog.showModal();
   await loadMemories();
+  // Learn from the latest messages right away instead of waiting for the idle timer.
+  status.textContent = "⏳ Son konuşmalar taranıyor...";
+  try {
+    const { added } = await api("/api/memories/learn", { method: "POST" });
+    status.textContent = added ? `✅ ${added} yeni bilgi eklendi.` : "Son konuşmalarda yeni bilgi bulunamadı.";
+    if (added) await loadMemories();
+  } catch (err) {
+    status.textContent = "⚠️ " + err.message;
+  }
 };
 
 els.memoryForm.addEventListener("submit", async (e) => {

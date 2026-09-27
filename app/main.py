@@ -171,6 +171,19 @@ def add_memory(body: MemoryIn):
     return {"id": db.add_memory(content)}
 
 
+@app.post("/api/memories/learn")
+async def learn_memories():
+    """Scan not-yet-processed messages right away (used when the memory panel opens)."""
+    try:
+        added = await memory.learn_now(config.load()["model"])
+    except llm.OllamaError as e:
+        raise HTTPException(503, str(e))
+    except Exception as e:
+        log.exception("Hafıza çıkarımı başarısız oldu")
+        raise HTTPException(500, f"Bilgiler çıkarılamadı: {e}")
+    return {"added": added}
+
+
 @app.delete("/api/memories/{memory_id}")
 def delete_memory(memory_id: int):
     db.delete_memory(memory_id)
@@ -182,8 +195,8 @@ def delete_memory(memory_id: int):
 @app.post("/api/transcribe/warmup")
 async def transcribe_warmup():
     """Load the speech model while the user is still talking."""
-    memory.cancel()
     settings = config.load()
+    memory.schedule(settings["model"])  # restart the idle countdown (it must never be dropped)
     try:
         await run_in_threadpool(stt.load, settings["whisper_model"])
     except Exception as e:
@@ -193,8 +206,8 @@ async def transcribe_warmup():
 
 @app.post("/api/transcribe")
 async def transcribe(audio: UploadFile = File(...)):
-    memory.cancel()
     settings = config.load()
+    memory.schedule(settings["model"])
     suffix = Path(audio.filename or "").suffix or ".webm"
     # delete=False + manual cleanup: Windows cannot reopen a file that is still open.
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:

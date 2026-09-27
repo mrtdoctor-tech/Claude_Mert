@@ -70,6 +70,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **1.9** — Düzeltme: sesli sohbetten sonra bilgiler hafızaya kaydedilmiyordu. Hafıza penceresi açılınca son konuşmalar hemen taranır. Asistan artık "kaydettim" diye uydurmaz.
 - **1.8** — Mikrofon konuşmanın bittiğini kendisi anlar (tekrar basmaya gerek yok). Sesli sohbet: yanıt okununca mikrofon kendiliğinden yeniden açılır.
 - **1.7** — Güncellemeden sonra asistan kendini yeniden başlatır; açık sayfada "yeni sürüm yüklendi, F5'e bas" uyarısı çıkar.
 - **1.6** — Sürüm numarası eklendi; güncellemeden sonra tarayıcı artık eski arayüzü göstermiyor.
