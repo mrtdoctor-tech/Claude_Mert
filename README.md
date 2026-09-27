@@ -2,10 +2,10 @@
 
 Tamamen **kendi bilgisayarında** çalışan, yazarak ya da sesli konuşabildiğin ve söylediklerini hatırlayan kişisel yapay zekâ asistanı.
 
-- 🔒 **Gizli:** Konuşmalar, hafıza ve ses kayıtları bilgisayarından çıkmaz. İnternet yalnızca kurulumda (model indirme) kullanılır.
+- 🔒 **Gizli:** Konuşmalar, hafıza ve ses kayıtları bilgisayarından çıkmaz. Tek istisna, seçersen çevrimiçi yanıt sesi (aşağıya bak).
 - 🧠 **Hatırlar:** Sohbetlerden önemli bilgileri (adın, ailen, işin, tercihlerin...) kendiliğinden öğrenir ve yeni sohbetlerde de bilir. Neyi hatırladığını **Hafıza** penceresinden görüp silebilir, kendin ekleyebilirsin.
 - 💬 **Sohbet geçmişi:** Eski sohbetlerin sol menüde durur, kaldığın yerden devam edebilirsin.
-- 🎤 **Sesli konuşma:** Mikrofonla konuş (ses, bilgisayarında Whisper ile yazıya çevrilir), asistan yanıtını Windows'un sesiyle okusun.
+- 🎤 **Sesli konuşma:** Mikrofonla konuş (ses, bilgisayarında Whisper ile yazıya çevrilir), asistan yanıtını sesli okusun.
 
 ## Kurulum (Windows, bir kerelik)
 
@@ -24,7 +24,8 @@ Tamamen **kendi bilgisayarında** çalışan, yazarak ya da sesli konuşabildiğ
 - **Sesli:** 🎤'a bas, konuş, bitirince 🎤'a tekrar bas. Sesli sorduğun sorulara asistan sesli yanıt verir. Her yanıtın okunmasını istersen sağ üstteki **🔊 Sesli yanıt**'ı aç.
   - İlk sesli kullanımda ses tanıma modeli bir kez indirilir (~500 MB), birkaç dakika sürebilir.
   - Tarayıcı mikrofon izni isterse **İzin ver** de.
-  - Türkçe ses yoksa: Windows **Ayarlar → Zaman ve dil → Konuşma → Ses ekle → Türkçe**.
+  - **Yanıt sesi** (⚙️ Ayarlar): Varsayılan **Emel**, doğal bir Türkçe kadın sesi. Bu ses Microsoft'un sunucusunda üretilir: yalnızca okunacak yanıt metni Microsoft'a gönderilir, mesajların ve hafızan gönderilmez. İnternet yoksa o cümle Windows sesiyle okunur. Tamamen internetsiz kalmak istersen **Windows sesi**'ni seç (Türkçe'de yalnızca erkek sesi "Tolga" var).
+  - Windows sesinde Türkçe yoksa: Windows **Ayarlar → Zaman ve dil → Konuşma → Ses ekle → Türkçe**.
 
 ## Daha akıllı bir model istersen
 
@@ -58,9 +59,13 @@ Tüm sohbetler, hafıza ve ayarlar proje klasöründeki **`data`** klasöründe 
 | Kurulum Pinokio / Miniconda / Anaconda Python'unu kullanıyor | Python'u python.org'dan kur, `.venv` klasörünü sil, `kurulum.bat`'ı tekrar çalıştır. (`pyvenv.cfg`'yi elle düzenleme; yeni `kurulum.bat` bozuk `.venv`'i kendisi yeniler.) |
 | Mikrofon çalışmıyor | Tarayıcı adres çubuğundaki kilit/mikrofon simgesinden izin ver. |
 
+## Güncelleme
+
+GitHub'dan ZIP'i yeniden indirip dosyaları eski klasörün üzerine kopyala (`data` klasörüne dokunulmaz). `baslat.bat` yeni gereken paketleri kendiliğinden kurar.
+
 ## Teknik bilgi
 
 - Sunucu: Python + FastAPI (`app/`), yalnızca `127.0.0.1:8765` adresinden, yani sadece bu bilgisayardan erişilebilir.
 - Yapay zekâ: [Ollama](https://ollama.com) (yerel).
-- Ses → yazı: [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (yerel). Yazı → ses: tarayıcıdaki çevrimdışı Windows sesleri.
+- Ses → yazı: [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (yerel). Yazı → ses: [edge-tts](https://github.com/rany2/edge-tts) ile Microsoft sinirsel sesleri (çevrimiçi) ya da tarayıcıdaki çevrimdışı Windows sesleri.
 - Veritabanı: SQLite (`data/asistan.db`).

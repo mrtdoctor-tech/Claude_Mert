@@ -267,7 +267,8 @@ els.mic.addEventListener("click", async () => {
   setStatus("🎙️ Dinliyorum... Bitirince 🎤 butonuna tekrar bas.");
 });
 
-// Voice output: only offline voices installed on Windows, so no text leaves the computer.
+// Voice output: either an online Microsoft neural voice rendered by the server (/api/tts),
+// or an offline Windows voice in the browser, so that no text leaves the computer.
 
 function pickVoice() {
   const lang = (state.settings.language || "tr").toLowerCase();
@@ -276,7 +277,13 @@ function pickVoice() {
 }
 
 function speak(text) {
-  if (!("speechSynthesis" in window) || !text) return;
+  if (!text) return;
+  if ((state.settings.tts_voice || "windows") === "windows") speakLocal(text);
+  else speakOnline(text);
+}
+
+function speakLocal(text) {
+  if (!("speechSynthesis" in window)) return;
   const voice = pickVoice();
   if (!voice) {
     setStatus("Bu dilde yüklü bir Windows sesi bulunamadı. Ayarlar > Zaman ve dil > Konuşma bölümünden ses ekleyebilirsin.", true);
@@ -309,7 +316,58 @@ function sentenceSpeaker() {
   };
 }
 
+// Online voice: every sentence is fetched right away (so the next one is ready in time)
+// and played strictly in order.
+let playback = Promise.resolve();
+let speechRound = 0; // bumped by stopSpeaking() to drop everything still queued
+let stopCurrentAudio = null;
+
+function speakOnline(text) {
+  const round = speechRound;
+  const audio = fetch("/api/tts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  }).then(async (res) => {
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.statusText);
+    return res.blob();
+  });
+  audio.catch(() => {}); // handled below, in order
+  playback = playback.then(async () => {
+    if (round !== speechRound) return;
+    let blob;
+    try {
+      blob = await audio;
+    } catch (err) {
+      if (round !== speechRound) return;
+      setStatus(`${err.message}. Bu cümle Windows sesiyle okunuyor.`, true);
+      return speakLocal(text);
+    }
+    if (round === speechRound) await playBlob(blob);
+  });
+}
+
+function playBlob(blob) {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(blob);
+    const player = new Audio(url);
+    const finish = () => {
+      URL.revokeObjectURL(url);
+      if (stopCurrentAudio === stop) stopCurrentAudio = null;
+      resolve();
+    };
+    const stop = () => { player.pause(); finish(); };
+    stopCurrentAudio = stop;
+    player.onended = finish;
+    player.onerror = finish;
+    player.play().catch(finish);
+  });
+}
+
 function stopSpeaking() {
+  speechRound++;
+  playback = Promise.resolve();
+  if (stopCurrentAudio) stopCurrentAudio();
   if ("speechSynthesis" in window) speechSynthesis.cancel();
 }
 
@@ -369,6 +427,7 @@ $("#open-settings").onclick = async () => {
   form.assistant_name.value = state.settings.assistant_name;
   form.whisper_model.value = state.settings.whisper_model;
   form.language.value = state.settings.language;
+  form.tts_voice.value = state.settings.tts_voice;
 
   const select = form.model;
   select.innerHTML = "";

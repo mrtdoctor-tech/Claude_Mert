@@ -8,11 +8,11 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, db, llm, memory, stt
+from . import config, db, llm, memory, stt, tts
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("asistan")
@@ -48,6 +48,7 @@ class SettingsIn(BaseModel):
     model: str | None = None
     whisper_model: str | None = None
     language: str | None = None
+    tts_voice: str | None = None
 
 
 @app.get("/api/settings")
@@ -193,3 +194,27 @@ async def transcribe(audio: UploadFile = File(...)):
     finally:
         os.remove(path)
     return {"text": text}
+
+
+class TtsIn(BaseModel):
+    text: str
+
+
+@app.post("/api/tts")
+async def speak(body: TtsIn):
+    voice = config.load()["tts_voice"]
+    if voice not in tts.VOICES:
+        raise HTTPException(400, "Seçili ses sunucuda seslendirilmiyor")
+    text = body.text.strip()[:2000]
+    if not text:
+        raise HTTPException(400, "Boş metin")
+    try:
+        audio = await tts.synthesize(text, voice)
+    except ImportError:
+        raise HTTPException(500, "Ses paketi (edge-tts) kurulu değil. baslat.bat'ı kapatıp yeniden aç.")
+    except Exception as e:
+        log.warning("Seslendirme başarısız oldu: %s", e)
+        raise HTTPException(502, "Microsoft ses servisine ulaşılamadı (internet bağlantını kontrol et)")
+    if not audio:
+        raise HTTPException(502, "Microsoft ses servisi boş yanıt verdi")
+    return Response(audio, media_type="audio/mpeg")

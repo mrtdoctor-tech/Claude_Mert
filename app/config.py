@@ -14,6 +14,7 @@ DEFAULTS = {
     "model": "gemma3:4b",
     "whisper_model": "small",
     "language": "tr",
+    "tts_voice": "tr-TR-EmelNeural",  # "windows" = offline Windows voice in the browser
 }
 
 
