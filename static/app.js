@@ -147,7 +147,34 @@ async function openConversation(id, title) {
 
 // Chat
 
-async function send(text, fromVoice = false) {
+const seconds = (ms) => (ms / 1000).toFixed(1).replace(".", ",") + " sn";
+
+// Live stopwatch under a reply, then a summary so different computers/models can be compared.
+function replyTimer(bubble, sttMs) {
+  const el = document.createElement("div");
+  el.className = "timing";
+  bubble.parentElement.appendChild(el);
+  const start = performance.now();
+  let firstMs = null;
+  const tick = () => { el.textContent = "⏱ " + seconds(performance.now() - start); };
+  tick();
+  const interval = setInterval(tick, 100);
+  return {
+    firstToken() { if (firstMs === null) firstMs = performance.now() - start; },
+    finish(ok) {
+      clearInterval(interval);
+      if (!ok) return el.remove();
+      const parts = [];
+      if (sttMs != null) parts.push(`ses→yazı ${seconds(sttMs)}`);
+      parts.push(`ilk kelime ${seconds(firstMs ?? performance.now() - start)}`);
+      parts.push(`toplam ${seconds(performance.now() - start)}`);
+      parts.push(state.settings.model);
+      el.textContent = "⏱ " + parts.join(" · ");
+    },
+  };
+}
+
+async function send(text, fromVoice = false, sttMs = null) {
   text = text.trim();
   if (!text || state.busy) return;
   els.input.value = "";
@@ -159,6 +186,7 @@ async function send(text, fromVoice = false) {
   addMessage("user", text);
   const bubble = addMessage("assistant", "");
   bubble.classList.add("typing");
+  const timer = replyTimer(bubble, sttMs);
   let reply = "";
   const speaker = (els.speak.checked || fromVoice) ? sentenceSpeaker() : null;
   const round = (state.voiceRound = (state.voiceRound || 0) + 1);
@@ -189,6 +217,7 @@ async function send(text, fromVoice = false) {
             els.title.textContent = text.length > 50 ? text.slice(0, 47) + "..." : text;
           }
         } else if (event.type === "token") {
+          timer.firstToken();
           reply += event.text;
           bubble.innerHTML = renderMarkdown(reply);
           scrollToBottom();
@@ -200,7 +229,9 @@ async function send(text, fromVoice = false) {
     }
     if (speaker) speaker.feed(reply, true);
     if (fromVoice && reply) listenAgainAfterReply(round);
+    timer.finish(true);
   } catch (err) {
+    timer.finish(false);
     bubble.parentElement.classList.add("error");
     bubble.textContent = "⚠️ " + err.message;
   } finally {
@@ -292,10 +323,12 @@ async function startListening(auto) {
     try {
       const form = new FormData();
       form.append("audio", blob, "kayit.webm");
+      const sttStart = performance.now();
       const { text } = await api("/api/transcribe", { method: "POST", body: form });
+      const sttMs = performance.now() - sttStart;
       setBusy(false);
       if (!text) return setStatus("Bir şey duyamadım, tekrar dener misin?", true);
-      send(text, true);
+      send(text, true, sttMs);
     } catch (err) {
       setBusy(false);
       setStatus(err.message, true);

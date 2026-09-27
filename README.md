@@ -71,6 +71,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **2.2** — Cevap süresi sayacı: her cevabın altında ilk kelimenin ve tüm cevabın kaç saniyede geldiği, kullanılan model (sesli sorularda ses→yazı süresi de) görünür.
 - **2.1** — Asistan saati doğru söyler.
 - **2.0** — Hafıza kalitesi: ayrı "Hafıza modeli" seçilebilir (sohbet hızlı küçük modelle, öğrenme arka planda daha akıllı modelle). Yalnızca senin mesajlarından öğrenir, bilgileri Türkçe yazar, aynı bilgiyi iki kez kaydetmez.
 - **1.9** — Düzeltme: sesli sohbetten sonra bilgiler hafızaya kaydedilmiyordu. Hafıza penceresi açılınca son konuşmalar hemen taranır. Asistan artık "kaydettim" diye uydurmaz.

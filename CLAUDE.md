@@ -54,6 +54,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   1,3 sn sessizlik → kayıt kendiliğinden biter. Hiç konuşma yoksa 10 sn (elle) / 8 sn (otomatik) sonra kapanır.
   Sesli soruya yanıt okunduktan sonra (`listenAgainAfterReply`) mikrofon yeniden açılır; ayar `auto_listen`.
   `state.voiceRound` yeni mesaj/mikrofon tıklamasında artar ve bekleyen otomatik açmayı iptal eder.
+  `replyTimer`: cevap beklerken canlı saniye sayacı, bitince "ses→yazı · ilk kelime · toplam · model" özeti
+  (yalnızca o anki oturumda; veritabanına yazılmaz, eski sohbetlerde görünmez).
 - `kurulum.bat` / `baslat.bat`: Windows kurulumu ve başlatma (CRLF satır sonları, `.gitattributes` ile korunuyor).
   `baslat.bat` her açılışta `pip install -r requirements.txt` çalıştırır; güncellemelerle gelen yeni paketler kendiliğinden kurulur.
 - `data/` git'e girmez: kullanıcının özel verileri orada.
@@ -101,6 +103,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   söyleyip söylemediği soruldu (1b uydurmuş olabilir). Kullanıcı eski hatalı kayıtları panelden elle silmeli.
 - **2026-09-28 (2.1):** Kullanıcı Bursa'yı gerçekten söylemiş (uydurma değil). Asistan tarihi doğru, saati yanlış
   söyledi: 1.2'de saat istemden çıkarılmıştı. Artık `clock_note()` ile son mesaja ekleniyor.
+- **2026-09-28 (2.2):** Kullanıcı isteğiyle cevap süresi sayacı; zayıf bilgisayar ile evdeki (NVIDIA) bilgisayarı
+  karşılaştırmak için. Kullanıcıdan iki bilgisayardaki süreleri paylaşması beklenebilir.
 
 ## Sıradaki fikirler
 
