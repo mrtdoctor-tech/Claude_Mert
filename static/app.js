@@ -160,6 +160,7 @@ function replyTimer(bubble, sttMs) {
   tick();
   const interval = setInterval(tick, 100);
   return {
+    instant: false, // answered from the clock, no model involved
     firstToken() { if (firstMs === null) firstMs = performance.now() - start; },
     finish(ok) {
       clearInterval(interval);
@@ -168,7 +169,7 @@ function replyTimer(bubble, sttMs) {
       if (sttMs != null) parts.push(`ses→yazı ${seconds(sttMs)}`);
       parts.push(`ilk kelime ${seconds(firstMs ?? performance.now() - start)}`);
       parts.push(`toplam ${seconds(performance.now() - start)}`);
-      parts.push(state.settings.model);
+      parts.push(this.instant ? "bilgisayar saatinden" : state.settings.model);
       el.textContent = "⏱ " + parts.join(" · ");
     },
   };
@@ -212,6 +213,7 @@ async function send(text, fromVoice = false, sttMs = null) {
         if (!line.trim()) continue;
         const event = JSON.parse(line);
         if (event.type === "meta") {
+          timer.instant = !!event.instant;
           if (state.conversationId !== event.conversation_id) {
             state.conversationId = event.conversation_id;
             els.title.textContent = text.length > 50 ? text.slice(0, 47) + "..." : text;
@@ -536,10 +538,27 @@ els.memoryForm.addEventListener("submit", async (e) => {
 
 // Settings dialog
 
+const WHISPER_LABELS = { tiny: "en hızlı", base: "hızlı", small: "dengeli", medium: "en iyi" };
+const VOICE_LABELS = { "tr-TR-EmelNeural": "Emel", "tr-TR-AhmetNeural": "Ahmet", windows: "Windows sesi" };
+
 async function loadSettings() {
   state.settings = await api("/api/settings");
-  els.greeting.textContent = `Merhaba, ben ${state.settings.assistant_name}!`;
-  document.title = state.settings.assistant_name;
+  const s = state.settings;
+  els.greeting.textContent = `Merhaba, ben ${s.assistant_name}!`;
+  document.title = s.assistant_name;
+
+  // Sidebar summary of the settings that matter most when comparing speed.
+  const lines = [`🤖 Model: ${s.model}`];
+  if (s.memory_model && s.memory_model !== s.model) lines.push(`🧠 Hafıza: ${s.memory_model}`);
+  lines.push(`🎤 Ses tanıma: ${WHISPER_LABELS[s.whisper_model] || s.whisper_model} (${s.whisper_model})`);
+  lines.push(`🔊 Ses: ${VOICE_LABELS[s.tts_voice] || s.tts_voice}`);
+  const summary = $("#config-summary");
+  summary.innerHTML = "";
+  for (const line of lines) {
+    const span = document.createElement("span");
+    span.textContent = line;
+    summary.appendChild(span);
+  }
 }
 
 $("#open-settings").onclick = async () => {
@@ -590,6 +609,7 @@ document.querySelectorAll("[data-close]").forEach((btn) => {
 // Layout
 
 $("#new-chat").onclick = newConversation;
+$("#config-summary").onclick = () => $("#open-settings").click();
 $("#toggle-sidebar").onclick = () => els.sidebar.classList.toggle("open");
 
 // Updates: the server restarts itself with new code; tell the user when the open page is older.

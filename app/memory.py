@@ -6,6 +6,7 @@ import re
 from datetime import datetime
 
 from . import db, llm
+from .quick import DAYS_TR
 
 log = logging.getLogger("asistan.memory")
 
@@ -16,7 +17,6 @@ MAX_MEMORIES_IN_PROMPT = 200
 IDLE_SECONDS = 300
 BATCH_SIZE = 20
 _CURSOR_KEY = "memory_cursor"  # id of the last message already scanned for facts
-DAYS_TR = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
 EXTRACT_PROMPT_TR = """Kişisel bir asistanın, kullanıcısı hakkındaki uzun süreli hafızasını tutuyorsun.
 Sana zaten bilinen bilgiler ve kullanıcının son mesajları verilecek.

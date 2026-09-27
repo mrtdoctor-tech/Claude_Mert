@@ -15,7 +15,7 @@
       <div class="sidebar-footer">
         <button id="open-memory" class="ghost wide">🧠 Hafıza</button>
         <button id="open-settings" class="ghost wide">⚙️ Ayarlar</button>
-        <p class="privacy">🔒 Her şey bu bilgisayarda saklanır.</p>
+        <button id="config-summary" class="summary" title="Ayarları aç"></button>
         <p class="version">Sürüm {{VERSION}}</p>
       </div>
     </aside>
@@ -80,6 +80,7 @@
       </label>
       <label>Ses tanıma kalitesi
         <select name="whisper_model">
+          <option value="tiny">En hızlı (tiny) — daha az doğru</option>
           <option value="base">Hızlı (base)</option>
           <option value="small">Dengeli (small) — önerilen</option>
           <option value="medium">En iyi (medium) — yavaş</option>

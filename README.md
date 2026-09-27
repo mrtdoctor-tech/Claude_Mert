@@ -41,7 +41,7 @@ Sonra asistanda **⚙️ Ayarlar → Yapay zekâ modeli**'nden seç.
 
 - **Daha küçük model:** Komut isteminde `ollama pull gemma3:1b` yaz, sonra **⚙️ Ayarlar**'dan bu modeli seç. Çok daha hızlıdır ama yanıtları daha basittir.
 - **Hafıza için ayrı model:** Sohbette hızlı `gemma3:1b`'yi kullanırken **⚙️ Ayarlar → Hafıza modeli**'nde `gemma3:4b`'yi seç. Senin hakkındaki bilgileri arka planda, sen beklemezken daha doğru çıkarır; sohbetin hızı değişmez.
-- **Daha hızlı ses tanıma:** **⚙️ Ayarlar → Ses tanıma kalitesi → Hızlı (base)**.
+- **Daha hızlı ses tanıma:** **⚙️ Ayarlar → Ses tanıma kalitesi → Hızlı (base)**; çok yavaşsa **En hızlı (tiny)** (Türkçeyi daha az doğru anlar).
 - **Diğer programları kapat:** Özellikle çok sekmeli tarayıcılar belleği doldurur, model yavaşlar.
 - **İlk mesaj her zaman biraz yavaştır:** Model belleğe yükleniyor. Sonrakiler daha hızlıdır. Model 1 saat kullanılmazsa bellekten çıkarılır.
 - Asistan yeni bilgileri öğrenme işini sen 5 dakika sustuktan sonra (ya da Hafıza penceresini açınca) yapar, böylece konuşmanı yavaşlatmaz. Yeni öğrendiklerini bir sonraki sohbette kullanır.
@@ -72,6 +72,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **2.4** — "Saat kaç?", "Bugün ayın kaçı?" gibi sorular bilgisayarın saatinden, anında ve her zaman doğru cevaplanır. Sol altta ayarların özeti (model, hafıza modeli, ses tanıma, ses) görünür; tıklayınca Ayarlar açılır. Ses tanımaya "En hızlı (tiny)" seçeneği eklendi.
 - **2.3** — Yavaş bilgisayarlarda büyük hızlanma: model sohbeti her mesajda baştan okumak zorunda kalmıyor. Hafıza öğrenmesi 5 dakika sessizlikten sonra çalışır; yeni öğrenilen bilgiler bir sonraki sohbette kullanılır.
 - **2.2** — Cevap süresi sayacı: her cevabın altında ilk kelimenin ve tüm cevabın kaç saniyede geldiği, kullanılan model (sesli sorularda ses→yazı süresi de) görünür.
 - **2.1** — Asistan saati doğru söyler.

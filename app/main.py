@@ -12,7 +12,7 @@ from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, db, llm, memory, stt, tts
+from . import config, db, llm, memory, quick, stt, tts
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("asistan")
@@ -135,12 +135,17 @@ async def chat(body: ChatIn):
     messages = [{"role": "system", "content": memory.system_prompt_for(conversation_id, settings)}]
     messages += [{"role": m["role"], "content": m["content"]} for m in history]
     messages.append({"role": "user", "content": text + memory.clock_note()})  # the note is not saved
+    instant = quick.answer(text)  # "saat kaç?" etc. come from the clock, not the model
+
+    async def from_clock():
+        yield instant
 
     async def stream():
-        yield _line({"type": "meta", "conversation_id": conversation_id})
+        yield _line({"type": "meta", "conversation_id": conversation_id, "instant": bool(instant)})
         parts = []
         try:
-            async for piece in llm.chat_stream(settings["model"], messages):
+            source = from_clock() if instant else llm.chat_stream(settings["model"], messages)
+            async for piece in source:
                 parts.append(piece)
                 yield _line({"type": "token", "text": piece})
         except llm.OllamaError as e:
