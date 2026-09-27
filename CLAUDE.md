@@ -121,11 +121,12 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-28 (2.4):** 2.3 sonrası 1b ile: ilk mesaj 58,8 sn (model yükleme), sonrakiler ilk kelime 4,7 / 6,0 sn — büyük
   iyileşme. ses→yazı `base` ile 9,7–18 sn (yavaş CPU); `tiny` seçeneği eklendi. 1b saati hâlâ yanlış söyledi → `quick.py`.
   Kullanıcı sol alttaki gizlilik yazısı yerine ayar özeti istedi → eklendi.
+- **2026-09-28:** 2.4 doğrulandı (yeniden başlatma + Chrome önbelleği temizliği sonrası, başka program kapalı):
+  saat/tarih soruları anında ve doğru; ses→yazı (`base`) ilk seferde 21,4 sn (model yükleme), sonra 6,2 sn.
 
 ## Sıradaki fikirler
 
 - 1b yetersiz kalırsa zayıf bilgisayar için başka küçük model dene (ör. `gemma3n:e2b`, `qwen3:1.7b`); sonucu kullanıcıdan öğren.
-- Hız düzeltmesinin sonucunu kullanıcıdan öğren; hâlâ yavaşsa bilgisayarın RAM/CPU bilgisini sor, daha küçük model öner.
 - Ana bilgisayara kurulum (henüz yapılmadı).
 - İstenirse tamamen yerel kadın sesi: NVIDIA olduğu için ses klonlama (XTTS-v2 / Chatterbox Multilingual gibi,
   Türkçe destekli) eklenebilir; kullanıcı bir kadın sesi örneği verir.
