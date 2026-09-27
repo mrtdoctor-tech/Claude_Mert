@@ -61,12 +61,16 @@ Tüm sohbetler, hafıza ve ayarlar proje klasöründeki **`data`** klasöründe 
 
 ## Güncelleme
 
-GitHub'dan ZIP'i yeniden indirip dosyaları eski klasörün üzerine kopyala (`data` klasörüne dokunulmaz). `baslat.bat` yeni gereken paketleri kendiliğinden kurar.
+- **GitHub Desktop ile:** **Fetch origin**'e, ardından çıkan **Pull origin**'e bas. Asistan açıksa kendini yeni sürümle yeniden başlatır; sayfada uyarı çıkınca **F5**'e bas.
+- **ZIP ile:** GitHub'dan ZIP'i yeniden indirip dosyaları eski klasörün üzerine kopyala (`data` klasörüne dokunulmaz).
+
+Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman gerekir; paketleri kendiliğinden kurar.
 
 ## Sürüm geçmişi
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **1.7** — Güncellemeden sonra asistan kendini yeniden başlatır; açık sayfada "yeni sürüm yüklendi, F5'e bas" uyarısı çıkar.
 - **1.6** — Sürüm numarası eklendi; güncellemeden sonra tarayıcı artık eski arayüzü göstermiyor.
 - **1.5** — Güncellemeden sonra tarayıcının eski dosyaları kullanması engellendi (ilk adım).
 - **1.4** — Kadın sesi: Microsoft Emel (Ayarlar → Yanıt sesi). `baslat.bat` yeni paketleri kendiliğinden kurar.

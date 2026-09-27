@@ -462,5 +462,25 @@ document.querySelectorAll("[data-close]").forEach((btn) => {
 $("#new-chat").onclick = newConversation;
 $("#toggle-sidebar").onclick = () => els.sidebar.classList.toggle("open");
 
+// Updates: the server restarts itself with new code; tell the user when the open page is older.
+
+const pageVersion = document.querySelector('meta[name="version"]').content;
+
+async function checkVersion() {
+  if (state.busy) return;
+  try {
+    const { version } = await api("/api/version");
+    if (version !== pageVersion) setStatus(`Yeni sürüm (${version}) yüklendi. Sayfayı yenilemek için F5'e bas.`);
+  } catch {
+    if (pageVersion.includes("{{")) {
+      setStatus("Güncelleme yarım kaldı: baslat.bat penceresini kapatıp yeniden aç.", true);
+    }
+  }
+}
+
+checkVersion();
+setInterval(checkVersion, 60000);
+window.addEventListener("focus", checkVersion);
+
 loadSettings().catch((err) => setStatus(err.message, true));
 loadConversations().catch((err) => setStatus(err.message, true));

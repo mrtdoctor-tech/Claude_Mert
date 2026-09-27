@@ -36,6 +36,7 @@ db.init()
 
 @app.on_event("startup")
 async def _catch_up_memory():
+    log.info("Yerel Asistan sürüm %s hazır", config.VERSION)
     # Learn from messages that were not scanned before the app was last closed.
     memory.init_cursor()
     memory.schedule(config.load()["model"])
@@ -50,6 +51,11 @@ def index():
     # The version goes into the asset URLs too, so every update loads fresh CSS/JS.
     html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
     return HTMLResponse(html.replace("{{VERSION}}", config.VERSION))
+
+
+@app.get("/api/version")
+def version():
+    return {"version": config.VERSION}
 
 
 # Settings
