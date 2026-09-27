@@ -66,6 +66,7 @@ class SettingsIn(BaseModel):
     whisper_model: str | None = None
     language: str | None = None
     tts_voice: str | None = None
+    auto_listen: bool | None = None
 
 
 @app.get("/api/settings")

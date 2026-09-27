@@ -161,6 +161,7 @@ async function send(text, fromVoice = false) {
   bubble.classList.add("typing");
   let reply = "";
   const speaker = (els.speak.checked || fromVoice) ? sentenceSpeaker() : null;
+  const round = (state.voiceRound = (state.voiceRound || 0) + 1);
 
   try {
     const res = await fetch("/api/chat", {
@@ -198,6 +199,7 @@ async function send(text, fromVoice = false) {
       }
     }
     if (speaker) speaker.feed(reply, true);
+    if (fromVoice && reply) listenAgainAfterReply(round);
   } catch (err) {
     bubble.parentElement.classList.add("error");
     bubble.textContent = "⚠️ " + err.message;
@@ -223,31 +225,68 @@ els.input.addEventListener("keydown", (e) => {
 els.input.addEventListener("input", autoGrow);
 
 // Voice input: record in the browser, transcribe locally with Whisper on the server.
+// Recording stops by itself once the user has spoken and then stayed quiet for a moment.
+// In voice conversations the microphone reopens after the reply has been read aloud.
+
+const SILENCE_MS = 1300;       // quiet time after speech that ends the recording
+const MIN_SPEECH_MS = 250;     // this much sound counts as speech (ignores clicks and coughs)
+const WAIT_MANUAL_MS = 10000;  // give up if nothing is said after pressing the button...
+const WAIT_AUTO_MS = 8000;     // ...or after the microphone reopened by itself
+const MAX_RECORDING_MS = 60000;
 
 let recorder = null;
 
-els.mic.addEventListener("click", async () => {
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+els.mic.addEventListener("click", () => {
+  state.voiceRound = (state.voiceRound || 0) + 1; // cancels a pending automatic reopen
   if (recorder && recorder.state === "recording") {
     recorder.stop();
     return;
   }
   stopSpeaking();
+  startListening(false);
+});
+
+async function startListening(auto) {
+  if (state.busy || (recorder && recorder.state === "recording")) return;
   fetch("/api/transcribe/warmup", { method: "POST" }).catch(() => {}); // load the speech model while the user talks
   let stream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
   } catch {
     setStatus("Mikrofona erişilemedi. Tarayıcının mikrofon iznini kontrol et.", true);
     return;
   }
+
+  // Loudness meter used to notice the end of speech.
+  const audioCtx = new AudioContext();
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 2048;
+  audioCtx.createMediaStreamSource(stream).connect(analyser);
+  const samples = new Float32Array(analyser.fftSize);
+  const loudness = () => {
+    analyser.getFloatTimeDomainData(samples);
+    let sum = 0;
+    for (const v of samples) sum += v * v;
+    return Math.sqrt(sum / samples.length);
+  };
+
   const chunks = [];
-  recorder = new MediaRecorder(stream);
-  recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
-  recorder.onstop = async () => {
+  const rec = new MediaRecorder(stream);
+  recorder = rec;
+  let heardSpeech = false;
+  rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+  rec.onstop = async () => {
+    clearInterval(meter);
     stream.getTracks().forEach((t) => t.stop());
+    audioCtx.close();
     els.mic.classList.remove("recording");
-    const blob = new Blob(chunks, { type: recorder.mimeType });
-    if (!blob.size) return setStatus("");
+    if (!heardSpeech) {
+      setStatus(auto ? "Sesli sohbet bitti. Devam etmek için 🎤'a bas." : "Bir şey duyamadım, tekrar dener misin?", !auto);
+      return;
+    }
+    const blob = new Blob(chunks, { type: rec.mimeType });
     setStatus("Ses yazıya çevriliyor... (ilk seferde model indirildiği için birkaç dakika sürebilir)");
     setBusy(true);
     try {
@@ -262,10 +301,48 @@ els.mic.addEventListener("click", async () => {
       setStatus(err.message, true);
     }
   };
-  recorder.start();
+
+  const started = Date.now();
+  let noiseFloor = null;
+  let loudMs = 0;
+  let quietSince = null;
+  const meter = setInterval(() => {
+    const now = Date.now();
+    const level = loudness();
+    if (now - started < 300) {           // first moment: measure the room's background noise
+      noiseFloor = Math.max(noiseFloor || 0, level);
+      return;
+    }
+    const loud = level > Math.max(0.02, noiseFloor * 2.5);
+    if (loud) {
+      loudMs += 100;
+      quietSince = null;
+      if (loudMs >= MIN_SPEECH_MS) heardSpeech = true;
+    } else if (quietSince === null) {
+      quietSince = now;
+    }
+    const waited = now - started;
+    if ((heardSpeech && quietSince && now - quietSince >= SILENCE_MS) ||
+        (!heardSpeech && waited >= (auto ? WAIT_AUTO_MS : WAIT_MANUAL_MS)) ||
+        waited >= MAX_RECORDING_MS) {
+      if (rec.state === "recording") rec.stop();
+    }
+  }, 100);
+
+  rec.start();
   els.mic.classList.add("recording");
-  setStatus("🎙️ Dinliyorum... Bitirince 🎤 butonuna tekrar bas.");
-});
+  setStatus("🎙️ Dinliyorum... Sustuğunda kendiliğinden gönderilir.");
+}
+
+// After a spoken question, reopen the microphone once the reply has been read aloud.
+async function listenAgainAfterReply(round) {
+  if (!state.settings.auto_listen) return;
+  let chain;
+  do { chain = playback; await chain; } while (chain !== playback); // online voice queue
+  while ("speechSynthesis" in window && (speechSynthesis.speaking || speechSynthesis.pending)) await sleep(200);
+  await sleep(300);
+  if (round === state.voiceRound && !state.busy) startListening(true);
+}
 
 // Voice output: either an online Microsoft neural voice rendered by the server (/api/tts),
 // or an offline Windows voice in the browser, so that no text leaves the computer.
@@ -428,6 +505,7 @@ $("#open-settings").onclick = async () => {
   form.whisper_model.value = state.settings.whisper_model;
   form.language.value = state.settings.language;
   form.tts_voice.value = state.settings.tts_voice;
+  form.auto_listen.checked = !!state.settings.auto_listen;
 
   const select = form.model;
   select.innerHTML = "";
@@ -448,6 +526,7 @@ $("#open-settings").onclick = async () => {
 els.settingsForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(els.settingsForm));
+  data.auto_listen = els.settingsForm.auto_listen.checked;
   await api("/api/settings", { method: "PUT", body: JSON.stringify(data) });
   await loadSettings();
   els.settingsDialog.close();

@@ -21,7 +21,7 @@ Tamamen **kendi bilgisayarında** çalışan, yazarak ya da sesli konuşabildiğ
 **`baslat.bat`**'a çift tıkla. Tarayıcında asistan açılır. Kullandığın sürece siyah pencereyi kapatma; kapatınca asistan da kapanır.
 
 - **Yazarak:** Mesajını yaz, Enter'a bas (alt satıra geçmek için Shift+Enter).
-- **Sesli:** 🎤'a bas, konuş, bitirince 🎤'a tekrar bas. Sesli sorduğun sorulara asistan sesli yanıt verir. Her yanıtın okunmasını istersen sağ üstteki **🔊 Sesli yanıt**'ı aç.
+- **Sesli:** 🎤'a bas ve konuş. Sustuğunda asistan bunu anlar ve mesajını gönderir. Sesli sorduğun sorulara sesli yanıt verir, sonra mikrofonu kendiliğinden yeniden açar; böylece karşılıklı konuşabilirsin. 8 saniye bir şey söylemezsen sesli sohbet biter. Bunu istemezsen **⚙️ Ayarlar → Sesli sohbet** kutusunu kapat. Her yazılı yanıtın da okunmasını istersen sağ üstteki **🔊 Sesli yanıt**'ı aç.
   - İlk sesli kullanımda ses tanıma modeli bir kez indirilir (~500 MB), birkaç dakika sürebilir.
   - Tarayıcı mikrofon izni isterse **İzin ver** de.
   - **Yanıt sesi** (⚙️ Ayarlar): Varsayılan **Emel**, doğal bir Türkçe kadın sesi. Bu ses Microsoft'un sunucusunda üretilir: yalnızca okunacak yanıt metni Microsoft'a gönderilir, mesajların ve hafızan gönderilmez. İnternet yoksa o cümle Windows sesiyle okunur. Tamamen internetsiz kalmak istersen **Windows sesi**'ni seç (Türkçe'de yalnızca erkek sesi "Tolga" var).
@@ -70,6 +70,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **1.8** — Mikrofon konuşmanın bittiğini kendisi anlar (tekrar basmaya gerek yok). Sesli sohbet: yanıt okununca mikrofon kendiliğinden yeniden açılır.
 - **1.7** — Güncellemeden sonra asistan kendini yeniden başlatır; açık sayfada "yeni sürüm yüklendi, F5'e bas" uyarısı çıkar.
 - **1.6** — Sürüm numarası eklendi; güncellemeden sonra tarayıcı artık eski arayüzü göstermiyor.
 - **1.5** — Güncellemeden sonra tarayıcının eski dosyaları kullanması engellendi (ilk adım).

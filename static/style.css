@@ -134,6 +134,8 @@ input:focus, select:focus { border-color: var(--accent); }
 .settings { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
 .settings label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--muted); }
 .settings small { color: var(--muted); }
+.settings label.check { flex-direction: row; align-items: center; gap: 10px; color: var(--text); cursor: pointer; }
+.settings label.check input { width: auto; accent-color: var(--accent); }
 
 @media (max-width: 760px) {
   #toggle-sidebar { display: inline-block; }
