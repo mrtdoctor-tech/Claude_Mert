@@ -22,6 +22,15 @@ HISTORY_LIMIT = 30  # previous messages of the current conversation sent to the 
 
 app = FastAPI(title="Yerel Asistan")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.middleware("http")
+async def _no_stale_ui(request, call_next):
+    # Make the browser re-check the UI files every time, so an update is never hidden by its cache.
+    response = await call_next(request)
+    if request.url.path == "/" or request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
 db.init()
 
 
