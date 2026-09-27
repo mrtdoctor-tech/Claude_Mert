@@ -1,6 +1,5 @@
 """Local web server: serves the UI and the chat/memory/voice API."""
 
-import asyncio
 import json
 import logging
 import os
@@ -25,14 +24,12 @@ app = FastAPI(title="Yerel Asistan")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 db.init()
 
-# Keep references so background memory tasks are not garbage-collected mid-run.
-_background: set[asyncio.Task] = set()
 
-
-def _spawn(coro):
-    task = asyncio.create_task(coro)
-    _background.add(task)
-    task.add_done_callback(_background.discard)
+@app.on_event("startup")
+async def _catch_up_memory():
+    # Learn from messages that were not scanned before the app was last closed.
+    memory.init_cursor()
+    memory.schedule(config.load()["model"])
 
 
 def _line(obj: dict) -> str:
@@ -107,6 +104,7 @@ async def chat(body: ChatIn):
         title = text if len(text) <= 50 else text[:47].rstrip() + "..."
         conversation_id = db.create_conversation(title)
 
+    memory.cancel()  # free the CPU for the reply
     history = db.list_messages(conversation_id)[-HISTORY_LIMIT:]
     db.add_message(conversation_id, "user", text)
 
@@ -125,10 +123,11 @@ async def chat(body: ChatIn):
         except llm.OllamaError as e:
             yield _line({"type": "error", "message": str(e)})
             return
+        finally:
+            memory.schedule(settings["model"])
         reply = "".join(parts).strip()
         if reply:
             db.add_message(conversation_id, "assistant", reply)
-            _spawn(memory.extract(settings["model"], text, reply))
         yield _line({"type": "done"})
 
     return StreamingResponse(stream(), media_type="application/x-ndjson")
@@ -161,8 +160,21 @@ def delete_memory(memory_id: int):
 
 # Voice
 
+@app.post("/api/transcribe/warmup")
+async def transcribe_warmup():
+    """Load the speech model while the user is still talking."""
+    memory.cancel()
+    settings = config.load()
+    try:
+        await run_in_threadpool(stt.load, settings["whisper_model"])
+    except Exception as e:
+        log.warning("Ses modeli yüklenemedi: %s", e)
+    return {"ok": True}
+
+
 @app.post("/api/transcribe")
 async def transcribe(audio: UploadFile = File(...)):
+    memory.cancel()
     settings = config.load()
     suffix = Path(audio.filename or "").suffix or ".webm"
     # delete=False + manual cleanup: Windows cannot reopen a file that is still open.

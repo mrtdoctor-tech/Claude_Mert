@@ -160,6 +160,7 @@ async function send(text, fromVoice = false) {
   const bubble = addMessage("assistant", "");
   bubble.classList.add("typing");
   let reply = "";
+  const speaker = (els.speak.checked || fromVoice) ? sentenceSpeaker() : null;
 
   try {
     const res = await fetch("/api/chat", {
@@ -190,12 +191,13 @@ async function send(text, fromVoice = false) {
           reply += event.text;
           bubble.innerHTML = renderMarkdown(reply);
           scrollToBottom();
+          if (speaker) speaker.feed(reply);
         } else if (event.type === "error") {
           throw new Error(event.message);
         }
       }
     }
-    if (reply && (els.speak.checked || fromVoice)) speak(reply);
+    if (speaker) speaker.feed(reply, true);
   } catch (err) {
     bubble.parentElement.classList.add("error");
     bubble.textContent = "⚠️ " + err.message;
@@ -230,6 +232,7 @@ els.mic.addEventListener("click", async () => {
     return;
   }
   stopSpeaking();
+  fetch("/api/transcribe/warmup", { method: "POST" }).catch(() => {}); // load the speech model while the user talks
   let stream;
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -273,16 +276,37 @@ function pickVoice() {
 }
 
 function speak(text) {
-  if (!("speechSynthesis" in window)) return;
+  if (!("speechSynthesis" in window) || !text) return;
   const voice = pickVoice();
   if (!voice) {
     setStatus("Bu dilde yüklü bir Windows sesi bulunamadı. Ayarlar > Zaman ve dil > Konuşma bölümünden ses ekleyebilirsin.", true);
     return;
   }
-  const utterance = new SpeechSynthesisUtterance(plainText(text));
+  const utterance = new SpeechSynthesisUtterance(text);
   utterance.voice = voice;
   utterance.lang = voice.lang;
-  speechSynthesis.speak(utterance);
+  speechSynthesis.speak(utterance); // queued after anything already being spoken
+}
+
+// Speaks a streaming reply sentence by sentence, so speech starts with the first sentence
+// instead of waiting for the whole answer.
+function sentenceSpeaker() {
+  let spoken = 0; // characters of the reply already handed to the voice
+  return {
+    feed(reply, final = false) {
+      const rest = reply.slice(spoken);
+      let end = rest.length;
+      if (!final) {
+        end = 0;
+        for (const m of rest.matchAll(/[.!?…:]\s|\n/g)) end = m.index + m[0].length;
+        // Never cut inside a code block; those are skipped anyway.
+        if (reply.slice(0, spoken + end).split("```").length % 2 === 0) return;
+      }
+      if (end <= 0) return;
+      spoken += end;
+      speak(plainText(rest.slice(0, end)));
+    },
+  };
 }
 
 function stopSpeaking() {

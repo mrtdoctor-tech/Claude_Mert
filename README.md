@@ -36,6 +36,14 @@ ollama pull gemma3:12b
 
 Sonra asistanda **⚙️ Ayarlar → Yapay zekâ modeli**'nden seç.
 
+## Bilgisayarın yavaşsa
+
+- **Daha küçük model:** Komut isteminde `ollama pull gemma3:1b` yaz, sonra **⚙️ Ayarlar**'dan bu modeli seç. Çok daha hızlıdır ama yanıtları daha basittir.
+- **Daha hızlı ses tanıma:** **⚙️ Ayarlar → Ses tanıma kalitesi → Hızlı (base)**.
+- **Diğer programları kapat:** Özellikle çok sekmeli tarayıcılar belleği doldurur, model yavaşlar.
+- **İlk mesaj her zaman biraz yavaştır:** Model belleğe yükleniyor. Sonrakiler daha hızlıdır. Model 1 saat kullanılmazsa bellekten çıkarılır.
+- Asistan yeni bilgileri öğrenme işini sen 30 saniye sustuktan sonra yapar, böylece konuşmanı yavaşlatmaz.
+
 ## Verilerin nerede?
 
 Tüm sohbetler, hafıza ve ayarlar proje klasöründeki **`data`** klasöründe durur. Yedeklemek için bu klasörü kopyalaman yeterli. Başka bir bilgisayara taşırken de bu klasörü yanında götür.
@@ -46,7 +54,7 @@ Tüm sohbetler, hafıza ve ayarlar proje klasöründeki **`data`** klasöründe 
 |---|---|
 | "Ollama'ya bağlanılamadı" | Başlat menüsünden Ollama'yı aç, sonra tekrar dene. |
 | "... modeli yüklü değil" | Komut isteminde mesajdaki `ollama pull ...` komutunu çalıştır. |
-| Yanıtlar çok yavaş | Ayarlar'dan daha küçük bir model seç (ör. `ollama pull gemma3:1b`). |
+| Yanıtlar çok yavaş | Yukarıdaki "Bilgisayarın yavaşsa" bölümüne bak. |
 | Mikrofon çalışmıyor | Tarayıcı adres çubuğundaki kilit/mikrofon simgesinden izin ver. |
 
 ## Teknik bilgi

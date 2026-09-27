@@ -25,6 +25,10 @@ CREATE TABLE IF NOT EXISTS memories (
     content TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
+CREATE TABLE IF NOT EXISTS meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
 """
 
 
@@ -91,6 +95,36 @@ def list_messages(conversation_id: int) -> list[dict]:
             (conversation_id,),
         ).fetchall()
         return [dict(r) for r in rows]
+
+
+def messages_after(message_id: int, limit: int) -> list[dict]:
+    with session() as conn:
+        rows = conn.execute(
+            "SELECT id, role, content FROM messages WHERE id > ? ORDER BY id LIMIT ?",
+            (message_id, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def last_message_id() -> int:
+    with session() as conn:
+        return conn.execute("SELECT COALESCE(MAX(id), 0) FROM messages").fetchone()[0]
+
+
+# Key-value state
+
+def get_meta(key: str):
+    with session() as conn:
+        row = conn.execute("SELECT value FROM meta WHERE key = ?", (key,)).fetchone()
+        return row[0] if row else None
+
+
+def set_meta(key: str, value: str):
+    with session() as conn:
+        conn.execute(
+            "INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            (key, value),
+        )
 
 
 # Memories

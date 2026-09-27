@@ -7,6 +7,8 @@ import httpx
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")
 TIMEOUT = httpx.Timeout(600.0, connect=5.0)
+# Keep the model in RAM between messages; reloading it takes 10+ seconds on a slow PC.
+KEEP_ALIVE = "60m"
 
 
 class OllamaError(Exception):
@@ -36,7 +38,7 @@ async def list_models() -> list[str]:
 
 async def chat_stream(model: str, messages: list[dict]):
     """Yield the reply text piece by piece as Ollama generates it."""
-    payload = {"model": model, "messages": messages, "stream": True}
+    payload = {"model": model, "messages": messages, "stream": True, "keep_alive": KEEP_ALIVE}
     try:
         async with httpx.AsyncClient(timeout=TIMEOUT) as client:
             async with client.stream("POST", f"{OLLAMA_URL}/api/chat", json=payload) as resp:
@@ -65,7 +67,8 @@ async def chat_json(model: str, messages: list[dict]) -> dict:
         "messages": messages,
         "stream": False,
         "format": "json",
-        "options": {"temperature": 0},
+        "keep_alive": KEEP_ALIVE,
+        "options": {"temperature": 0, "num_predict": 300},
     }
     try:
         async with httpx.AsyncClient(timeout=TIMEOUT) as client:
