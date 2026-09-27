@@ -18,7 +18,8 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("asistan")
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
-HISTORY_LIMIT = 30  # previous messages of the current conversation sent to the model
+HISTORY_LIMIT = 30  # at least this many previous messages of the conversation are sent to the model
+HISTORY_STEP = 10  # the window's start moves in steps, so the model's cached reading stays valid in between
 
 app = FastAPI(title="Yerel Asistan")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -125,11 +126,13 @@ async def chat(body: ChatIn):
         conversation_id = db.create_conversation(title)
 
     memory.cancel()  # free the CPU for the reply
-    history = db.list_messages(conversation_id)[-HISTORY_LIMIT:]
+    history = db.list_messages(conversation_id)
+    start = max(0, len(history) - HISTORY_LIMIT)
+    history = history[start - start % HISTORY_STEP:]
     db.add_message(conversation_id, "user", text)
 
     settings = config.load()
-    messages = [{"role": "system", "content": memory.system_prompt(settings)}]
+    messages = [{"role": "system", "content": memory.system_prompt_for(conversation_id, settings)}]
     messages += [{"role": m["role"], "content": m["content"]} for m in history]
     messages.append({"role": "user", "content": text + memory.clock_note()})  # the note is not saved
 

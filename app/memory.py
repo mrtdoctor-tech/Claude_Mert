@@ -10,9 +10,10 @@ from . import db, llm
 log = logging.getLogger("asistan.memory")
 
 MAX_MEMORIES_IN_PROMPT = 200
-# Learning runs only after the user has been quiet this long, so it never competes
-# with a reply (or with speech/voice recognition) for the CPU.
-IDLE_SECONDS = 30
+# Learning runs only after the user has been quiet this long. It uses the same model as the chat,
+# and every other request wipes the model's cached reading of the conversation (Ollama keeps one),
+# so on a slow computer it must not run between the messages of an ongoing conversation.
+IDLE_SECONDS = 300
 BATCH_SIZE = 20
 _CURSOR_KEY = "memory_cursor"  # id of the last message already scanned for facts
 DAYS_TR = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
@@ -44,6 +45,23 @@ def clock_note() -> str:
     """
     now = datetime.now()
     return f"\n\n(Şu an: {now:%d.%m.%Y}, {DAYS_TR[now.weekday()]}, saat {now:%H:%M})"
+
+
+_prompts: dict[int, tuple[str, str]] = {}  # conversation id -> (assistant name, system prompt)
+
+
+def system_prompt_for(conversation_id: int, settings: dict) -> str:
+    """The system prompt is fixed for the whole conversation.
+
+    If it changed whenever a new fact was learned, the model would have to re-read the entire
+    conversation from scratch (minutes on a slow computer). New facts apply from the next conversation;
+    the current one already contains them anyway.
+    """
+    cached = _prompts.get(conversation_id)
+    if cached is None or cached[0] != settings["assistant_name"]:
+        cached = (settings["assistant_name"], system_prompt(settings))
+        _prompts[conversation_id] = cached
+    return cached[1]
 
 
 def system_prompt(settings: dict) -> str:

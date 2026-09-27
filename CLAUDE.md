@@ -28,6 +28,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - `app/main.py`: FastAPI uç noktaları (sohbet akışı NDJSON, sohbetler, hafıza, ayarlar, ses→yazı).
 - `app/llm.py`: Yerel **Ollama** istemcisi (`http://127.0.0.1:11434`). Varsayılan model `gemma3:4b`.
   `keep_alive=60m`: model bellekte kalır, her mesajda yeniden yüklenmez.
+- **Ollama önbelleği (hız için kritik):** Ollama tek bir "okunmuş istem" önbelleği tutar. Sistem istemi veya geçmişin
+  başı değişirse ya da araya başka bir istek (ör. hafıza çıkarma) girerse model tüm sohbeti baştan okur; zayıf
+  bilgisayarda bu dakikalar sürer. Bu yüzden: sistem istemi sohbet başına sabit (`system_prompt_for`), geçmiş penceresi
+  10'luk adımlarla kayar (`HISTORY_STEP`), saat yalnızca son mesajda, hafıza öğrenmesi 5 dk boşta (`IDLE_SECONDS=300`).
 - `app/memory.py`: Sistem istemini kurar (hafızadaki bilgiler; tarih/saat YOK ki Ollama'nın istem önbelleği bozulmasın).
   Tarih ve saat `clock_note()` ile yalnızca modele giden **son kullanıcı mesajının sonuna** eklenir, veritabanına yazılmaz. Yeni bilgi çıkarma **kullanıcı 30 sn sustuktan sonra** çalışır (`schedule`/`cancel`); yeni mesaj veya
   mikrofon kullanımı bunu iptal eder, CPU cevaba kalır. Hangi mesajların tarandığı `meta` tablosundaki
@@ -105,6 +109,11 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   söyledi: 1.2'de saat istemden çıkarılmıştı. Artık `clock_note()` ile son mesaja ekleniyor.
 - **2026-09-28 (2.2):** Kullanıcı isteğiyle cevap süresi sayacı; zayıf bilgisayar ile evdeki (NVIDIA) bilgisayarı
   karşılaştırmak için. Kullanıcıdan iki bilgisayardaki süreleri paylaşması beklenebilir.
+- **2026-09-28 (2.3):** Sayaç: 4b ile "ses→yazı 15 sn · ilk kelime 182 sn · toplam 184 sn". **Zayıf bilgisayar:**
+  Intel i5-3427U (2012, 2 çekirdek/4 iş parçacığı, AVX2 yok), 12 GB DDR3 (%87 dolu), SSD. Ayarlar: sohbet `gemma3:4b`,
+  hafıza "aynı", Whisper `base`, asistan adı "Asiye". Gecikme istem okumadan: önbellek sürekli bozuluyordu (hafıza
+  öğrenmesi araya giriyor, öğrenilen bilgi sistem istemini değiştiriyor, 30+ mesajda pencere kayıyor) → üçü de düzeltildi.
+  Bu bilgisayar için 1b önerildi. Kullanıcının yeni süreleri paylaşması bekleniyor.
 
 ## Sıradaki fikirler
 

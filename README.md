@@ -44,7 +44,8 @@ Sonra asistanda **⚙️ Ayarlar → Yapay zekâ modeli**'nden seç.
 - **Daha hızlı ses tanıma:** **⚙️ Ayarlar → Ses tanıma kalitesi → Hızlı (base)**.
 - **Diğer programları kapat:** Özellikle çok sekmeli tarayıcılar belleği doldurur, model yavaşlar.
 - **İlk mesaj her zaman biraz yavaştır:** Model belleğe yükleniyor. Sonrakiler daha hızlıdır. Model 1 saat kullanılmazsa bellekten çıkarılır.
-- Asistan yeni bilgileri öğrenme işini sen 30 saniye sustuktan sonra yapar, böylece konuşmanı yavaşlatmaz.
+- Asistan yeni bilgileri öğrenme işini sen 5 dakika sustuktan sonra (ya da Hafıza penceresini açınca) yapar, böylece konuşmanı yavaşlatmaz. Yeni öğrendiklerini bir sonraki sohbette kullanır.
+- **Eski/zayıf işlemcilerde** (örneğin 2 çekirdekli, 2015 öncesi dizüstüler) `gemma3:1b` kullan; 4b dakikalarca bekletebilir. Cevap altındaki ⏱ sayacı ile karşılaştırabilirsin.
 
 ## Verilerin nerede?
 
@@ -71,6 +72,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **2.3** — Yavaş bilgisayarlarda büyük hızlanma: model sohbeti her mesajda baştan okumak zorunda kalmıyor. Hafıza öğrenmesi 5 dakika sessizlikten sonra çalışır; yeni öğrenilen bilgiler bir sonraki sohbette kullanılır.
 - **2.2** — Cevap süresi sayacı: her cevabın altında ilk kelimenin ve tüm cevabın kaç saniyede geldiği, kullanılan model (sesli sorularda ses→yazı süresi de) görünür.
 - **2.1** — Asistan saati doğru söyler.
 - **2.0** — Hafıza kalitesi: ayrı "Hafıza modeli" seçilebilir (sohbet hızlı küçük modelle, öğrenme arka planda daha akıllı modelle). Yalnızca senin mesajlarından öğrenir, bilgileri Türkçe yazar, aynı bilgiyi iki kez kaydetmez.
