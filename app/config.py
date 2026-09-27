@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = Path(os.environ.get("ASISTAN_DATA_DIR", ROOT / "data"))
 DB_PATH = DATA_DIR / "asistan.db"
 SETTINGS_PATH = DATA_DIR / "settings.json"
+VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 
 DEFAULTS = {
     "assistant_name": "Asistan",

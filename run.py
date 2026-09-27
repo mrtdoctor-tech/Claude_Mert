@@ -5,11 +5,13 @@ import webbrowser
 
 import uvicorn
 
+from app.config import VERSION
+
 HOST = "127.0.0.1"  # only reachable from this computer
 PORT = 8765
 
 if __name__ == "__main__":
     url = f"http://{HOST}:{PORT}"
-    print(f"Asistan başlatılıyor: {url}  (kapatmak için bu pencereyi kapat)")
+    print(f"Yerel Asistan sürüm {VERSION} başlatılıyor: {url}  (kapatmak için bu pencereyi kapat)")
     threading.Timer(2.0, lambda: webbrowser.open(url)).start()
     uvicorn.run("app.main:app", host=HOST, port=PORT)

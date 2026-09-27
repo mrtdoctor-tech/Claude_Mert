@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Yerel Asistan</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v={{VERSION}}">
 </head>
 <body>
   <div class="app">
@@ -15,6 +15,7 @@
         <button id="open-memory" class="ghost wide">🧠 Hafıza</button>
         <button id="open-settings" class="ghost wide">⚙️ Ayarlar</button>
         <p class="privacy">🔒 Her şey bu bilgisayarda saklanır.</p>
+        <p class="version">Sürüm {{VERSION}}</p>
       </div>
     </aside>
 
@@ -97,6 +98,6 @@
     </form>
   </dialog>
 
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v={{VERSION}}"></script>
 </body>
 </html>

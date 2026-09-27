@@ -63,6 +63,18 @@ Tüm sohbetler, hafıza ve ayarlar proje klasöründeki **`data`** klasöründe 
 
 GitHub'dan ZIP'i yeniden indirip dosyaları eski klasörün üzerine kopyala (`data` klasörüne dokunulmaz). `baslat.bat` yeni gereken paketleri kendiliğinden kurar.
 
+## Sürüm geçmişi
+
+Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
+
+- **1.6** — Sürüm numarası eklendi; güncellemeden sonra tarayıcı artık eski arayüzü göstermiyor.
+- **1.5** — Güncellemeden sonra tarayıcının eski dosyaları kullanması engellendi (ilk adım).
+- **1.4** — Kadın sesi: Microsoft Emel (Ayarlar → Yanıt sesi). `baslat.bat` yeni paketleri kendiliğinden kurar.
+- **1.3** — `kurulum.bat` doğru Python'u seçer (Pinokio/Miniconda değil), bozuk `.venv`'i yeniler.
+- **1.2** — Hızlandırma: yanıt cümle cümle okunur, hafıza öğrenme boşta çalışır, model bellekte kalır.
+- **1.1** — Proje notları (CLAUDE.md).
+- **1.0** — İlk sürüm: sohbet, kalıcı hafıza, sohbet geçmişi, sesli konuşma.
+
 ## Teknik bilgi
 
 - Sunucu: Python + FastAPI (`app/`), yalnızca `127.0.0.1:8765` adresinden, yani sadece bu bilgisayardan erişilebilir.

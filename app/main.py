@@ -8,7 +8,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import FileResponse, Response, StreamingResponse
+from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -47,7 +47,9 @@ def _line(obj: dict) -> str:
 
 @app.get("/")
 def index():
-    return FileResponse(STATIC_DIR / "index.html")
+    # The version goes into the asset URLs too, so every update loads fresh CSS/JS.
+    html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+    return HTMLResponse(html.replace("{{VERSION}}", config.VERSION))
 
 
 # Settings
