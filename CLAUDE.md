@@ -37,7 +37,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 
 - Bulut ortamında Ollama yok: `app` sahte bir Ollama sunucusuyla (`/api/tags`, `/api/chat` akışlı + `format: json`)
   test edildi; arayüz headless Chromium ile ekran görüntüsü alınarak kontrol edildi.
-- Gerçek Windows + Ollama + mikrofon üzerinde **henüz kullanıcıdan geri bildirim alınmadı**.
+- Kullanıcı gerçek Windows + Ollama üzerinde çalıştırdı (zayıf bir bilgisayarda); ayrıntılar "Geçmiş" bölümünde.
 
 ## Geçmiş
 
