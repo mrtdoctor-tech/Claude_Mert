@@ -71,6 +71,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **2.1** — Asistan saati doğru söyler.
 - **2.0** — Hafıza kalitesi: ayrı "Hafıza modeli" seçilebilir (sohbet hızlı küçük modelle, öğrenme arka planda daha akıllı modelle). Yalnızca senin mesajlarından öğrenir, bilgileri Türkçe yazar, aynı bilgiyi iki kez kaydetmez.
 - **1.9** — Düzeltme: sesli sohbetten sonra bilgiler hafızaya kaydedilmiyordu. Hafıza penceresi açılınca son konuşmalar hemen taranır. Asistan artık "kaydettim" diye uydurmaz.
 - **1.8** — Mikrofon konuşmanın bittiğini kendisi anlar (tekrar basmaya gerek yok). Sesli sohbet: yanıt okununca mikrofon kendiliğinden yeniden açılır.

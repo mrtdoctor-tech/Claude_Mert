@@ -131,7 +131,7 @@ async def chat(body: ChatIn):
     settings = config.load()
     messages = [{"role": "system", "content": memory.system_prompt(settings)}]
     messages += [{"role": m["role"], "content": m["content"]} for m in history]
-    messages.append({"role": "user", "content": text})
+    messages.append({"role": "user", "content": text + memory.clock_note()})  # the note is not saved
 
     async def stream():
         yield _line({"type": "meta", "conversation_id": conversation_id})

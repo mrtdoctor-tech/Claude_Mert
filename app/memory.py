@@ -36,10 +36,17 @@ Do not guess or invent. Write each fact as one short standalone sentence and ref
 Answer with JSON only: {"memories": ["..."]}. If there is nothing new: {"memories": []}"""
 
 
-def system_prompt(settings: dict) -> str:
-    # Date only (no clock time): an unchanged prompt lets Ollama reuse its cache, which is much faster.
+def clock_note() -> str:
+    """Current date and time, added to the newest user message only.
+
+    Keeping it out of the system prompt leaves the prompt unchanged between messages,
+    so Ollama can reuse its cache (much faster on a slow computer).
+    """
     now = datetime.now()
-    today = f"{now:%d.%m.%Y}, {DAYS_TR[now.weekday()]}"
+    return f"\n\n(Şu an: {now:%d.%m.%Y}, {DAYS_TR[now.weekday()]}, saat {now:%H:%M})"
+
+
+def system_prompt(settings: dict) -> str:
     memories = db.list_memories()[-MAX_MEMORIES_IN_PROMPT:]
     if memories:
         known = "\n".join(f"- {m['content']}" for m in memories)
@@ -50,7 +57,8 @@ Tamamen kullanıcının kendi bilgisayarında çalışıyorsun; konuşmalar hiç
 Samimi, net ve yardımsever ol. Kullanıcı hangi dilde yazarsa o dilde yanıt ver.
 Yanıtlarını gereksiz uzatma; sesli okunabilecekleri için sade tut.
 
-Bugün: {today}
+Kullanıcının son mesajının sonundaki "(Şu an: ...)" notunu sistem ekler: tarih ve saati oradan al,
+sorulmadıkça bu nottan bahsetme.
 
 Önceki sohbetlerden kullanıcı hakkında hatırladıkların:
 {known}
