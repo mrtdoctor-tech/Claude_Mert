@@ -1,5 +1,6 @@
 """Local web server: serves the UI and the chat/memory/voice API."""
 
+import asyncio
 import json
 import logging
 import os
@@ -12,7 +13,7 @@ from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, db, llm, memory, quick, stt, tts
+from . import config, db, llm, memory, presence, quick, stt, tts
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("asistan")
@@ -41,6 +42,19 @@ async def _catch_up_memory():
     # Learn from messages that were not scanned before the app was last closed.
     memory.init_cursor()
     memory.schedule(config.load())
+    other = presence.other_computer()
+    if other:
+        log.warning("DİKKAT: Asistan şu anda %s bilgisayarında da açık görünüyor.", other)
+    _presence_task = asyncio.create_task(presence.keep_marking())
+    _background.add(_presence_task)
+
+
+_background: set = set()  # keeps background tasks referenced
+
+
+@app.on_event("shutdown")
+async def _goodbye():
+    presence.clear()
 
 
 def _line(obj: dict) -> str:
@@ -56,7 +70,7 @@ def index():
 
 @app.get("/api/version")
 def version():
-    return {"version": config.VERSION}
+    return {"version": config.VERSION, "other_computer": presence.other_computer()}
 
 
 # Settings

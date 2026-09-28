@@ -48,7 +48,11 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   cevaplanır (1b verilen saati bile yanlış okuyordu). `meta` olayında `instant: true`; sayaç "bilgisayar saatinden" yazar.
 - `app/db.py`: SQLite (`data/asistan.db`): `conversations`, `messages`, `memories`, `meta`.
 - `app/stt.py`: **faster-whisper** ile çevrimdışı ses→yazı (model ilk kullanımda indirilir).
-- `app/config.py`: Ayarlar `data/settings.json` (asistan adı, model, whisper modeli, dil, yanıt sesi `tts_voice`).
+- `app/config.py`: Ayarlar **bilgisayara özel** `%LOCALAPPDATA%\YerelAsistan\settings.json` (2.6; yoksa ilk açılışta eski
+  ortak `data/settings.json`'dan okunur). Veritabanı `data/` içinde, OneDrive ile **ortak** (kullanıcı kararı).
+- `app/presence.py`: `data/kullanimda.json`'a dakikada bir bilgisayar adı + zaman yazar; başka bilgisayarın 150 sn'den
+  yeni notu varsa `/api/version` `other_computer` döner ve arayüz kırmızı uyarı gösterir (ortak SQLite'ı aynı anda iki
+  bilgisayarda kullanmak bozabilir). Kapanışta kendi notunu siler.
 - `app/tts.py` + `POST /api/tts`: **edge-tts** ile Microsoft sinirsel sesi (varsayılan `tr-TR-EmelNeural`, kadın) →
   MP3. **Çevrimiçi**: okunacak yanıt metni Microsoft'a gider; kullanıcı bunu bilerek seçti (2026-09-27).
   `tts_voice: "windows"` ise sunucu kullanılmaz, tarayıcı internetsiz Windows sesiyle okur.
@@ -65,9 +69,13 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `replyTimer`: cevap beklerken canlı saniye sayacı, bitince "ses→yazı · ilk kelime · toplam · model" özeti
   (yalnızca o anki oturumda; veritabanına yazılmaz, eski sohbetlerde görünmez).
 - `kurulum.bat` / `baslat.bat`: Windows kurulumu ve başlatma (CRLF satır sonları, `.gitattributes` ile korunuyor).
-  **Python ortamı `%LOCALAPPDATA%\YerelAsistan\venv`** (2.5): proje klasörü kullanıcıda OneDrive'da ve iki bilgisayar
-  arasında eşitleniyor; klasör içindeki `.venv` öbür bilgisayarı bozuyordu. `kurulum.bat` eski `.venv`'i siler, Python
-  bulamazsa `where python` / `py -0p` çıktısını gösterir; `baslat.bat` ortam yoksa/bozuksa kurulumu işaret eder.
+  **Python ortamı her bilgisayarda ayrı** (proje klasörü OneDrive ile iki bilgisayar arasında eşitleniyor):
+  2.6'dan beri `kurulum.bat` önce Anaconda/Miniconda arar (Pinokio'nunkini atlar) ve **`asistan` adlı conda ortamı**
+  açar (`conda create -n asistan --override-channels -c conda-forge python=3.12`, conda-forge = Anaconda ToS derdi yok);
+  yoksa python.org Python'u ile `%LOCALAPPDATA%\YerelAsistan\venv`. Seçilen python.exe yolu
+  `%LOCALAPPDATA%\YerelAsistan\python-yolu.txt`'e yazılır, `baslat.bat` oradan okur. Conda ortamı "activate" edilmeden
+  kullanıldığı için iki dosya da `Library\bin` vb. klasörleri PATH'e ekler (yoksa ssl DLL'leri bulunamaz);
+  `baslat.bat` `import ssl` ile sağlamlık kontrolü yapar.
   Bulutta Windows yok: `.bat` dosyaları çalıştırılarak test edilemiyor, dikkatle gözden geçir (blok içinde `)` yok).
   `baslat.bat` her açılışta `pip install -r requirements.txt` çalıştırır; güncellemelerle gelen yeni paketler kendiliğinden kurulur.
 - `data/` git'e girmez: kullanıcının özel verileri orada.
@@ -133,7 +141,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   yani OneDrive ile eşitleniyor; zayıf bilgisayarın (kullanıcı `mertb`) `.venv`'i evdekine gelmiş. Ortam LOCALAPPDATA'ya
   taşındı. Evde python.org Python'u kurulu olmayabilir (kurulum.bat artık listeyi gösteriyor). **Açık soru:** `data/`
   (sohbetler, hafıza) da OneDrive ile eşitleniyor → iki bilgisayar aynı hafızayı paylaşıyor ama veriler Microsoft
-  bulutunda ve aynı anda iki bilgisayarda açmak SQLite'ı bozabilir; kullanıcıya soruldu, karar bekleniyor.
+  bulutunda ve aynı anda iki bilgisayarda açmak SQLite'ı bozabilir.
+- **2026-09-28 (2.6):** Kullanıcının kararları: veritabanı OneDrive'da **ortak**, ayarlar **her bilgisayarda ayrı**, Python
+  için Anaconda'da **yeni `asistan` ortamı** (base önerilmedi: paket sürümleri base'i bozabilir). Kullanıcıda Anaconda ve
+  birkaç conda ortamı var; **ileride ortamları birleştirmek/düzenlemek için yardım isteyecek.**
 
 ## SIRADAKİ ADIM (kullanıcının istediği, 2026-09-28): Ses ile kimlik doğrulama
 

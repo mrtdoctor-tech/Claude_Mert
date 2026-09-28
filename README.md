@@ -9,7 +9,7 @@ Tamamen **kendi bilgisayarında** çalışan, yazarak ya da sesli konuşabildiğ
 
 ## Kurulum (Windows, bir kerelik)
 
-1. **Python'u kur:** https://www.python.org/downloads/ → "Download Python" → kurulumun ilk ekranında **"Add python.exe to PATH"** kutusunu işaretle.
+1. **Python:** Bilgisayarında **Anaconda** (veya Miniconda) varsa bir şey yapma; kurulum Anaconda'da **`asistan`** adında ayrı bir ortam açar (base'e ve diğer ortamlarına dokunmaz). Yoksa https://www.python.org/downloads/ → "Download Python" → kurulumun ilk ekranında **"Add python.exe to PATH"** kutusunu işaretle.
 2. **Ollama'yı kur:** https://ollama.com/download → Windows sürümünü indirip kur. (Yapay zekâ modelini çalıştıran program; kurulumdan sonra arka planda kendiliğinden çalışır.)
 3. **Bu projeyi indir:** GitHub sayfasında yeşil **Code** butonu → **Download ZIP** → ZIP'i örneğin `Belgeler\Asistan` klasörüne çıkar.
 4. Klasördeki **`kurulum.bat`** dosyasına çift tıkla. Paketleri ve yapay zekâ modelini (~3 GB) indirir; internet hızına göre 5-20 dakika sürebilir.
@@ -49,7 +49,8 @@ Sonra asistanda **⚙️ Ayarlar → Yapay zekâ modeli**'nden seç.
 
 ## Verilerin nerede?
 
-Tüm sohbetler, hafıza ve ayarlar proje klasöründeki **`data`** klasöründe durur. Yedeklemek için bu klasörü kopyalaman yeterli. Başka bir bilgisayara taşırken de bu klasörü yanında götür.
+- **Sohbetler ve hafıza:** proje klasöründeki **`data\asistan.db`**. Proje klasörü OneDrive'daysa iki bilgisayar aynı sohbetleri ve hafızayı paylaşır. **Asistanı aynı anda iki bilgisayarda açma** (açarsan ekranda uyarı çıkar); yedeklemek için `data` klasörünü kopyala.
+- **Ayarlar ve Python ortamı:** her bilgisayarın kendi `%LOCALAPPDATA%\YerelAsistan` klasöründe (model seçimi gibi ayarlar bilgisayara özel).
 
 ## Sorun giderme
 
@@ -73,6 +74,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **2.6** — Anaconda varsa asistan onun içinde ayrı bir `asistan` ortamına kurulur. Ayarlar her bilgisayarda ayrı; sohbetler ve hafıza OneDrive ile ortak. Asistan aynı anda başka bir bilgisayarda da açıksa uyarı çıkar.
 - **2.5** — Python ortamı artık proje klasöründe değil, her bilgisayarın kendi klasöründe (`%LOCALAPPDATA%\YerelAsistan`). Proje klasörü OneDrive ile iki bilgisayar arasında eşitlenince ortamlar birbirini bozuyordu. `kurulum.bat` Python bulamazsa bilgisayardaki Python'ları listeler.
 - **2.4** — "Saat kaç?", "Bugün ayın kaçı?" gibi sorular bilgisayarın saatinden, anında ve her zaman doğru cevaplanır. Sol altta ayarların özeti (model, hafıza modeli, ses tanıma, ses) görünür; tıklayınca Ayarlar açılır. Ses tanımaya "En hızlı (tiny)" seçeneği eklendi.
 - **2.3** — Yavaş bilgisayarlarda büyük hızlanma: model sohbeti her mesajda baştan okumak zorunda kalmıyor. Hafıza öğrenmesi 5 dakika sessizlikten sonra çalışır; yeni öğrenilen bilgiler bir sonraki sohbette kullanılır.

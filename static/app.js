@@ -619,8 +619,12 @@ const pageVersion = document.querySelector('meta[name="version"]').content;
 async function checkVersion() {
   if (state.busy) return;
   try {
-    const { version } = await api("/api/version");
-    if (version !== pageVersion) setStatus(`Yeni sürüm (${version}) yüklendi. Sayfayı yenilemek için F5'e bas.`);
+    const { version, other_computer: other } = await api("/api/version");
+    if (other) {
+      setStatus(`⚠️ Asistan şu anda "${other}" bilgisayarında da açık. Sohbetler iki bilgisayarda ortak olduğu için aynı anda kullanmak kayıtları bozabilir; birini kapat.`, true);
+    } else if (version !== pageVersion) {
+      setStatus(`Yeni sürüm (${version}) yüklendi. Sayfayı yenilemek için F5'e bas.`);
+    }
   } catch {
     if (pageVersion.includes("{{")) {
       setStatus("Güncelleme yarım kaldı: baslat.bat penceresini kapatıp yeniden aç.", true);

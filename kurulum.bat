@@ -4,34 +4,16 @@ cd /d "%~dp0"
 echo === Yerel Asistan kurulumu ===
 echo.
 
-rem The Python environment lives outside the project folder, on this computer only: the project
-rem folder may be synced (OneDrive) to another computer, where an environment built here cannot work.
-set "VENV=%LOCALAPPDATA%\YerelAsistan\venv"
+rem Everything computer-specific (Python environment, settings) lives outside the project folder,
+rem which may be synced (OneDrive) to another computer where it could not work.
+set "HOMEDIR=%LOCALAPPDATA%\YerelAsistan"
+set "PYFILE=%HOMEDIR%\python-yolu.txt"
+set "VENV=%HOMEDIR%\venv"
+if not exist "%HOMEDIR%" mkdir "%HOMEDIR%"
 
-rem A usable Python is 3.10+ and not a conda/miniconda one (e.g. the copy Pinokio puts on PATH).
+set "VERCHECK=import sys; sys.exit(sys.version_info < (3, 10))"
+rem For the python.org route: 3.10+ and not a conda Python (e.g. the copy Pinokio puts on PATH).
 set "CHECK=import os, sys; sys.exit(sys.version_info < (3, 10) or os.path.exists(os.path.join(sys.base_prefix, 'conda-meta')))"
-
-rem Prefer the "py" launcher that comes with the python.org installer.
-set "PY="
-where py >nul 2>nul
-if errorlevel 1 goto trypython
-py -3 -c "%CHECK%" >nul 2>nul
-if errorlevel 1 goto trypython
-set "PY=py -3"
-goto havepython
-
-:trypython
-where python >nul 2>nul
-if errorlevel 1 goto nopython
-python -c "%CHECK%" >nul 2>nul
-if errorlevel 1 goto nopython
-set "PY=python"
-
-:havepython
-echo Kullanilan Python:
-%PY% -c "import sys; print('  ', sys.executable, sys.version.split()[0])"
-echo Python ortami: %VENV%
-echo.
 
 rem Old environments inside the project folder came from the first versions (and may be synced from another computer).
 if exist .venv (
@@ -39,7 +21,41 @@ if exist .venv (
     rmdir /s /q .venv
 )
 
-echo [1/3] Python ortami hazirlaniyor...
+call :findconda
+if defined CONDA goto useconda
+goto usepython
+
+rem ---------- Anaconda / Miniconda: a separate "asistan" environment ----------
+:useconda
+echo Anaconda bulundu: %CONDA%
+echo [1/3] Anaconda'daki "asistan" ortami hazirlaniyor...
+call "%CONDA%" run -n asistan python -c "%VERCHECK%" >nul 2>nul
+if not errorlevel 1 goto condaready
+echo "asistan" ortami olusturuluyor, birkac dakika surebilir...
+call "%CONDA%" create -y -n asistan --override-channels -c conda-forge python=3.12
+if errorlevel 1 goto failed
+:condaready
+call "%CONDA%" run -n asistan python -c "import sys; print(sys.executable)" > "%PYFILE%"
+if errorlevel 1 goto failed
+goto haveenv
+
+rem ---------- No Anaconda: python.org Python + a venv ----------
+:usepython
+set "PY="
+where py >nul 2>nul
+if errorlevel 1 goto trypython
+py -3 -c "%CHECK%" >nul 2>nul
+if errorlevel 1 goto trypython
+set "PY=py -3"
+goto havepython
+:trypython
+where python >nul 2>nul
+if errorlevel 1 goto nopython
+python -c "%CHECK%" >nul 2>nul
+if errorlevel 1 goto nopython
+set "PY=python"
+:havepython
+echo [1/3] Python ortami hazirlaniyor: %VENV%
 if not exist "%VENV%\Scripts\python.exe" goto makevenv
 "%VENV%\Scripts\python.exe" -c "%CHECK%" >nul 2>nul
 if not errorlevel 1 goto venvready
@@ -49,10 +65,21 @@ rmdir /s /q "%VENV%"
 %PY% -m venv "%VENV%"
 if errorlevel 1 goto failed
 :venvready
+echo %VENV%\Scripts\python.exe> "%PYFILE%"
+
+rem ---------- Common: install the packages ----------
+:haveenv
+set /p PYEXE=<"%PYFILE%"
+for %%i in ("%PYEXE%") do set "ENVDIR=%%~dpi"
+rem Conda environments need their DLL folders on PATH when used without "conda activate".
+set "PATH=%ENVDIR%;%ENVDIR%Library\mingw-w64\bin;%ENVDIR%Library\usr\bin;%ENVDIR%Library\bin;%ENVDIR%Scripts;%PATH%"
+echo Kullanilan Python: %PYEXE%
+"%PYEXE%" -c "import sys; print('  surum', sys.version.split()[0])"
+echo.
 
 echo [2/3] Gerekli paketler yukleniyor, bu birkac dakika surebilir...
-"%VENV%\Scripts\python.exe" -m pip install --upgrade pip
-"%VENV%\Scripts\python.exe" -m pip install -r requirements.txt
+"%PYEXE%" -m pip install --upgrade pip
+"%PYEXE%" -m pip install -r requirements.txt
 if errorlevel 1 goto failed
 
 echo [3/3] Yapay zeka modeli indiriliyor, yaklasik 3 GB...
@@ -66,16 +93,24 @@ echo Kurulum tamamlandi! Asistani baslatmak icin baslat.bat dosyasina cift tikla
 pause
 exit /b 0
 
+rem ---------- Helpers and messages ----------
+:findconda
+set "CONDA="
+for %%c in ("%USERPROFILE%\anaconda3\Scripts\conda.exe" "%LOCALAPPDATA%\anaconda3\Scripts\conda.exe" "%ProgramData%\anaconda3\Scripts\conda.exe" "%USERPROFILE%\miniconda3\Scripts\conda.exe" "%LOCALAPPDATA%\miniconda3\Scripts\conda.exe" "%ProgramData%\miniconda3\Scripts\conda.exe") do if not defined CONDA if exist %%c set "CONDA=%%~c"
+if defined CONDA goto :eof
+for /f "delims=" %%c in ('where conda 2^>nul') do if not defined CONDA set "CONDA=%%c"
+rem Pinokio ships its own conda for its apps; do not install into it.
+if defined CONDA echo %CONDA% | findstr /i pinokio >nul && set "CONDA="
+goto :eof
+
 :nopython
-echo Uygun bir Python bulunamadi.
+echo Ne Anaconda ne de uygun bir Python bulunamadi.
 echo.
 echo Bu bilgisayarda bulunan Python'lar:
 where python 2>nul
 py -0p 2>nul
 echo.
-echo https://www.python.org/downloads/ adresinden Python'u kur.
-echo Kurarken "Add python.exe to PATH" kutusunu isaretlemeyi unutma, sonra bu dosyayi tekrar calistir.
-echo Not: Pinokio veya Anaconda/Miniconda ile gelen Python bilerek kullanilmiyor.
+echo Anaconda'yi ya da https://www.python.org/downloads/ adresinden Python'u kur, sonra bu dosyayi tekrar calistir.
 pause
 exit /b 1
 
