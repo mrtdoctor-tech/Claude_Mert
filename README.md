@@ -74,6 +74,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **2.7** — Kurulum, Anaconda standart olmayan bir klasörde olsa da (ör. `C:\Apps\anaconda3`) bulur.
 - **2.6** — Anaconda varsa asistan onun içinde ayrı bir `asistan` ortamına kurulur. Ayarlar her bilgisayarda ayrı; sohbetler ve hafıza OneDrive ile ortak. Asistan aynı anda başka bir bilgisayarda da açıksa uyarı çıkar.
 - **2.5** — Python ortamı artık proje klasöründe değil, her bilgisayarın kendi klasöründe (`%LOCALAPPDATA%\YerelAsistan`). Proje klasörü OneDrive ile iki bilgisayar arasında eşitlenince ortamlar birbirini bozuyordu. `kurulum.bat` Python bulamazsa bilgisayardaki Python'ları listeler.
 - **2.4** — "Saat kaç?", "Bugün ayın kaçı?" gibi sorular bilgisayarın saatinden, anında ve her zaman doğru cevaplanır. Sol altta ayarların özeti (model, hafıza modeli, ses tanıma, ses) görünür; tıklayınca Ayarlar açılır. Ses tanımaya "En hızlı (tiny)" seçeneği eklendi.

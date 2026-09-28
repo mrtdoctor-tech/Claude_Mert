@@ -75,7 +75,11 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   yoksa python.org Python'u ile `%LOCALAPPDATA%\YerelAsistan\venv`. Seçilen python.exe yolu
   `%LOCALAPPDATA%\YerelAsistan\python-yolu.txt`'e yazılır, `baslat.bat` oradan okur. Conda ortamı "activate" edilmeden
   kullanıldığı için iki dosya da `Library\bin` vb. klasörleri PATH'e ekler (yoksa ssl DLL'leri bulunamaz);
-  `baslat.bat` `import ssl` ile sağlamlık kontrolü yapar.
+  `baslat.bat` `import ssl` ile sağlamlık kontrolü yapar. Conda arama sırası (`:findconda`): bilinen klasörler
+  (`C:\Apps\anaconda3` dahil) → `%USERPROFILE%\.conda\environments.txt` (conda'nın tüm kurulumlardaki ortam listesi;
+  kök klasör `Scripts\conda.exe` içerir) → `where conda`. Yolunda "pinokio" geçen her şey atlanır.
+  **Toplu düzenleme uyarısı:** `.bat`'ta `:etiket` ararken `call :etiket` satırıyla karışmasın (2.7'de bir kez oldu,
+  git'ten geri alındı); satır başı `\n:etiket\n` ile ara.
   Bulutta Windows yok: `.bat` dosyaları çalıştırılarak test edilemiyor, dikkatle gözden geçir (blok içinde `)` yok).
   `baslat.bat` her açılışta `pip install -r requirements.txt` çalıştırır; güncellemelerle gelen yeni paketler kendiliğinden kurulur.
 - `data/` git'e girmez: kullanıcının özel verileri orada.
@@ -145,6 +149,12 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-28 (2.6):** Kullanıcının kararları: veritabanı OneDrive'da **ortak**, ayarlar **her bilgisayarda ayrı**, Python
   için Anaconda'da **yeni `asistan` ortamı** (base önerilmedi: paket sürümleri base'i bozabilir). Kullanıcıda Anaconda ve
   birkaç conda ortamı var; **ileride ortamları birleştirmek/düzenlemek için yardım isteyecek.**
+- **2026-09-28 (2.7):** Evdeki bilgisayarda kurulum Anaconda'yı bulamadı. `conda env list` (Pinokio'nun conda'sı PATH'te):
+  Anaconda **`C:\Apps\anaconda3`**, ortamları: `ComfyUI`, `comfyui` (ComfyUI için), `ai_assistant` (kullanıcının kurduğu;
+  **Hourglow betikleri** bunu ve Comfy ortamlarından birini kullanıyor), `muzik`, `tts` (müzikle ilgili Python kodu için,
+  başka bir konuşmada yapılmış — bu oturumda bilgisi yok). Pinokio'nun Miniconda'sı `P:\pinokio\bin\miniconda` PATH'te
+  ve "base" olarak görünüyor. Ayrıca PATH'te Microsoft Store'un sahte `WindowsApps\python.exe`'si var. Kurulum artık
+  conda'nın ortam listesinden Anaconda'yı buluyor; kullanıcının denemesi bekleniyor.
 
 ## SIRADAKİ ADIM (kullanıcının istediği, 2026-09-28): Ses ile kimlik doğrulama
 

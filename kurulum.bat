@@ -96,11 +96,20 @@ exit /b 0
 rem ---------- Helpers and messages ----------
 :findconda
 set "CONDA="
-for %%c in ("%USERPROFILE%\anaconda3\Scripts\conda.exe" "%LOCALAPPDATA%\anaconda3\Scripts\conda.exe" "%ProgramData%\anaconda3\Scripts\conda.exe" "%USERPROFILE%\miniconda3\Scripts\conda.exe" "%LOCALAPPDATA%\miniconda3\Scripts\conda.exe" "%ProgramData%\miniconda3\Scripts\conda.exe") do if not defined CONDA if exist %%c set "CONDA=%%~c"
+for %%c in ("%USERPROFILE%\anaconda3" "%LOCALAPPDATA%\anaconda3" "%ProgramData%\anaconda3" "C:\Apps\anaconda3" "C:\anaconda3" "D:\anaconda3" "%USERPROFILE%\miniconda3" "%LOCALAPPDATA%\miniconda3" "%ProgramData%\miniconda3" "C:\Apps\miniconda3" "C:\miniconda3" "D:\miniconda3") do call :considerconda "%%~c"
 if defined CONDA goto :eof
-for /f "delims=" %%c in ('where conda 2^>nul') do if not defined CONDA set "CONDA=%%c"
-rem Pinokio ships its own conda for its apps; do not install into it.
-if defined CONDA echo %CONDA% | findstr /i pinokio >nul && set "CONDA="
+rem conda keeps a list of every environment it knows, from all installations; an installation's own folder has Scripts\conda.exe.
+if exist "%USERPROFILE%\.conda\environments.txt" for /f "usebackq delims=" %%p in ("%USERPROFILE%\.conda\environments.txt") do call :considerconda "%%p"
+if defined CONDA goto :eof
+for /f "delims=" %%c in ('where conda 2^>nul') do call :considerconda "%%~dpc.."
+goto :eof
+
+:considerconda
+rem %1 = a conda installation folder candidate. Pinokio ships its own conda for its apps: never install into it.
+if defined CONDA goto :eof
+if not exist "%~1\Scripts\conda.exe" goto :eof
+echo %~1| findstr /i pinokio >nul && goto :eof
+set "CONDA=%~f1\Scripts\conda.exe"
 goto :eof
 
 :nopython
