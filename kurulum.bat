@@ -4,6 +4,10 @@ cd /d "%~dp0"
 echo === Yerel Asistan kurulumu ===
 echo.
 
+rem The Python environment lives outside the project folder, on this computer only: the project
+rem folder may be synced (OneDrive) to another computer, where an environment built here cannot work.
+set "VENV=%LOCALAPPDATA%\YerelAsistan\venv"
+
 rem A usable Python is 3.10+ and not a conda/miniconda one (e.g. the copy Pinokio puts on PATH).
 set "CHECK=import os, sys; sys.exit(sys.version_info < (3, 10) or os.path.exists(os.path.join(sys.base_prefix, 'conda-meta')))"
 
@@ -26,22 +30,29 @@ set "PY=python"
 :havepython
 echo Kullanilan Python:
 %PY% -c "import sys; print('  ', sys.executable, sys.version.split()[0])"
+echo Python ortami: %VENV%
 echo.
 
+rem Old environments inside the project folder came from the first versions (and may be synced from another computer).
+if exist .venv (
+    echo Proje klasorundeki eski .venv siliniyor, artik kullanilmiyor...
+    rmdir /s /q .venv
+)
+
 echo [1/3] Python ortami hazirlaniyor...
-if not exist .venv\Scripts\python.exe goto makevenv
-.venv\Scripts\python.exe -c "%CHECK%" >nul 2>nul
+if not exist "%VENV%\Scripts\python.exe" goto makevenv
+"%VENV%\Scripts\python.exe" -c "%CHECK%" >nul 2>nul
 if not errorlevel 1 goto venvready
-echo Eski veya bozuk .venv klasoru bulundu, siliniyor ve yeniden olusturuluyor...
-rmdir /s /q .venv
+echo Bozuk Python ortami bulundu, siliniyor ve yeniden olusturuluyor...
+rmdir /s /q "%VENV%"
 :makevenv
-%PY% -m venv .venv
+%PY% -m venv "%VENV%"
 if errorlevel 1 goto failed
 :venvready
 
 echo [2/3] Gerekli paketler yukleniyor, bu birkac dakika surebilir...
-.venv\Scripts\python.exe -m pip install --upgrade pip
-.venv\Scripts\python.exe -m pip install -r requirements.txt
+"%VENV%\Scripts\python.exe" -m pip install --upgrade pip
+"%VENV%\Scripts\python.exe" -m pip install -r requirements.txt
 if errorlevel 1 goto failed
 
 echo [3/3] Yapay zeka modeli indiriliyor, yaklasik 3 GB...
@@ -57,6 +68,11 @@ exit /b 0
 
 :nopython
 echo Uygun bir Python bulunamadi.
+echo.
+echo Bu bilgisayarda bulunan Python'lar:
+where python 2>nul
+py -0p 2>nul
+echo.
 echo https://www.python.org/downloads/ adresinden Python'u kur.
 echo Kurarken "Add python.exe to PATH" kutusunu isaretlemeyi unutma, sonra bu dosyayi tekrar calistir.
 echo Not: Pinokio veya Anaconda/Miniconda ile gelen Python bilerek kullanilmiyor.

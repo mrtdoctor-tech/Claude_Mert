@@ -65,6 +65,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `replyTimer`: cevap beklerken canlı saniye sayacı, bitince "ses→yazı · ilk kelime · toplam · model" özeti
   (yalnızca o anki oturumda; veritabanına yazılmaz, eski sohbetlerde görünmez).
 - `kurulum.bat` / `baslat.bat`: Windows kurulumu ve başlatma (CRLF satır sonları, `.gitattributes` ile korunuyor).
+  **Python ortamı `%LOCALAPPDATA%\YerelAsistan\venv`** (2.5): proje klasörü kullanıcıda OneDrive'da ve iki bilgisayar
+  arasında eşitleniyor; klasör içindeki `.venv` öbür bilgisayarı bozuyordu. `kurulum.bat` eski `.venv`'i siler, Python
+  bulamazsa `where python` / `py -0p` çıktısını gösterir; `baslat.bat` ortam yoksa/bozuksa kurulumu işaret eder.
+  Bulutta Windows yok: `.bat` dosyaları çalıştırılarak test edilemiyor, dikkatle gözden geçir (blok içinde `)` yok).
   `baslat.bat` her açılışta `pip install -r requirements.txt` çalıştırır; güncellemelerle gelen yeni paketler kendiliğinden kurulur.
 - `data/` git'e girmez: kullanıcının özel verileri orada.
 
@@ -123,6 +127,13 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Kullanıcı sol alttaki gizlilik yazısı yerine ayar özeti istedi → eklendi.
 - **2026-09-28:** 2.4 doğrulandı (yeniden başlatma + Chrome önbelleği temizliği sonrası, başka program kapalı):
   saat/tarih soruları anında ve doğru; ses→yazı (`base`) ilk seferde 21,4 sn (model yükleme), sonra 6,2 sn.
+
+- **2026-09-28 (2.5):** Evdeki (NVIDIA'lı) bilgisayarda ilk deneme: `baslat` → `No Python at '"C:\Users\mertb\...\Python312\python.exe'`,
+  `kurulum` → "Uygun bir Python bulunamadı". Neden: proje `C:\Users\mertbilgin\OneDrive\Documents\GitHub\Claude_Mert`,
+  yani OneDrive ile eşitleniyor; zayıf bilgisayarın (kullanıcı `mertb`) `.venv`'i evdekine gelmiş. Ortam LOCALAPPDATA'ya
+  taşındı. Evde python.org Python'u kurulu olmayabilir (kurulum.bat artık listeyi gösteriyor). **Açık soru:** `data/`
+  (sohbetler, hafıza) da OneDrive ile eşitleniyor → iki bilgisayar aynı hafızayı paylaşıyor ama veriler Microsoft
+  bulutunda ve aynı anda iki bilgisayarda açmak SQLite'ı bozabilir; kullanıcıya soruldu, karar bekleniyor.
 
 ## SIRADAKİ ADIM (kullanıcının istediği, 2026-09-28): Ses ile kimlik doğrulama
 
