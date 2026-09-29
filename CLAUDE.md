@@ -145,6 +145,14 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   (sayaç hariç) 20 sn'de bir ve sohbet/ekleme/silme sonrası yükler; ay takvimi Pazartesi başlar, tekrarlar istemcide
   (`occursOn`: due_at = sonraki oluşum, öncesi gösterilmez). Güvenlik kaydı `<table class="grid">`: arama, olay süzgeci,
   başlığa tıkla-sırala, CSV dışa aktarma (`;` + BOM + virgüllü ondalık: Türkçe Excel doğru açsın).
+- **Outlook kayıtları ajandada (3.10):** `outlook.events(start, end)` → `GetDefaultFolder(9).Items`, `IncludeRecurrences`,
+  `Sort("[Start]")`, `Restrict("[Start] < 'bitiş' AND [End] > 'başlangıç'")`. Tarih biçimi Windows yerel ayarına bağlı →
+  sırayla `%x %H:%M` (setlocale LC_TIME ""), ABD biçimi, `dd.mm.yyyy` denenir; sonuç ayrıca aralığa göre süzülür.
+  pywin32 Outlook saatlerini "UTC" etiketli verir ama değer yerel saattir → `_local` tz'yi atar. Body/Organizer okunmaz
+  (Outlook güvenlik uyarısı çıkarabilir). Asistanın eklediği randevular (konu + başlangıç dakikası eşleşen, `calendar_id`'li
+  hatırlatmalar) çıkarılır. 60 sn önbellek; ekleme/silmede temizlenir. `GET /api/outlook/events` yalnızca yönetici (ya da
+  kimlik kapalıyken) + `outlook_sync` açık + klasik Outlook ve profil varsa. Arayüz: salt okunur mavi kayıtlar, çok günlü
+  (tüm gün) kayıtlar her güne nokta koyar. **Gerçek Outlook'ta denenmedi** (sahte COM ile test edildi).
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -291,6 +299,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-30 (3.9):** Kullanıcı isteği: güvenlik kaydı tablo gibi, hatırlatıcılar sağda takvim görünümlü bir bölümde
   (profil açılınca). Kullanıcının asıl sıradaki seçimi bundan sonra sorulacak (notlar/liste, fotoğraf, belge, sabah özeti,
   uyandırma sözcüğü, eski sohbet arama, hava/haber). Excel/müzik komutları gerçek bilgisayarda henüz denenmedi.
+- **2026-09-30 (3.10):** Kullanıcı: ajanda boş ama Outlook'ta kayıtlar var → Outlook kayıtları ajandada salt okunur
+  gösteriliyor. Gerçek Outlook'ta tarih biçimi (`Restrict`) sorun çıkarırsa ajandada ⚠️ mesajı görünür.
 
 ## Sıradaki fikirler
 

@@ -1135,8 +1135,8 @@ $("#outlook-test").onclick = async () => {
 
 const MONTHS = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 const DAYS = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
-const agenda = { items: [], month: new Date(new Date().getFullYear(), new Date().getMonth(), 1), selected: null,
-  allowed: false, loadedAt: 0 };
+const agenda = { items: [], outlook: [], outlookError: "", month: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  selected: null, allowed: false, loadedAt: 0 };
 
 function agendaPref() {
   try { return localStorage.getItem("agenda") !== "hidden"; } catch { return true; }
@@ -1159,6 +1159,13 @@ const dayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,
 const dueDate = (r) => new Date(r.due_at.replace(" ", "T"));
 
 function occursOn(r, day) {
+  if (r.kind === "outlook") {
+    // An appointment covers every day from its start to its end (an all-day event ends at midnight).
+    const start = dueDate(r);
+    const end = new Date(new Date(r.end_at.replace(" ", "T")).getTime() - 60000);
+    const first = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    return day >= first && day <= end;
+  }
   const due = dueDate(r);
   const start = new Date(due.getFullYear(), due.getMonth(), due.getDate());
   if (day < start) return false;
@@ -1183,11 +1190,34 @@ function dayLabel(d) {
 async function loadAgenda() {
   if ($("#agenda").hidden) return;
   agenda.loadedAt = Date.now();
+  let own = [];
   try {
-    agenda.items = (await api("/api/reminders")).filter((r) => r.kind !== "timer");
-  } catch {
-    agenda.items = [];
+    own = (await api("/api/reminders")).filter((r) => r.kind !== "timer");
+  } catch {}
+  agenda.items = own.concat(agenda.outlook);
+  renderMonth();
+  renderAgendaList();
+  loadOutlookEvents(own); // slower (Outlook may need to start): added when it arrives
+}
+
+// The admin's Outlook appointments, read-only, for the shown month and the next 30 days (3.10).
+async function loadOutlookEvents(own) {
+  const m = agenda.month;
+  const first = new Date(m.getFullYear(), m.getMonth(), 1 - (m.getDay() + 6) % 7);
+  const today = new Date();
+  const start = first < today ? first : new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const gridEnd = new Date(first.getFullYear(), first.getMonth(), first.getDate() + 42);
+  const soon = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 31);
+  const end = gridEnd > soon ? gridEnd : soon;
+  try {
+    const res = await api(`/api/outlook/events?start=${dayKey(start)}T00:00&end=${dayKey(end)}T00:00`);
+    agenda.outlook = res.events;
+    agenda.outlookError = res.error || "";
+  } catch (err) {
+    agenda.outlook = [];
+    agenda.outlookError = err.message;
   }
+  agenda.items = own.concat(agenda.outlook);
   renderMonth();
   renderAgendaList();
 }
@@ -1223,6 +1253,7 @@ function renderMonth() {
 function agendaItem(r, showDay) {
   const div = document.createElement("div");
   div.className = "agenda-item";
+  if (r.kind === "outlook") return outlookItem(r, div);
   const icon = r.kind === "alarm" ? "⏰" : "🔔";
   div.innerHTML = `<span class="time"></span><span class="what"><span></span><small></small></span><button title="İptal et">✕</button>`;
   const due = dueDate(r);
@@ -1242,6 +1273,18 @@ function agendaItem(r, showDay) {
   return div;
 }
 
+function outlookItem(r, div) {
+  div.classList.add("outlook");
+  div.innerHTML = `<span class="time"></span><span class="what"><span></span><small></small></span>`;
+  const due = dueDate(r);
+  div.querySelector(".time").textContent = r.all_day ? "Tüm gün"
+    : `${String(due.getHours()).padStart(2, "0")}:${String(due.getMinutes()).padStart(2, "0")}`;
+  div.querySelector(".what span").textContent = `📆 ${r.text}`;
+  div.querySelector("small").textContent = ["Outlook", r.location, r.recurring ? "tekrarlanan" : ""].filter(Boolean).join(" · ");
+  div.title = "Outlook takviminden (buradan değiştirilemez)";
+  return div;
+}
+
 function renderAgendaList() {
   const list = $("#agenda-list");
   list.innerHTML = "";
@@ -1256,12 +1299,20 @@ function renderAgendaList() {
     return;
   }
   $("#agenda-list-title").textContent = "Yaklaşanlar";
-  if (!agenda.items.length) {
+  if (!agenda.items.length && !agenda.outlookError) {
     list.innerHTML = `<div class="agenda-empty">Kurulu hatırlatma yok. Sohbette "yarın 9'da doktoru aramamı hatırlat" yazabilirsin.</div>`;
     return;
   }
+  const now = new Date();
+  const upcoming = agenda.items.filter((r) => r.kind !== "outlook" || new Date(r.end_at.replace(" ", "T")) > now);
+  if (agenda.outlookError) {
+    const warn = document.createElement("div");
+    warn.className = "agenda-empty";
+    warn.textContent = "⚠️ " + agenda.outlookError;
+    list.appendChild(warn);
+  }
   let last = "";
-  for (const r of [...agenda.items].sort((a, b) => a.due_at.localeCompare(b.due_at)).slice(0, 40)) {
+  for (const r of upcoming.sort((a, b) => a.due_at.localeCompare(b.due_at)).slice(0, 40)) {
     const label = dayLabel(dueDate(r));
     if (label !== last) {
       const h = document.createElement("div");
@@ -1288,8 +1339,8 @@ function renderAgendaTimers() {
   }
 }
 
-$("#month-prev").onclick = () => { agenda.month = new Date(agenda.month.getFullYear(), agenda.month.getMonth() - 1, 1); renderMonth(); };
-$("#month-next").onclick = () => { agenda.month = new Date(agenda.month.getFullYear(), agenda.month.getMonth() + 1, 1); renderMonth(); };
+$("#month-prev").onclick = () => { agenda.month = new Date(agenda.month.getFullYear(), agenda.month.getMonth() - 1, 1); loadAgenda(); };
+$("#month-next").onclick = () => { agenda.month = new Date(agenda.month.getFullYear(), agenda.month.getMonth() + 1, 1); loadAgenda(); };
 $("#agenda-all").onclick = () => { agenda.selected = null; renderMonth(); renderAgendaList(); };
 
 // "+ Ekle" opens the reminder window, set to the selected day at 09:00 (or the next full hour).

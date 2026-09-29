@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.9
+Sürüm: 3.10
 
 ---
 
@@ -74,6 +74,8 @@ Bu sorular yapay zekâya gitmez; doğrudan bilgisayarın saatinden, anında ve h
 - Ekranın sağındaki **📅 Ajanda**'da ay takvimi (hatırlatma olan günlerin altında nokta), çalışan sayaçlar ve yaklaşan
   hatırlatmalar görünür. Bir güne tıklayınca o günün hatırlatmaları listelenir; **+ Ekle** o güne hatırlatma ekler.
   Başlıktaki 📅 düğmesiyle gizleyip açabilirsin. Misafir modunda ajanda görünmez. (Dar pencerede yer olmadığı için gizlenir.)
+- Outlook bağlantısı açıksa, **Outlook takvimindeki kayıtların** da ajandada mavi şeritle (📆) görünür. Bunlar yalnızca
+  gösterilir; değiştirmek için Outlook'u kullan. Outlook takvimi senin hesabın olduğu için yalnızca yöneticiye görünür.
 
 ## 📅 Outlook takvimi ve telefon (3.6)
 

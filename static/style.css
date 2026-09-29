@@ -264,3 +264,5 @@ table.grid td.nowrap { white-space: nowrap; font-variant-numeric: tabular-nums; 
 .agenda-item button:hover { color: var(--danger); }
 .agenda-empty { color: var(--muted); font-size: 13px; padding: 6px 2px; }
 @media (max-width: 1100px) { .agenda { display: none; } #toggle-agenda { display: none; } }
+.agenda-item.outlook { background: rgba(0, 120, 212, .12); border-left: 3px solid #2b88d8; }
+.agenda-item.outlook .time { color: #6cb8f6; }

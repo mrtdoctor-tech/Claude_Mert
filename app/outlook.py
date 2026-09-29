@@ -9,10 +9,12 @@ Only the admin's reminders are copied (the Outlook account on this computer is t
 the admin turned it on in Settings. Timers are never copied.
 """
 
+import locale
 import logging
 import os
 import threading
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 
 from . import config, db
 from .pc import com, windows_only
@@ -114,6 +116,7 @@ def _add(reminder_id: int):
     try:
         entry = com(lambda: _create(reminder))
         db.set_reminder_calendar(reminder_id, entry, "")
+        forget_events()
         log.info("Outlook takvimine eklendi: %s", reminder["text"])
     except Exception as e:
         log.warning("Outlook takvimine eklenemedi: %s", e)
@@ -123,6 +126,7 @@ def _add(reminder_id: int):
 def _remove(entry_id: str):
     try:
         com(lambda: _outlook().GetNamespace("MAPI").GetItemFromID(entry_id).Delete())
+        forget_events()
     except Exception as e:
         log.warning("Outlook takviminden silinemedi: %s", e)
 
@@ -135,6 +139,81 @@ def add_later(reminder_id: int):
 def remove_later(reminder: dict):
     if reminder.get("calendar_id"):
         threading.Thread(target=_remove, args=(reminder["calendar_id"],), daemon=True).start()
+
+
+# Reading the Outlook calendar (3.10): shown read-only in the agenda, next to the assistant's own reminders.
+
+EVENTS_CACHE_SECONDS = 60
+MAX_EVENTS = 500
+_events_cache: dict = {}  # (start, end) -> (time, events)
+
+
+def can_read() -> bool:
+    return bool(config.load().get("outlook_sync")) and not windows_only() and bool(classic_outlook_path()) \
+        and has_mail_profile()
+
+
+def _local(value) -> datetime:
+    """pywin32 hands Outlook's local times over marked as UTC; they are local wall-clock times."""
+    return datetime(value.year, value.month, value.day, value.hour, value.minute)
+
+
+def _restriction(start: datetime, end: datetime, fmt: str) -> str:
+    return f"[Start] < '{end.strftime(fmt)}' AND [End] > '{start.strftime(fmt)}'"
+
+
+def _read(start: datetime, end: datetime) -> list[dict]:
+    items = _outlook().GetNamespace("MAPI").GetDefaultFolder(9).Items  # olFolderCalendar
+    items.IncludeRecurrences = True  # every occurrence of a repeating appointment as its own item
+    items.Sort("[Start]")
+    # Outlook wants dates in the Windows date format (e.g. 30.09.2026 in Turkish); try it, then the US form.
+    try:
+        locale.setlocale(locale.LC_TIME, "")
+    except locale.Error:
+        pass
+    found = None
+    for fmt in ("%x %H:%M", "%m/%d/%Y %I:%M %p", "%d.%m.%Y %H:%M"):
+        try:
+            found = items.Restrict(_restriction(start, end, fmt))
+            break
+        except Exception:
+            continue
+    if found is None:
+        raise RuntimeError("Outlook tarih aralığını kabul etmedi")
+    events = []
+    item = found.GetFirst()
+    while item is not None and len(events) < MAX_EVENTS:
+        try:
+            begin, finish = _local(item.Start), _local(item.End)
+            if finish > start and begin < end:  # Restrict may be loose with some date formats
+                events.append({
+                    "id": f"o{len(events)}", "kind": "outlook", "text": item.Subject or "(konu yok)",
+                    "due_at": begin.strftime("%Y-%m-%d %H:%M:%S"), "end_at": finish.strftime("%Y-%m-%d %H:%M:%S"),
+                    "all_day": bool(item.AllDayEvent), "location": item.Location or "",
+                    "repeat": None, "recurring": bool(item.IsRecurring),
+                })
+        except Exception as e:  # one odd item must not hide the others
+            log.debug("Outlook kaydı okunamadı: %s", e)
+        item = found.GetNext()
+    return events
+
+
+def events(start: datetime, end: datetime) -> list[dict]:
+    """Outlook appointments between start and end, without the ones the assistant itself added."""
+    key = (start, end)
+    cached = _events_cache.get(key)
+    if cached and time.time() - cached[0] < EVENTS_CACHE_SECONDS:
+        return cached[1]
+    found = com(lambda: _read(start, end))
+    ours = {(r["text"], r["due_at"][:16]) for r in db.list_reminders() if r.get("calendar_id")}
+    found = [e for e in found if (e["text"], e["due_at"][:16]) not in ours]
+    _events_cache.clear()
+    _events_cache[key] = (time.time(), found)
+    return found
+
+
+def forget_events():
+    _events_cache.clear()
 
 
 def test() -> str:

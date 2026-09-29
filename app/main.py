@@ -284,6 +284,26 @@ def cancel_reminder(reminder_id: int):
     return {"ok": True}
 
 
+@app.get("/api/outlook/events")
+async def outlook_events(start: str, end: str):
+    """The admin's Outlook appointments for the agenda (read-only). Empty for everyone else."""
+    who = identity.owner()
+    if who == identity.GUEST or (who != db.ALL and not identity.is_admin()) or not outlook.can_read():
+        return {"events": [], "available": False}
+    try:
+        begin, finish = datetime.fromisoformat(start), datetime.fromisoformat(end)
+    except ValueError:
+        raise HTTPException(400, "Tarih anlaşılamadı")
+    if (finish - begin).days > 120:
+        raise HTTPException(400, "Aralık çok uzun")
+    try:
+        found = await run_in_threadpool(outlook.events, begin, finish)
+    except Exception as e:
+        log.warning("Outlook takvimi okunamadı: %s", e)
+        return {"events": [], "available": True, "error": f"Outlook takvimi okunamadı: {e}"}
+    return {"events": found, "available": True}
+
+
 @app.post("/api/outlook/test")
 async def outlook_test():
     _require_admin()
