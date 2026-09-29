@@ -278,6 +278,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   penceresiydi). Kullanıcıda **Microsoft 365 Personal** var, telefon **Android**. Yol: klasik Outlook'u bir kez açıp
   hesabı eklemek → 3.6 COM yolu. Olmazsa kullanıcının 2. tercihi **Gmail/Google Takvim** (Google Cloud projesi +
   OAuth; kart gerekmez). Spotify Chrome'da (web oynatıcı) da aynı: çalma kontrolü API'si Premium ister, medya tuşları çalışır.
+- **2026-09-29:** 3.8 sonrası kullanıcı klasik Outlook'a hesabını ekledi → "Outlook bağlantısını dene": **✅ Outlook
+  çalışıyor, takvim "Calendar" (kişisel Outlook.com hesabı)**. `outlook_sync` açıldı. Takvime gerçekten randevu eklenip
+  telefonda (Android) bildirim çıkıp çıkmadığı henüz bildirilmedi. Gmail yoluna gerek kalmadı.
 
 ## Sıradaki fikirler
 
