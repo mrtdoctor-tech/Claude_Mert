@@ -211,11 +211,15 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   çok kısa bulundu (puan yok, misafir kaldı). Yanlış kişiye eşleşme **hiç olmadı**, ama çapraz puanlar (Sezin'in sesinin
   Mert profiline benzerliği) loglanmıyordu → 3.3'te eklendi. Kullanıcıdan yeni kayıttaki puanlar beklenecek; eşik ve
   MARGIN buna göre ayarlanacak.
+- **2026-09-29:** 3.3 ile gerçek puanlar: Mert 0,39 / 0,42 / 0,46 / 0,52 / 0,56 / 0,59 (hepsi tanındı), aynı seslerin
+  Sezin profiline benzerliği 0,10–0,17 → ayrım net, eşik 0,33 + MARGIN uygun, değişiklik gerekmedi. "Benim adım Mert",
+  "Asya?" gibi tek kelime/çok kısa sesler puansız (misafir kalır); kullanıcı "cümle uzayınca benzerlik artıyor, problem
+  değil" dedi. Sezin'in bu sürümdeki puanları henüz görülmedi.
 
 ## Sıradaki fikirler
 
 - Kullanıcı conda ortamlarını (ComfyUI, comfyui, ai_assistant, muzik, tts, asistan) düzenlemek/birleştirmek için yardım isteyecek.
-- Ses tanıma eşiğini (0,40) gerçek puanlara göre ayarla; gerekirse Ayarlar'a eşik seçeneği.
+- Ses tanıma: Sezin'in 3.3 puanlarını gör (özellikle Mert profiline benzerliği); gerekirse eşik/MARGIN ayarı.
 - 1b yetersiz kalırsa zayıf bilgisayar için başka küçük model dene (ör. `gemma3n:e2b`, `qwen3:1.7b`); sonucu kullanıcıdan öğren.
 - Ana bilgisayara kurulum (henüz yapılmadı).
 - İstenirse tamamen yerel kadın sesi: NVIDIA olduğu için ses klonlama (XTTS-v2 / Chatterbox Multilingual gibi,
