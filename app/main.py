@@ -112,8 +112,7 @@ def get_settings():
 
 @app.put("/api/settings")
 def put_settings(body: SettingsIn):
-    if identity.state()["guest"]:
-        raise HTTPException(403, "Misafir ayarları değiştiremez.")
+    _require_admin()
     return config.save(body.model_dump())
 
 

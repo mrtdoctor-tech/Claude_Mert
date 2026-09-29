@@ -99,7 +99,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `<Ad>1234` → o profilin oturumu (misafir yazarsa normal mesaj sayılır). Kodlar veritabanına/modele gitmez
   (`_notice_stream`). `db`: `conversations.owner`, `messages.speaker`, `memories.owner` (+ `_NEW_COLUMNS` göçü), `speakers`,
   `security_log`. Misafir: hafızasız ayrı sistem istemi, mesajları "Misafir mesajı" olarak loglanır, hafıza çıkarma
-  `speaker=misafir`'i atlar. Güvenlik kaydı ve profil listesi yalnızca yöneticiye açık. 3.1: misafirde Ayarlar düğmesi gizli, sol alt özet tıklanmaz, `PUT /api/settings` 403; yönetici olmayan profil (Sezin) Ayarlar'ı görür ama `#profiles` bölümünü görmez.
+  `speaker=misafir`'i atlar. Güvenlik kaydı ve profil listesi yalnızca yöneticiye açık. 3.2: Ayarlar yalnızca yöneticiye açık (özellik aktifken yönetici olmayan herkes için düğme gizli, sol alt özet tıklanmaz, `PUT /api/settings` → `_require_admin` 403). Ayarlar bilgisayar başına tektir; herkes yöneticinin seçtiklerini kullanır (kullanıcı kararı).
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
   "[Sistem notu, yanıtta yazma: …]" ve `memory.strip_clock_echo` cevaptan (kaydetmeden önce) temizler.
 - `data/` git'e girmez: kullanıcının özel verileri orada.
@@ -200,6 +200,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   denenmedi. Kullanıcının denemesi bekleniyor: tanınmazsa/yanlış tanırsa güvenlik kaydındaki puanlara göre eşik ayarlanır.
 - **2026-09-29 (3.1):** Kullanıcı isteği: ses tanıtmada ayırt edici kelimeler içeren 3 cümle (tüm Türkçe sesler; kayıt
   ekranında önceden gösteriliyor) ve misafir modunda Ayarlar'ın hiç görünmemesi (kimse ses kaydı yapamasın).
+- **2026-09-29 (3.2):** Kullanıcı: Ayarlar'ı yalnızca admin görsün/kullansın; seçilmiş ayarlar herkes için geçerli.
+  Kullanıcı henüz ses kaydı yapmadı (3.1'in cümleleriyle yapacak).
 
 ## Sıradaki fikirler
 

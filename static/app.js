@@ -577,10 +577,11 @@ function applyIdentity(id) {
     ? "👤 Misafir — tanınmıyor. Kendi oturumun için konuş."
     : `👤 ${id.name}${id.admin ? " · yönetici" : ""}`;
   $("#open-security").hidden = !(id.active && id.admin);
-  // A guest must not reach Settings (no enrolling a new voice, no changing models).
-  $("#open-settings").hidden = !!id.guest;
-  $("#config-summary").disabled = !!id.guest;
-  if (id.guest) els.settingsDialog.close();
+  // Only the admin reaches Settings (enrolling voices, models); everyone else uses the admin's settings.
+  const locked = !!(id.active && !id.admin);
+  $("#open-settings").hidden = locked;
+  $("#config-summary").disabled = locked;
+  if (locked) els.settingsDialog.close();
   if (before !== null && before !== identityKey(id)) {
     // Another person: their own conversations and a fresh chat.
     state.conversationId = null;
