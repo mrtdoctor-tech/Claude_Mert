@@ -37,6 +37,19 @@ ollama pull gemma3:12b
 
 Sonra asistanda **⚙️ Ayarlar → Yapay zekâ modeli**'nden seç.
 
+## Hangi model? (ekran kartına göre)
+
+Model **ekran kartının belleğine (VRAM) sığarsa** hızlıdır; sığmazsa işlemcide çalışır ve dakikalarca bekletir.
+Kural: modelin boyutu (`ollama list`) VRAM'den **1-2 GB küçük** olsun. Nerede çalıştığını görmek için soru sorduktan
+sonra komut isteminde `ollama ps` yaz: **PROCESSOR** sütununda "100% GPU" görmelisin.
+
+| Ekran kartı belleği | Önerilen sohbet modeli |
+|---|---|
+| Ekran kartı yok / zayıf dizüstü | `gemma3:1b` |
+| 6-8 GB (ör. RTX 4060) | `gemma3:4b` (tamamen sığar, çok hızlı) |
+| 12-16 GB | `gemma3:12b` |
+| 24 GB ve üstü | daha büyük modeller (ör. 27b-31b) |
+
 ## Bilgisayarın yavaşsa
 
 - **Daha küçük model:** Komut isteminde `ollama pull gemma3:1b` yaz, sonra **⚙️ Ayarlar**'dan bu modeli seç. Çok daha hızlıdır ama yanıtları daha basittir.
@@ -74,6 +87,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **2.8** — Model artık 8192 token'lık metin okuyabiliyor (Ollama'nın varsayılanı 4096'ydı; uzun sohbetlerde başı, hafızayla birlikte, sessizce kesiliyordu).
 - **2.7** — Kurulum, Anaconda standart olmayan bir klasörde olsa da (ör. `C:\Apps\anaconda3`) bulur.
 - **2.6** — Anaconda varsa asistan onun içinde ayrı bir `asistan` ortamına kurulur. Ayarlar her bilgisayarda ayrı; sohbetler ve hafıza OneDrive ile ortak. Asistan aynı anda başka bir bilgisayarda da açıksa uyarı çıkar.
 - **2.5** — Python ortamı artık proje klasöründe değil, her bilgisayarın kendi klasöründe (`%LOCALAPPDATA%\YerelAsistan`). Proje klasörü OneDrive ile iki bilgisayar arasında eşitlenince ortamlar birbirini bozuyordu. `kurulum.bat` Python bulamazsa bilgisayardaki Python'ları listeler.

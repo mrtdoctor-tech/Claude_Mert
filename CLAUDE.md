@@ -27,7 +27,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Arayüz `/api/version`'ı dakikada bir ve pencere odaklanınca kontrol eder, farklıysa "F5'e bas" der.
 - `app/main.py`: FastAPI uç noktaları (sohbet akışı NDJSON, sohbetler, hafıza, ayarlar, ses→yazı).
 - `app/llm.py`: Yerel **Ollama** istemcisi (`http://127.0.0.1:11434`). Varsayılan model `gemma3:4b`.
-  `keep_alive=60m`: model bellekte kalır, her mesajda yeniden yüklenmez.
+  `keep_alive=60m`: model bellekte kalır, her mesajda yeniden yüklenmez. `NUM_CTX=8192` (2.8): Ollama varsayılanı 4096
+  token'dı, sistem istemi + 30-40 mesaj sığmıyor, başı (hafızalı sistem istemi dahil) sessizce kesiliyordu.
 - **Ollama önbelleği (hız için kritik):** Ollama tek bir "okunmuş istem" önbelleği tutar. Sistem istemi veya geçmişin
   başı değişirse ya da araya başka bir istek (ör. hafıza çıkarma) girerse model tüm sohbeti baştan okur; zayıf
   bilgisayarda bu dakikalar sürer. Bu yüzden: sistem istemi sohbet başına sabit (`system_prompt_for`), geçmiş penceresi
@@ -161,6 +162,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   ilk kelime 174–218 sn, toplam ~260–290 sn (~2 kelime/sn). RAM %83 dolu, GPU kullanımı %12 → 31b VRAM'e sığmıyor, çoğu
   CPU'da çalışıyor. Kullanıcıdan GPU adı + "Dedicated GPU memory" ve `ollama ps` (PROCESSOR sütunu) istendi; VRAM'e
   sığan model önerilecek (kural: model boyutu < VRAM − 1-2 GB).
+- **2026-09-29 (2.8):** Ev bilgisayarının ekran kartı **RTX 4060, 8 GB VRAM**. `ollama ps`: gemma4:31b **21 GB, 76%/24%
+  CPU/GPU**, CONTEXT 4096; CPU %100, paylaşılan GPU belleği 14,5 GB; ilk kelime 222 sn. Öneri: sohbet `gemma3:4b` (tam
+  GPU'ya sığar), istenirse hafıza modeli daha büyük (ör. `gemma3:12b`, arka planda). Ayrıca 4096 bağlam sınırı fark
+  edildi → `num_ctx=8192`. README'ye VRAM'e göre model tablosu eklendi.
 
 ## SIRADAKİ ADIM (kullanıcının istediği, 2026-09-28): Ses ile kimlik doğrulama
 
