@@ -96,7 +96,12 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   geçmeli); `score ≥ ADAPT_MIN=0.50` ve fark ≥ 2×MARGIN ise mesajın vektörü profile %10 karıştırılır (okuma sesi ≠ sohbet
   sesi). Her sesli mesaj tüm profillerin puanlarıyla loglanır ("Ses doğrulandı"/"Ses ile tanındı"/"Tanınmayan ses";
   `voiceid.describe`). Çok kısa konuşmada `voice_too_short` → misafir çubuğu "bir cümle daha söyle" der. Kayıt: 3 cümle × 7 sn, ortalama vektör; cümleler (`ENROLL_SENTENCES`) tüm Türkçe ünlü/ünsüzleri kapsar (3.1).
-  `app/identity.py`: süreç içi `_current` (yeniden başlatınca misafir). Hiç profil yoksa özellik kapalı, owner `db.ALL`
+  `app/identity.py`: süreç içi `_current`; 3.14'ten beri `_set` ile `SETTINGS_DIR/oturum.json`'a da yazılır (her bilgisayara
+  özel, OneDrive'daki DB'ye değil), `touch()` her mesajda (dakikada en çok bir) tazeler, açılışta `restore()` son 15 dk
+  (`RESTORE_SECONDS`) içindeki oturumu geri getirir ("Oturum geri yüklendi" loglanır). Neden: uvicorn reload (Pull, OneDrive'ın
+  dosyalara dokunması) kullanıcıyı sessizce misafire düşürüyordu. Yankı: `main._last_reply` (son cevap, 120 sn) ile duyulan
+  metnin kelimelerinin ≥%60'ı örtüşürse `/api/transcribe` `echo: true` döner, kimlik değişmez, arayüz mesajı göndermez
+  (sesli sohbette hoparlörden Emel'in sesi "Tanınmayan ses" sayılabiliyordu). Hiç profil yoksa özellik kapalı, owner `db.ALL`
   ("*"). İlk profil yönetici olur ve `assign_unowned` ile eski tüm veriler onun olur. `1234` → misafir; yönetici
   `<Ad>1234` → o profilin oturumu (misafir yazarsa normal mesaj sayılır). Kodlar veritabanına/modele gitmez
   (`_notice_stream`). `db`: `conversations.owner`, `messages.speaker`, `memories.owner` (+ `_NEW_COLUMNS` göçü), `speakers`,
@@ -328,6 +333,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   genişletilmiş medya tuşları. Hava/haber (3.11) gerçek ağda henüz denendiği bildirilmedi.
 - **2026-09-30 (3.13):** 3.12 gerçekte: "sonraki şarkı" (çalan şarkıyı söyledi) ve "müziği durdur" **çalıştı**; "müziğe devam et"
   "Zaten çalıyor: GDI+ Window (Spotify.exe)" dedi → yardımcı pencere hatası düzeltildi.
+- **2026-09-30 (3.14):** 3.13 doğrulandı (müzik devam/durdur çalışıyor). Kullanıcı: "komut vermeden misafire geçti, daha önce
+  de birkaç kez oldu" → oturum diskte saklanıp yeniden başlatmada geri yükleniyor + yankı algılama. Kullanıcıdan güvenlik
+  kaydında o saatlerde "Tanınmayan ses" olup olmadığına bakması istendi (asıl nedeni ayırt etmek için).
 
 ## Sıradaki fikirler
 

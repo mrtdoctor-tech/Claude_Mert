@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.13
+Sürüm: 3.14
 
 ---
 
@@ -164,6 +164,9 @@ Herkesin hafızası ayrıdır.
 - **`1234`** yaz: kilitlenir ve misafir moduna geçer. Kilidi tanınan bir ses ya da şifre açar.
 - **Kişisel şifre** (ör. hastayken sesin değişirse): şifreni yazıp gönder, kendi oturumuna geçersin.
 - **`Sezin1234`** (yalnızca yönetici, kendi oturumundayken): Sezin'in oturumuna geçer.
+- Asistan kendini yeniden başlatırsa (ör. güncellemeden sonra) son 15 dakikada tanıdığı kişi tanınmış kalır
+  (güvenlik kaydına "Oturum geri yüklendi" yazar). Daha eski oturumlar geri gelmez; konuşman yeterli.
+- Mikrofon hoparlörden asistanın kendi okuduğu cevabı duyarsa bunu yok sayar (yabancı ses saymaz).
 - **🛡️ Güvenlik kaydı** (yalnızca yönetici): tanınmayan sesler, misafir mesajları, şifre denemeleri. Tablo hâlinde;
   arayabilir, olay türüne göre süzebilir, sütun başlığına tıklayıp sıralayabilir, **📥 Excel'e aktar** ile indirebilirsin.
 - **⚙️ Ayarlar** yalnızca yöneticiye görünür.

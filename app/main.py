@@ -4,7 +4,9 @@ import asyncio
 import json
 import logging
 import os
+import re
 import tempfile
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -41,6 +43,7 @@ db.init()
 async def _catch_up_memory():
     log.info("Yerel Asistan sürüm %s hazır", config.VERSION)
     # Learn from messages that were not scanned before the app was last closed.
+    identity.restore()  # the app restarted by itself (update, OneDrive): keep the person who was talking
     memory.init_cursor()
     memory.schedule(config.load())
     other = presence.other_computer()
@@ -52,6 +55,19 @@ async def _catch_up_memory():
 
 
 _background: set = set()  # keeps background tasks referenced
+_last_reply = {"text": "", "at": 0.0}  # what the assistant said last (spoken aloud), to recognise its own echo
+
+
+def _words(text: str) -> set[str]:
+    return {w for w in re.findall(r"\w+", text.replace("I", "ı").replace("İ", "i").lower()) if len(w) > 2}
+
+
+def _is_echo(heard: str) -> bool:
+    """The microphone picked up the assistant's own spoken reply (speakers, sesli sohbet), not a person."""
+    if time.time() - _last_reply["at"] > 120:
+        return False
+    words = _words(heard)
+    return len(words) >= 2 and len(words & _words(_last_reply["text"])) / len(words) >= 0.6
 
 
 @app.on_event("shutdown")
@@ -181,6 +197,7 @@ async def chat(body: ChatIn):
     if notice:
         return _notice_stream(notice)
 
+    identity.touch()
     who = identity.owner()
     speaker = None if who == db.ALL else who
     if who == identity.GUEST:
@@ -227,6 +244,7 @@ async def chat(body: ChatIn):
         finally:
             memory.schedule(settings)
         reply = memory.strip_clock_echo("".join(parts))
+        _last_reply.update(text=reply, at=time.time())
         if reply:
             db.add_message(conversation_id, "assistant", reply)
         yield _line({"type": "done"})
@@ -425,6 +443,10 @@ async def transcribe(audio: UploadFile = File(...)):
         )
         score = None
         too_short = False
+        if text and _is_echo(text):
+            log.info("Asistanın kendi sesi duyuldu, yok sayıldı: %s", text)
+            return {"text": "", "device": device, "identity": identity.state(), "voice_score": None,
+                    "voice_too_short": False, "echo": True}
         if identity.active():
             result = await run_in_threadpool(voiceid.identify, path)
             score, scores = result["score"], voiceid.describe(result["scores"])

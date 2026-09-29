@@ -342,12 +342,13 @@ async function startListening(auto) {
       const form = new FormData();
       form.append("audio", blob, "kayit.webm");
       const sttStart = performance.now();
-      const { text, device, identity, voice_too_short: tooShort } = await api("/api/transcribe", { method: "POST", body: form });
+      const { text, device, identity, voice_too_short: tooShort, echo } = await api("/api/transcribe", { method: "POST", body: form });
       state.voiceTooShort = !!tooShort; // guest bar asks for a longer sentence
       const sttMs = performance.now() - sttStart;
       showSttDevice(device);
       applyIdentity(identity); // a different voice starts its own conversation
       setBusy(false);
+      if (echo) return setStatus("🔇 Hoparlörden kendi okuduğum cevabı duydum; mesaj olarak almadım.");
       if (!text) return setStatus("Bir şey duyamadım, tekrar dener misin?", true);
       send(text, true, sttMs, device);
     } catch (err) {
