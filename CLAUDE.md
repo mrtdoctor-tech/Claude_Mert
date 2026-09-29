@@ -336,6 +336,14 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-30 (3.14):** 3.13 doğrulandı (müzik devam/durdur çalışıyor). Kullanıcı: "komut vermeden misafire geçti, daha önce
   de birkaç kez oldu" → oturum diskte saklanıp yeniden başlatmada geri yükleniyor + yankı algılama. Kullanıcıdan güvenlik
   kaydında o saatlerde "Tanınmayan ses" olup olmadığına bakması istendi (asıl nedeni ayırt etmek için).
+- **2026-09-30:** Mikrofon kontrolü: ev bilgisayarında **MC-PW8 (Generic USB Audio)** mikrofon, Windows giriş düzeyi 100,
+  Levels 0,0 dB (boost yok), ama Windows mikrofon testi **%1** → sinyal cihazdan çok zayıf (Studio One'da da tepe yok).
+  Kullanıcıya: mikrofon konumu, cihazın kendi kazanç ayarı/pil, "exclusive mode" kutusunu kaldırma önerildi; hedef test
+  %30–60. Düşük seviye kısa cümlelerde düşük ses tanıma puanlarının/"Tanınmayan ses"in nedeni olabilir.
+  **SIRADAKİ (yarın):** Kullanıcı cihazı test edip sonucu (% değeri) söyleyecek. Değişmezse: Ayarlar'a canlı mikrofon
+  seviye göstergesi + "mikrofon yükseltme" (yazılım kazancı, Whisper/ses tanımaya gitmeden önce) eklenecek. Ayrıca 3.14'ün
+  (oturum geri yükleme, yankı) ve 3.11'in (hava/haber gerçek ağda) sonuçları, güvenlik kaydındaki "Tanınmayan ses"
+  satırları sorulacak. Sonra kalan fikirler: notlar/liste, fotoğraf, belge, sabah özeti, uyandırma sözcüğü, sohbet arama.
 
 ## Sıradaki fikirler
 
