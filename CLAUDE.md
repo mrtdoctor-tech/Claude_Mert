@@ -196,10 +196,19 @@ hafızasız kurulur ve hafıza öğrenmesi o mesajları atlar (mesajlara `speake
 Kullanıcıya söylendi: ses doğrulaması caydırıcıdır, güçlü güvenlik değildir (kayıtla kandırılabilir; `data/` dosyaları
 doğrudan açılabilir → Windows hesap şifresi / disk şifreleme önerilecek).
 
-**Başlamadan önce kullanıcıya sorulacaklar (henüz cevaplanmadı):**
-- Sesle doğrulandıktan sonra bir süre (ör. 10 dk) yazılanlar da onun sayılsın mı, yoksa yazarak kullanım için PIN/şifre mi?
-- Yabancı genel sorular sorabilsin mi, yoksa hiç cevap verilmesin mi?
-- Başka kişilerin (aile) sesleri de ayrı hafızayla tanıtılacak mı?
+**Kullanıcının cevapları (2026-09-29):**
+- **Yazarak kullanım:** Sesle doğrulandıktan sonra klavyeden yazılanlar da o kişinin sayılır, doğrulama **açık kalır**
+  (zaman aşımı yok). Klavyeden **`1234`** girildiği anda doğrulama iptal → **misafir modu** (kilitleme; kilidi yalnızca
+  ses açar). `1234` mesaj olarak modele/geçmişe gitmemeli.
+- **Misafir:** Soru sorabilir (genel cevaplar), özel bilgiler/hafıza kullanılmaz, mesajları hafızaya karışmaz ve güvenlik
+  kaydına yazılır. Ekranın altında **"Misafir"** yazar; tanınınca kişinin adı (**"Mert"**) yazar.
+- **Eşinin sesi de tanıtılacak** (ekranda onun adı görünecek).
+
+**Hâlâ sorulacak (kullanıcı GPU testinden sonra cevaplayacak):**
+- Eşi için ayrı hafıza mı, Mert'in hafızası mı? Eşinin ekranda görünecek adı?
+- Kilit kodu sabit `1234` mü, Ayarlar'dan değiştirilebilir mi (öneri: değiştirilebilir, varsayılan 1234)?
+- Kullanıcı "önce GPU testini bitirip sonuçları paylaşacağım, sonra diğer güncellemelere geçeriz" dedi: **başlamadan
+  önce onun GPU sonuçlarını bekle.**
 
 ## Sıradaki fikirler
 
