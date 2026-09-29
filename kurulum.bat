@@ -81,6 +81,16 @@ echo [2/3] Gerekli paketler yukleniyor, bu birkac dakika surebilir...
 "%PYEXE%" -m pip install --upgrade pip
 "%PYEXE%" -m pip install -r requirements.txt
 if errorlevel 1 goto failed
+rem NVIDIA graphics card: CUDA libraries so speech recognition can run on the GPU (optional, about 1 GB).
+where nvidia-smi >nul 2>nul
+if errorlevel 1 goto gpudone
+echo NVIDIA ekran karti bulundu, ses tanima icin ekran karti paketleri yukleniyor, yaklasik 1 GB...
+"%PYEXE%" -m pip install -r requirements-gpu.txt
+if errorlevel 1 echo Ekran karti paketleri kurulamadi, ses tanima islemcide calisacak.
+:gpudone
+rem Reset the error level: a failed GPU install is not a failed setup.
+ver >nul
+if errorlevel 1 goto failed
 
 echo [3/3] Yapay zeka modeli indiriliyor, yaklasik 3 GB...
 where ollama >nul 2>nul

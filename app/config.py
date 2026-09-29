@@ -24,6 +24,7 @@ DEFAULTS = {
     "assistant_name": "Asistan",
     "model": "gemma3:4b",
     "whisper_model": "small",
+    "whisper_device": "auto",  # "auto" = graphics card when possible, "cpu" = always the processor
     "language": "tr",
     "tts_voice": "tr-TR-EmelNeural",  # "windows" = offline Windows voice in the browser
     "auto_listen": True,  # reopen the microphone after a spoken reply

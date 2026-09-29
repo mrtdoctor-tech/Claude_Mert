@@ -13,6 +13,12 @@ set "PATH=%ENVDIR%;%ENVDIR%Library\mingw-w64\bin;%ENVDIR%Library\usr\bin;%ENVDIR
 if errorlevel 1 goto setup
 rem Installs packages added by an update; does nothing (and needs no internet) when all are present.
 "%PYEXE%" -m pip install -q --disable-pip-version-check -r requirements.txt
+rem NVIDIA graphics card: CUDA libraries so speech recognition can run on the GPU.
+where nvidia-smi >nul 2>nul
+if errorlevel 1 goto run
+echo Ekran karti paketleri kontrol ediliyor, ilk seferde yaklasik 1 GB indirilir...
+"%PYEXE%" -m pip install -q --disable-pip-version-check -r requirements-gpu.txt
+:run
 "%PYEXE%" run.py
 pause
 exit /b 0

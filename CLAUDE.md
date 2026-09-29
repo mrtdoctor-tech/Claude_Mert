@@ -48,7 +48,14 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - `app/quick.py`: "Saat kaç?", "Bugün ayın kaçı?" gibi kısa (≤60 karakter) sorular modele gitmeden bilgisayar saatinden
   cevaplanır (1b verilen saati bile yanlış okuyordu). `meta` olayında `instant: true`; sayaç "bilgisayar saatinden" yazar.
 - `app/db.py`: SQLite (`data/asistan.db`): `conversations`, `messages`, `memories`, `meta`.
-- `app/stt.py`: **faster-whisper** ile çevrimdışı ses→yazı (model ilk kullanımda indirilir).
+- `app/stt.py`: **faster-whisper** ile çevrimdışı ses→yazı (model ilk kullanımda indirilir). 2.9: ayar `whisper_device`
+  ("auto"/"cpu"). "auto"da CTranslate2 CUDA görürse ve CUDA DLL'leri (`CUDA_DLLS`, ctypes ile tek tek denenir — eksik DLL
+  süreci çökertebildiği için önceden kontrol) yüklenebiliyorsa GPU'da float16, yoksa CPU'da int8. GPU'da hata olursa
+  `_gpu_failed` ile uygulama yeniden başlayana dek CPU'ya düşer. DLL'ler pip `nvidia-cublas-cu12`/`nvidia-cudnn-cu12`
+  (`requirements-gpu.txt`) paketlerinden gelir; `_add_nvidia_dlls` bunların `bin` klasörlerini DLL aramasına ekler.
+  `baslat.bat`/`kurulum.bat` bu paketleri yalnızca `nvidia-smi` varsa kurar (zayıf bilgisayar 1 GB indirmesin).
+  `ctranslate2>=4.5` (CUDA 12 + cuDNN 9) sabitlendi. `/api/transcribe` ve `/api/version` cihazı (`gpu`/`cpu`) döner;
+  arayüz sayaçta ve sol alt özette gösterir. Bulutta GPU yok: GPU yolu gerçek donanımda denenmedi.
 - `app/config.py`: Ayarlar **bilgisayara özel** `%LOCALAPPDATA%\YerelAsistan\settings.json` (2.6; yoksa ilk açılışta eski
   ortak `data/settings.json`'dan okunur). Veritabanı `data/` içinde, OneDrive ile **ortak** (kullanıcı kararı).
 - `app/presence.py`: `data/kullanimda.json`'a dakikada bir bilgisayar adı + zaman yazar; başka bilgisayarın 150 sn'den
@@ -168,7 +175,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   edildi → `num_ctx=8192`. README'ye VRAM'e göre model tablosu eklendi.
 - **2026-09-29:** Ev bilgisayarında `gemma3:4b`'ye geçildi: `ollama ps` → 3,0 GB, **100% GPU**, CONTEXT **8192** (2.8 doğrulandı).
   Sayaç: ses→yazı 5,7 sn · ilk kelime 6,4 sn · toplam 10,8 sn (31b'de 309 sn). Kullanıcı memnun ("çok hızlı").
-  Artık en yavaş halka Whisper (CPU'da medium ~5,7 sn) → GPU'ya taşıma önerildi; kullanıcının cevabı bekleniyor.
+  Artık en yavaş halka Whisper (CPU'da medium ~5,7 sn) → GPU'ya taşıma önerildi.
+- **2026-09-29 (2.9):** Kullanıcı önce Whisper'ı GPU'ya taşımayı, sonra ses kimlik doğrulamasını seçti. GPU desteği eklendi
+  (ayrıntı: Mimari → `app/stt.py`). Kullanıcının ev bilgisayarında denemesi bekleniyor: sol altta "GPU" ve sayaçta
+  ses→yazı süresi. **Sıradaki iş: ses ile kimlik doğrulama** (aşağıdaki bölüm; önce 3 soru sorulacak).
 
 ## SIRADAKİ ADIM (kullanıcının istediği, 2026-09-28): Ses ile kimlik doğrulama
 
@@ -197,9 +207,6 @@ doğrudan açılabilir → Windows hesap şifresi / disk şifreleme önerilecek)
 - Ana bilgisayara kurulum (henüz yapılmadı).
 - İstenirse tamamen yerel kadın sesi: NVIDIA olduğu için ses klonlama (XTTS-v2 / Chatterbox Multilingual gibi,
   Türkçe destekli) eklenebilir; kullanıcı bir kadın sesi örneği verir.
-- NVIDIA varken Whisper'ı `device="cuda"` ile çalıştırmak sesi yazıya çok daha hızlı çevirir (ev bilgisayarında medium
-  CPU'da ~6 sn). Windows'ta cuBLAS/cuDNN DLL'leri gerekir (ör. pip `nvidia-cublas-cu12`, `nvidia-cudnn-cu12`);
-  yüklenemezse CPU'ya geri düşen "otomatik" seçenek olarak yapılmalı.
 - Hafıza büyüdükçe: tüm bilgileri isteme koymak yerine anlamsal arama (Ollama embedding modeli).
 - Eski sohbetlerde arama.
 - Dosya/belge yükleyip onun hakkında konuşma.

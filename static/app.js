@@ -150,7 +150,7 @@ async function openConversation(id, title) {
 const seconds = (ms) => (ms / 1000).toFixed(1).replace(".", ",") + " sn";
 
 // Live stopwatch under a reply, then a summary so different computers/models can be compared.
-function replyTimer(bubble, sttMs) {
+function replyTimer(bubble, sttMs, sttDevice) {
   const el = document.createElement("div");
   el.className = "timing";
   bubble.parentElement.appendChild(el);
@@ -166,7 +166,7 @@ function replyTimer(bubble, sttMs) {
       clearInterval(interval);
       if (!ok) return el.remove();
       const parts = [];
-      if (sttMs != null) parts.push(`ses→yazı ${seconds(sttMs)}`);
+      if (sttMs != null) parts.push(`ses→yazı ${seconds(sttMs)}${sttDevice ? ` (${sttDevice.toUpperCase()})` : ""}`);
       parts.push(`ilk kelime ${seconds(firstMs ?? performance.now() - start)}`);
       parts.push(`toplam ${seconds(performance.now() - start)}`);
       parts.push(this.instant ? "bilgisayar saatinden" : state.settings.model);
@@ -175,7 +175,7 @@ function replyTimer(bubble, sttMs) {
   };
 }
 
-async function send(text, fromVoice = false, sttMs = null) {
+async function send(text, fromVoice = false, sttMs = null, sttDevice = null) {
   text = text.trim();
   if (!text || state.busy) return;
   els.input.value = "";
@@ -187,7 +187,7 @@ async function send(text, fromVoice = false, sttMs = null) {
   addMessage("user", text);
   const bubble = addMessage("assistant", "");
   bubble.classList.add("typing");
-  const timer = replyTimer(bubble, sttMs);
+  const timer = replyTimer(bubble, sttMs, sttDevice);
   let reply = "";
   const speaker = (els.speak.checked || fromVoice) ? sentenceSpeaker() : null;
   const round = (state.voiceRound = (state.voiceRound || 0) + 1);
@@ -326,11 +326,12 @@ async function startListening(auto) {
       const form = new FormData();
       form.append("audio", blob, "kayit.webm");
       const sttStart = performance.now();
-      const { text } = await api("/api/transcribe", { method: "POST", body: form });
+      const { text, device } = await api("/api/transcribe", { method: "POST", body: form });
       const sttMs = performance.now() - sttStart;
+      showSttDevice(device);
       setBusy(false);
       if (!text) return setStatus("Bir şey duyamadım, tekrar dener misin?", true);
-      send(text, true, sttMs);
+      send(text, true, sttMs, device);
     } catch (err) {
       setBusy(false);
       setStatus(err.message, true);
@@ -538,7 +539,7 @@ els.memoryForm.addEventListener("submit", async (e) => {
 
 // Settings dialog
 
-const WHISPER_LABELS = { tiny: "en hızlı", base: "hızlı", small: "dengeli", medium: "en iyi" };
+const WHISPER_LABELS = { tiny: "en hızlı", base: "hızlı", small: "dengeli", medium: "iyi", "large-v3-turbo": "en iyi" };
 const VOICE_LABELS = { "tr-TR-EmelNeural": "Emel", "tr-TR-AhmetNeural": "Ahmet", windows: "Windows sesi" };
 
 async function loadSettings() {
@@ -550,7 +551,8 @@ async function loadSettings() {
   // Sidebar summary of the settings that matter most when comparing speed.
   const lines = [`🤖 Model: ${s.model}`];
   if (s.memory_model && s.memory_model !== s.model) lines.push(`🧠 Hafıza: ${s.memory_model}`);
-  lines.push(`🎤 Ses tanıma: ${WHISPER_LABELS[s.whisper_model] || s.whisper_model} (${s.whisper_model})`);
+  const hardware = state.sttDevice ? ` · ${state.sttDevice.toUpperCase()}` : "";
+  lines.push(`🎤 Ses tanıma: ${WHISPER_LABELS[s.whisper_model] || s.whisper_model} (${s.whisper_model})${hardware}`);
   lines.push(`🔊 Ses: ${VOICE_LABELS[s.tts_voice] || s.tts_voice}`);
   const summary = $("#config-summary");
   summary.innerHTML = "";
@@ -561,10 +563,18 @@ async function loadSettings() {
   }
 }
 
+// "gpu" / "cpu": where speech recognition actually runs; shown in the sidebar summary.
+function showSttDevice(device) {
+  if (!device || device === state.sttDevice) return;
+  state.sttDevice = device;
+  loadSettings().catch(() => {});
+}
+
 $("#open-settings").onclick = async () => {
   const form = els.settingsForm;
   form.assistant_name.value = state.settings.assistant_name;
   form.whisper_model.value = state.settings.whisper_model;
+  form.whisper_device.value = state.settings.whisper_device || "auto";
   form.language.value = state.settings.language;
   form.tts_voice.value = state.settings.tts_voice;
   form.auto_listen.checked = !!state.settings.auto_listen;
@@ -619,7 +629,8 @@ const pageVersion = document.querySelector('meta[name="version"]').content;
 async function checkVersion() {
   if (state.busy) return;
   try {
-    const { version, other_computer: other } = await api("/api/version");
+    const { version, other_computer: other, stt_device: sttDevice } = await api("/api/version");
+    showSttDevice(sttDevice);
     if (other) {
       setStatus(`⚠️ Asistan şu anda "${other}" bilgisayarında da açık. Sohbetler iki bilgisayarda ortak olduğu için aynı anda kullanmak kayıtları bozabilir; birini kapat.`, true);
     } else if (version !== pageVersion) {

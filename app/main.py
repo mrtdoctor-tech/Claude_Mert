@@ -70,7 +70,11 @@ def index():
 
 @app.get("/api/version")
 def version():
-    return {"version": config.VERSION, "other_computer": presence.other_computer()}
+    return {
+        "version": config.VERSION,
+        "other_computer": presence.other_computer(),
+        "stt_device": stt.current_device(),
+    }
 
 
 # Settings
@@ -83,6 +87,7 @@ class SettingsIn(BaseModel):
     tts_voice: str | None = None
     auto_listen: bool | None = None
     memory_model: str | None = None
+    whisper_device: str | None = None
 
 
 @app.get("/api/settings")
@@ -221,7 +226,7 @@ async def transcribe_warmup():
     settings = config.load()
     memory.schedule(settings)  # restart the idle countdown (it must never be dropped)
     try:
-        await run_in_threadpool(stt.load, settings["whisper_model"])
+        await run_in_threadpool(stt.load, settings["whisper_model"], settings["whisper_device"])
     except Exception as e:
         log.warning("Ses modeli yüklenemedi: %s", e)
     return {"ok": True}
@@ -237,8 +242,8 @@ async def transcribe(audio: UploadFile = File(...)):
         tmp.write(await audio.read())
         path = tmp.name
     try:
-        text = await run_in_threadpool(
-            stt.transcribe, path, settings["whisper_model"], settings["language"]
+        text, device = await run_in_threadpool(
+            stt.transcribe, path, settings["whisper_model"], settings["language"], settings["whisper_device"]
         )
     except ImportError:
         raise HTTPException(500, "Ses tanıma paketi (faster-whisper) kurulu değil. kurulum.bat'ı tekrar çalıştır.")
@@ -247,7 +252,7 @@ async def transcribe(audio: UploadFile = File(...)):
         raise HTTPException(500, f"Ses tanınamadı: {e}")
     finally:
         os.remove(path)
-    return {"text": text}
+    return {"text": text, "device": device}
 
 
 class TtsIn(BaseModel):

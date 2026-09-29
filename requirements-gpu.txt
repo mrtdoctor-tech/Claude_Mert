@@ -1,0 +1,4 @@
+# Installed only on computers with an NVIDIA graphics card (baslat.bat / kurulum.bat check for nvidia-smi):
+# the CUDA libraries that let speech recognition (faster-whisper) run on the GPU. About 1 GB.
+nvidia-cublas-cu12
+nvidia-cudnn-cu12>=9,<10

@@ -55,6 +55,7 @@ sonra komut isteminde `ollama ps` yaz: **PROCESSOR** sütununda "100% GPU" görm
 - **Daha küçük model:** Komut isteminde `ollama pull gemma3:1b` yaz, sonra **⚙️ Ayarlar**'dan bu modeli seç. Çok daha hızlıdır ama yanıtları daha basittir.
 - **Hafıza için ayrı model:** Sohbette hızlı `gemma3:1b`'yi kullanırken **⚙️ Ayarlar → Hafıza modeli**'nde `gemma3:4b`'yi seç. Senin hakkındaki bilgileri arka planda, sen beklemezken daha doğru çıkarır; sohbetin hızı değişmez.
 - **Daha hızlı ses tanıma:** **⚙️ Ayarlar → Ses tanıma kalitesi → Hızlı (base)**; çok yavaşsa **En hızlı (tiny)** (Türkçeyi daha az doğru anlar).
+- **NVIDIA ekran kartı varsa:** ses tanıma kendiliğinden ekran kartında çalışır (`baslat.bat` ilk açılışta gereken ~1 GB'lık paketleri indirir). Sol alttaki özette **GPU** yazmalı; **⚙️ Ayarlar → Ses tanıma kalitesi → En iyi (large-v3-turbo)** ekran kartında hem hızlı hem en doğrusudur.
 - **Diğer programları kapat:** Özellikle çok sekmeli tarayıcılar belleği doldurur, model yavaşlar.
 - **İlk mesaj her zaman biraz yavaştır:** Model belleğe yükleniyor. Sonrakiler daha hızlıdır. Model 1 saat kullanılmazsa bellekten çıkarılır.
 - Asistan yeni bilgileri öğrenme işini sen 5 dakika sustuktan sonra (ya da Hafıza penceresini açınca) yapar, böylece konuşmanı yavaşlatmaz. Yeni öğrendiklerini bir sonraki sohbette kullanır.
@@ -87,6 +88,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **2.9** — Ses tanıma NVIDIA ekran kartı varsa onda çalışır (çok daha hızlı); yoksa ya da sorun çıkarsa kendiliğinden işlemciye geçer. Sayaçta ve sol altta GPU/CPU yazar. Yeni seçenek: "En iyi (large-v3-turbo)".
 - **2.8** — Model artık 8192 token'lık metin okuyabiliyor (Ollama'nın varsayılanı 4096'ydı; uzun sohbetlerde başı, hafızayla birlikte, sessizce kesiliyordu).
 - **2.7** — Kurulum, Anaconda standart olmayan bir klasörde olsa da (ör. `C:\Apps\anaconda3`) bulur.
 - **2.6** — Anaconda varsa asistan onun içinde ayrı bir `asistan` ortamına kurulur. Ayarlar her bilgisayarda ayrı; sohbetler ve hafıza OneDrive ile ortak. Asistan aynı anda başka bir bilgisayarda da açıksa uyarı çıkar.
