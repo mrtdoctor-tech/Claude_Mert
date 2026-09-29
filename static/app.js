@@ -189,6 +189,8 @@ async function send(text, fromVoice = false, sttMs = null, sttDevice = null) {
   bubble.classList.add("typing");
   const timer = replyTimer(bubble, sttMs, sttDevice);
   let reply = "";
+  let notice = false; // lock/switch notice: shown briefly, not part of the conversation
+  let newIdentity = null;
   const speaker = (els.speak.checked || fromVoice) ? sentenceSpeaker() : null;
   const round = (state.voiceRound = (state.voiceRound || 0) + 1);
 
@@ -196,7 +198,7 @@ async function send(text, fromVoice = false, sttMs = null, sttDevice = null) {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text, conversation_id: state.conversationId }),
+      body: JSON.stringify({ message: text, conversation_id: state.conversationId, via: fromVoice ? "ses" : "yazı" }),
     });
     if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
 
@@ -214,6 +216,9 @@ async function send(text, fromVoice = false, sttMs = null, sttDevice = null) {
         const event = JSON.parse(line);
         if (event.type === "meta") {
           timer.instant = !!event.instant;
+          notice = !!event.notice;
+          newIdentity = event.identity || null;
+          if (notice) continue;
           if (state.conversationId !== event.conversation_id) {
             state.conversationId = event.conversation_id;
             els.title.textContent = text.length > 50 ? text.slice(0, 47) + "..." : text;
@@ -229,6 +234,15 @@ async function send(text, fromVoice = false, sttMs = null, sttDevice = null) {
         }
       }
     }
+    if (notice) {
+      timer.finish(false);
+      bubble.parentElement.previousElementSibling?.remove(); // the typed code itself
+      bubble.parentElement.remove();
+      applyIdentity(newIdentity);
+      setStatus(reply);
+      return;
+    }
+    applyIdentity(newIdentity);
     if (speaker) speaker.feed(reply, true);
     if (fromVoice && reply) listenAgainAfterReply(round);
     timer.finish(true);
@@ -326,9 +340,10 @@ async function startListening(auto) {
       const form = new FormData();
       form.append("audio", blob, "kayit.webm");
       const sttStart = performance.now();
-      const { text, device } = await api("/api/transcribe", { method: "POST", body: form });
+      const { text, device, identity } = await api("/api/transcribe", { method: "POST", body: form });
       const sttMs = performance.now() - sttStart;
       showSttDevice(device);
+      applyIdentity(identity); // a different voice starts its own conversation
       setBusy(false);
       if (!text) return setStatus("Bir şey duyamadım, tekrar dener misin?", true);
       send(text, true, sttMs, device);
@@ -495,8 +510,14 @@ els.speak.addEventListener("change", () => {
 // Memory dialog
 
 async function loadMemories() {
-  const list = await api("/api/memories");
+  const guest = !!state.identity?.guest;
+  els.memoryForm.hidden = guest;
   els.memoryList.innerHTML = "";
+  if (guest) {
+    els.memoryList.innerHTML = `<li class="none">Misafir modunda hafıza gösterilmez. Kendi hafızanı görmek için konuş.</li>`;
+    return;
+  }
+  const list = await api("/api/memories");
   if (!list.length) {
     els.memoryList.innerHTML = `<li class="none">Henüz kayıtlı bilgi yok.</li>`;
     return;
@@ -516,7 +537,9 @@ async function loadMemories() {
 $("#open-memory").onclick = async () => {
   const status = $("#memory-status");
   els.memoryDialog.showModal();
+  status.textContent = "";
   await loadMemories();
+  if (state.identity?.guest) return;
   // Learn from the latest messages right away instead of waiting for the idle timer.
   status.textContent = "⏳ Son konuşmalar taranıyor...";
   try {
@@ -536,6 +559,150 @@ els.memoryForm.addEventListener("submit", async (e) => {
   els.memoryInput.value = "";
   loadMemories();
 });
+
+// Voice identification: who is talking (shown under the message box), voice profiles, security log.
+
+function identityKey(id) {
+  return id ? (id.name || (id.guest ? "misafir" : "herkes")) : null;
+}
+
+function applyIdentity(id) {
+  if (!id) return;
+  const before = identityKey(state.identity);
+  state.identity = id;
+  const bar = $("#identity-bar");
+  bar.hidden = !id.active;
+  bar.classList.toggle("guest", !!id.guest);
+  bar.textContent = id.guest
+    ? "👤 Misafir — tanınmıyor. Kendi oturumun için konuş."
+    : `👤 ${id.name}${id.admin ? " · yönetici" : ""}`;
+  $("#open-security").hidden = !(id.active && id.admin);
+  if (before !== null && before !== identityKey(id)) {
+    // Another person: their own conversations and a fresh chat.
+    state.conversationId = null;
+    els.title.textContent = "Yeni sohbet";
+    clearMessages();
+    loadConversations();
+  }
+}
+
+const ENROLL_SENTENCES = [
+  "Merhaba, ben asistanıma kendi sesimi tanıtıyorum. Bugün hava güzel, biraz yürüyüşe çıkabilirim.",
+  "Sabahları kahvemi içerken haberleri okurum, akşamları da ailemle vakit geçirmeyi severim.",
+  "Bir, iki, üç, dört, beş. Bu cümleyi normal konuşma sesimle, acele etmeden okuyorum.",
+];
+const ENROLL_MS = 7000;
+
+async function recordFor(ms, onTick) {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  const rec = new MediaRecorder(stream);
+  const chunks = [];
+  rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+  const stopped = new Promise((r) => (rec.onstop = r));
+  const start = Date.now();
+  const tick = setInterval(() => onTick(Math.max(0, ms - (Date.now() - start))), 200);
+  rec.start();
+  await sleep(ms);
+  rec.stop();
+  await stopped;
+  clearInterval(tick);
+  stream.getTracks().forEach((t) => t.stop());
+  return new Blob(chunks, { type: rec.mimeType });
+}
+
+$("#enroll-open").onclick = () => {
+  const first = !state.identity?.active;
+  $("#enroll-intro").textContent = first
+    ? "İlk tanıtılan kişi yönetici olur ve şimdiye kadarki sohbetler ve hafıza onun olur. Sessiz bir yerde, normal sesinle 3 kısa cümle okuyacaksın."
+    : "Tanıtılacak kişi (ör. Sezin) 3 kısa cümleyi kendi sesiyle, normal konuşur gibi okusun. Aynı adla tekrar kaydedersen o kişinin sesi yenilenir.";
+  $("#enroll-sentence").textContent = "Adı yazıp \"Kaydı başlat\"a bas.";
+  $("#enroll-status").textContent = "";
+  $("#enroll-record").disabled = false;
+  $("#enroll-dialog").showModal();
+};
+
+$("#enroll-record").onclick = async () => {
+  const name = $("#enroll-name").value.trim();
+  const status = $("#enroll-status");
+  if (!name || /\s/.test(name)) return (status.textContent = "⚠️ Tek kelimelik bir ad yaz.");
+  stopSpeaking();
+  const button = $("#enroll-record");
+  button.disabled = true;
+  const form = new FormData();
+  form.append("name", name);
+  try {
+    for (let i = 0; i < ENROLL_SENTENCES.length; i++) {
+      $("#enroll-sentence").textContent = `${i + 1}/${ENROLL_SENTENCES.length}: "${ENROLL_SENTENCES[i]}"`;
+      for (let n = 3; n > 0; n--) { status.textContent = `${n}... hazırlan`; await sleep(700); }
+      const blob = await recordFor(ENROLL_MS, (left) => {
+        status.textContent = `🔴 Oku! (${Math.ceil(left / 1000)} sn)`;
+      });
+      form.append("audio", blob, `ornek${i + 1}.webm`);
+    }
+    $("#enroll-sentence").textContent = "Kayıtlar tamam.";
+    status.textContent = "⏳ Ses parmak izi çıkarılıyor... (ilk seferde model indirilir, biraz sürebilir)";
+    const result = await api("/api/voice/enroll", { method: "POST", body: form });
+    const weak = result.consistency < 0.5;
+    status.textContent = weak
+      ? `⚠️ ${name} kaydedildi ama örnekler birbirine az benziyor (${result.consistency}). Daha sessiz bir yerde tekrar kaydetmen iyi olur.`
+      : `✅ ${name} kaydedildi. (örnek tutarlılığı ${result.consistency})`;
+    applyIdentity(result.identity);
+    loadProfiles();
+  } catch (err) {
+    status.textContent = "⚠️ " + err.message;
+  } finally {
+    button.disabled = false;
+  }
+};
+
+async function loadProfiles() {
+  const list = $("#profile-list");
+  const hint = $("#profiles-hint");
+  list.innerHTML = "";
+  const id = state.identity || {};
+  $("#enroll-open").hidden = !!(id.active && !id.admin);
+  if (!id.active) {
+    hint.textContent = "Henüz ses tanıtılmadı. İlk tanıtılan kişi yönetici olur; o andan itibaren asistan konuşanı sesinden tanır, tanımadıklarını misafir sayar.";
+    return;
+  }
+  if (!id.admin) {
+    hint.textContent = "Ses profillerini yalnızca yönetici görebilir ve değiştirebilir.";
+    return;
+  }
+  hint.textContent = "Kilitlemek için 1234 yaz. Yönetici olarak başka birinin oturumuna geçmek için adını ve 1234 yaz (ör. Sezin1234).";
+  for (const p of await api("/api/voice/profiles")) {
+    const li = document.createElement("li");
+    li.innerHTML = `<span></span><button title="Sil">✕</button>`;
+    li.querySelector("span").textContent = `${p.name}${p.admin ? " · yönetici" : ""}`;
+    li.querySelector("button").onclick = async () => {
+      if (!confirm(`${p.name} ses profili silinsin mi?`)) return;
+      try {
+        const res = await api(`/api/voice/profiles/${p.id}`, { method: "DELETE" });
+        applyIdentity(res.identity);
+        loadProfiles();
+      } catch (err) {
+        hint.textContent = "⚠️ " + err.message;
+      }
+    };
+    list.appendChild(li);
+  }
+}
+
+$("#open-security").onclick = async () => {
+  const list = $("#security-list");
+  list.innerHTML = "";
+  $("#security-dialog").showModal();
+  const entries = await api("/api/security-log").catch((err) => [{ event: "⚠️ " + err.message, detail: "", created_at: "" }]);
+  if (!entries.length) list.innerHTML = `<li class="none">Kayıt yok.</li>`;
+  for (const e of entries) {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="when"></span><strong></strong><span class="what"></span>`;
+    li.querySelector(".when").textContent = e.created_at + (e.score != null ? ` · benzerlik ${e.score}` : "");
+    li.querySelector("strong").textContent = e.event;
+    li.querySelector(".what").textContent = e.detail;
+    list.appendChild(li);
+  }
+};
 
 // Settings dialog
 
@@ -599,6 +766,7 @@ $("#open-settings").onclick = async () => {
   if (state.settings.memory_model && !memModels.includes(state.settings.memory_model)) memModels.push(state.settings.memory_model);
   for (const name of memModels) memSelect.add(new Option(name, name));
   memSelect.value = state.settings.memory_model || "";
+  loadProfiles();
 
   els.settingsDialog.showModal();
 };
@@ -629,8 +797,9 @@ const pageVersion = document.querySelector('meta[name="version"]').content;
 async function checkVersion() {
   if (state.busy) return;
   try {
-    const { version, other_computer: other, stt_device: sttDevice } = await api("/api/version");
+    const { version, other_computer: other, stt_device: sttDevice, identity } = await api("/api/version");
     showSttDevice(sttDevice);
+    applyIdentity(identity);
     if (other) {
       setStatus(`⚠️ Asistan şu anda "${other}" bilgisayarında da açık. Sohbetler iki bilgisayarda ortak olduğu için aynı anda kullanmak kayıtları bozabilir; birini kapat.`, true);
     } else if (version !== pageVersion) {

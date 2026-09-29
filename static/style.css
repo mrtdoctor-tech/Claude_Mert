@@ -87,6 +87,21 @@ button:disabled { opacity: .5; cursor: default; }
 .msg.user .bubble { background: var(--user); max-width: 80%; border-bottom-right-radius: 4px; }
 .msg.assistant { flex-direction: column; }
 .msg.assistant .bubble { background: transparent; padding-left: 0; }
+.identity {
+  max-width: 800px; width: calc(100% - 40px); margin: -12px auto 10px; text-align: center;
+  font-size: 13px; color: var(--muted);
+}
+.identity.guest { color: #f0b429; }
+.profiles { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; }
+.profiles-head { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+.profiles small { color: var(--muted); font-size: 12px; }
+.enroll-sentence {
+  margin: 14px 0; padding: 14px; border-radius: 12px; background: var(--panel-2);
+  font-size: 17px; line-height: 1.5; min-height: 3em;
+}
+#enroll-name { margin-top: 6px; }
+.log-list li { flex-direction: column; gap: 2px; }
+.log-list .when { color: var(--muted); font-size: 12px; }
 .timing { font-size: 12px; color: var(--muted); opacity: .8; margin-top: 2px; font-variant-numeric: tabular-nums; }
 .msg.error .bubble { background: rgba(255, 107, 107, .12); color: var(--danger); }
 .bubble pre { background: #0a0c11; border: 1px solid var(--border); border-radius: 10px; padding: 12px; overflow-x: auto; }

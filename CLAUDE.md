@@ -90,6 +90,18 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   git'ten geri alındı); satır başı `\n:etiket\n` ile ara.
   Bulutta Windows yok: `.bat` dosyaları çalıştırılarak test edilemiyor, dikkatle gözden geçir (blok içinde `)` yok).
   `baslat.bat` her açılışta `pip install -r requirements.txt` çalıştırır; güncellemelerle gelen yeni paketler kendiliğinden kurulur.
+- **Ses ile kimlik (3.0):** `app/voiceid.py` sherpa-onnx `SpeakerEmbeddingExtractor` + 3D-Speaker ERes2Net modeli
+  (~40 MB, ilk kullanımda GitHub releases'ten `SETTINGS_DIR/models`'e iner). Sessiz 30 ms kareler atılır (`_speech_only`),
+  <0,8 sn konuşma → (None, None) = kimlik değişmez. Kosinüs benzerliği, `THRESHOLD=0.40` (örnek kayıtta aynı kişi ≥0,44,
+  farklı ≤0,26; **gerçek seslerle ayarlanmalı**, puanlar güvenlik kaydında). Kayıt: 3 cümle × 7 sn, ortalama vektör.
+  `app/identity.py`: süreç içi `_current` (yeniden başlatınca misafir). Hiç profil yoksa özellik kapalı, owner `db.ALL`
+  ("*"). İlk profil yönetici olur ve `assign_unowned` ile eski tüm veriler onun olur. `1234` → misafir; yönetici
+  `<Ad>1234` → o profilin oturumu (misafir yazarsa normal mesaj sayılır). Kodlar veritabanına/modele gitmez
+  (`_notice_stream`). `db`: `conversations.owner`, `messages.speaker`, `memories.owner` (+ `_NEW_COLUMNS` göçü), `speakers`,
+  `security_log`. Misafir: hafızasız ayrı sistem istemi, mesajları "Misafir mesajı" olarak loglanır, hafıza çıkarma
+  `speaker=misafir`'i atlar. Güvenlik kaydı ve profil listesi yalnızca yöneticiye açık.
+- **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
+  "[Sistem notu, yanıtta yazma: …]" ve `memory.strip_clock_echo` cevaptan (kaydetmeden önce) temizler.
 - `data/` git'e girmez: kullanıcının özel verileri orada.
 
 ## Test
@@ -178,40 +190,19 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Artık en yavaş halka Whisper (CPU'da medium ~5,7 sn) → GPU'ya taşıma önerildi.
 - **2026-09-29 (2.9):** Kullanıcı önce Whisper'ı GPU'ya taşımayı, sonra ses kimlik doğrulamasını seçti. GPU desteği eklendi
   (ayrıntı: Mimari → `app/stt.py`). Kullanıcının ev bilgisayarında denemesi bekleniyor: sol altta "GPU" ve sayaçta
-  ses→yazı süresi. **Sıradaki iş: ses ile kimlik doğrulama** (aşağıdaki bölüm; önce 3 soru sorulacak).
-
-## SIRADAKİ ADIM (kullanıcının istediği, 2026-09-28): Ses ile kimlik doğrulama
-
-Kullanıcının isteği (onaylandı, "net"):
-1. Asistan kullanıcının sesini bir kez öğrenir (kayıt), sonra konuşanın o olup olmadığını sesten anlar.
-2. Doğrulanmış kişi → özel bilgiler (hafıza, adı, kişisel sorular) kullanılır.
-3. Doğrulanmamış (yazan ya da tanınmayan ses) → özel bilgileri açıklamaz ("adım ne?" yazana cevap vermez),
-   "kiminle konuşuyorum?" diye bilgi toplar, bu kişinin mesajları hafızaya karışmaz.
-4. Doğrulanmamış tüm girişler ayrı bir **güvenlik kaydına** (tarih/saat, yazılan/söylenen) yazılır; kullanıcı panelden görür.
-5. Yazarak kullanım için ayrı bir doğrulama yolu gerekir.
-
-Teknik fikir: tamamen yerel konuşmacı doğrulama (ör. SpeechBrain ECAPA-TDNN ya da Resemblyzer ile ses parmak izi;
-kayıtta birkaç örnek → ortalama vektör, her sesli mesajda kosinüs benzerliği + eşik). Yabancı modunda sistem istemi
-hafızasız kurulur ve hafıza öğrenmesi o mesajları atlar (mesajlara `speaker`/`verified` alanı).
-Kullanıcıya söylendi: ses doğrulaması caydırıcıdır, güçlü güvenlik değildir (kayıtla kandırılabilir; `data/` dosyaları
-doğrudan açılabilir → Windows hesap şifresi / disk şifreleme önerilecek).
-
-**Kullanıcının cevapları (2026-09-29):**
-- **Yazarak kullanım:** Sesle doğrulandıktan sonra klavyeden yazılanlar da o kişinin sayılır, doğrulama **açık kalır**
-  (zaman aşımı yok). Klavyeden **`1234`** girildiği anda doğrulama iptal → **misafir modu** (kilitleme; kilidi yalnızca
-  ses açar). `1234` mesaj olarak modele/geçmişe gitmemeli.
-- **Misafir:** Soru sorabilir (genel cevaplar), özel bilgiler/hafıza kullanılmaz, mesajları hafızaya karışmaz ve güvenlik
-  kaydına yazılır. Ekranın altında **"Misafir"** yazar; tanınınca kişinin adı (**"Mert"**) yazar.
-- **Eşinin sesi de tanıtılacak** (ekranda onun adı görünecek).
-
-**Hâlâ sorulacak (kullanıcı GPU testinden sonra cevaplayacak):**
-- Eşi için ayrı hafıza mı, Mert'in hafızası mı? Eşinin ekranda görünecek adı?
-- Kilit kodu sabit `1234` mü, Ayarlar'dan değiştirilebilir mi (öneri: değiştirilebilir, varsayılan 1234)?
-- Kullanıcı "önce GPU testini bitirip sonuçları paylaşacağım, sonra diğer güncellemelere geçeriz" dedi: **başlamadan
-  önce onun GPU sonuçlarını bekle.**
+  ses→yazı süresi.
+- **2026-09-29:** 2.9 ev bilgisayarında doğrulandı: ses→yazı **0,6 sn (GPU)**, ilk kelime 0,3 sn, toplam 5,8 sn.
+  Ekranda modelin cevabın sonuna "(Şu an: 29.09.2026, Salı, saat 18:59)" yazdığı görüldü → 3.0'da düzeltildi.
+- **2026-09-29 (3.0):** Ses ile kimlik doğrulama. Kullanıcı kararları: sesle doğrulanınca yazı da o kişinin (zaman aşımı
+  yok); `1234` kilitler (sabit kod); misafir genel soru sorabilir, altta "Misafir", tanınınca ad yazar; eşi **Sezin**
+  ayrı hafızayla tanıtılacak; yönetici Mert, kendi oturumundayken `Sezin1234` ile Sezin'in oturumuna geçebilir.
+  Bulutta sherpa-onnx'in 4 konuşmacılı örnek kaydıyla test edildi (Mert 0,77, Sezin 0,44, yabancı ≤0,20); gerçek seslerle
+  denenmedi. Kullanıcının denemesi bekleniyor: tanınmazsa/yanlış tanırsa güvenlik kaydındaki puanlara göre eşik ayarlanır.
 
 ## Sıradaki fikirler
 
+- Kullanıcı conda ortamlarını (ComfyUI, comfyui, ai_assistant, muzik, tts, asistan) düzenlemek/birleştirmek için yardım isteyecek.
+- Ses tanıma eşiğini (0,40) gerçek puanlara göre ayarla; gerekirse Ayarlar'a eşik seçeneği.
 - 1b yetersiz kalırsa zayıf bilgisayar için başka küçük model dene (ör. `gemma3n:e2b`, `qwen3:1.7b`); sonucu kullanıcıdan öğren.
 - Ana bilgisayara kurulum (henüz yapılmadı).
 - İstenirse tamamen yerel kadın sesi: NVIDIA olduğu için ses klonlama (XTTS-v2 / Chatterbox Multilingual gibi,

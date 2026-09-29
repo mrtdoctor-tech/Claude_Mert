@@ -61,6 +61,23 @@ sonra komut isteminde `ollama ps` yaz: **PROCESSOR** sütununda "100% GPU" görm
 - Asistan yeni bilgileri öğrenme işini sen 5 dakika sustuktan sonra (ya da Hafıza penceresini açınca) yapar, böylece konuşmanı yavaşlatmaz. Yeni öğrendiklerini bir sonraki sohbette kullanır.
 - **Eski/zayıf işlemcilerde** (örneğin 2 çekirdekli, 2015 öncesi dizüstüler) `gemma3:1b` kullan; 4b dakikalarca bekletebilir. Cevap altındaki ⏱ sayacı ile karşılaştırabilirsin.
 
+## Ses ile tanıma (3.0)
+
+Asistan kimin konuştuğunu sesinden anlar. Özel bilgiler (hafıza, eski sohbetler) yalnızca tanıdığı kişiye açılır.
+
+1. **Ayarlar → 🎙️ Ses profilleri → "+ Ses tanıt"**. Adını yaz (ör. `Mert`), "Kaydı başlat"a bas ve ekrana gelen 3 kısa
+   cümleyi normal sesinle oku. **İlk tanıtılan kişi yöneticidir**; o ana kadarki sohbetler ve hafıza onun olur.
+2. Aynı yerden eşin için de tanıt (ör. `Sezin`). Onun hafızası ve sohbetleri ayrıdır.
+3. Mikrofonla konuşunca ekranın altında adın yazar (**👤 Mert · yönetici**). Sonra klavyeden yazdıkların da senin sayılır.
+4. Tanınmayan bir ses konuşursa ya da klavyeden **`1234`** yazılırsa **Misafir** moduna geçilir: genel sorular cevaplanır,
+   özel bilgiler söylenmez, misafirin yazdıkları hafızaya karışmaz. Kilidi yalnızca tanınan bir ses açar.
+5. Yönetici olarak oturumundayken **`Sezin1234`** yazarsan Sezin'in oturumuna geçersin (test etmek için).
+6. **🛡️ Güvenlik kaydı** (yalnızca yönetici görür): tanınmayan sesler, misafir mesajları, kilitlemeler ve "benzerlik" puanları.
+
+İlk kullanımda yaklaşık 40 MB'lık ses parmak izi modeli bir kez indirilir; sonra tamamen internetsiz çalışır.
+Uyarı: Bu bir caydırıcıdır, güçlü bir kilit değildir (ses kaydıyla kandırılabilir). Asıl koruma için Windows hesabına
+şifre koy.
+
 ## Verilerin nerede?
 
 - **Sohbetler ve hafıza:** proje klasöründeki **`data\asistan.db`**. Proje klasörü OneDrive'daysa iki bilgisayar aynı sohbetleri ve hafızayı paylaşır. **Asistanı aynı anda iki bilgisayarda açma** (açarsan ekranda uyarı çıkar); yedeklemek için `data` klasörünü kopyala.
@@ -88,6 +105,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.0** — Ses ile tanıma: asistan Mert ve Sezin'i sesinden tanır, herkesin hafızası ayrı; tanınmayan ses ya da `1234` → Misafir modu; yönetici `Sezin1234` ile oturum değiştirebilir; güvenlik kaydı. Ayrıca yanıtların sonunda "(Şu an: …saat…)" yazması düzeltildi.
 - **2.9** — Ses tanıma NVIDIA ekran kartı varsa onda çalışır (çok daha hızlı); yoksa ya da sorun çıkarsa kendiliğinden işlemciye geçer. Sayaçta ve sol altta GPU/CPU yazar. Yeni seçenek: "En iyi (large-v3-turbo)".
 - **2.8** — Model artık 8192 token'lık metin okuyabiliyor (Ollama'nın varsayılanı 4096'ydı; uzun sohbetlerde başı, hafızayla birlikte, sessizce kesiliyordu).
 - **2.7** — Kurulum, Anaconda standart olmayan bir klasörde olsa da (ör. `C:\Apps\anaconda3`) bulur.

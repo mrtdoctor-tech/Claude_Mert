@@ -7,13 +7,13 @@ import os
 import tempfile
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, db, llm, memory, presence, quick, stt, tts
+from . import config, db, identity, llm, memory, presence, quick, stt, tts, voiceid
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("asistan")
@@ -74,7 +74,22 @@ def version():
         "version": config.VERSION,
         "other_computer": presence.other_computer(),
         "stt_device": stt.current_device(),
+        "identity": identity.state(),
     }
+
+
+def _require_admin():
+    if not identity.is_admin():
+        raise HTTPException(403, "Bunu yalnızca yönetici (sesiyle tanınmış) yapabilir.")
+
+
+def _own_conversation(conversation_id: int):
+    """The conversation, if the person talking now may see it."""
+    conv = db.get_conversation(conversation_id)
+    who = identity.owner()
+    if not conv or (who != db.ALL and conv.get("owner") != who):
+        raise HTTPException(404, "Sohbet bulunamadı")
+    return conv
 
 
 # Settings
@@ -112,18 +127,18 @@ async def models():
 
 @app.get("/api/conversations")
 def conversations():
-    return db.list_conversations()
+    return db.list_conversations(identity.owner())
 
 
 @app.get("/api/conversations/{conversation_id}/messages")
 def conversation_messages(conversation_id: int):
-    if not db.get_conversation(conversation_id):
-        raise HTTPException(404, "Sohbet bulunamadı")
+    _own_conversation(conversation_id)
     return db.list_messages(conversation_id)
 
 
 @app.delete("/api/conversations/{conversation_id}")
 def delete_conversation(conversation_id: int):
+    _own_conversation(conversation_id)
     db.delete_conversation(conversation_id)
     return {"ok": True}
 
@@ -131,6 +146,17 @@ def delete_conversation(conversation_id: int):
 class ChatIn(BaseModel):
     message: str
     conversation_id: int | None = None
+    via: str = "yazı"  # "yazı" (typed) or "ses" (spoken), for the security log
+
+
+def _notice_stream(text: str):
+    """A reply that is not a conversation message (lock/switch notices): shown, never stored."""
+    async def stream():
+        yield _line({"type": "meta", "conversation_id": None, "instant": True, "notice": True,
+                     "identity": identity.state()})
+        yield _line({"type": "token", "text": text})
+        yield _line({"type": "done"})
+    return StreamingResponse(stream(), media_type="application/x-ndjson")
 
 
 @app.post("/api/chat")
@@ -139,19 +165,29 @@ async def chat(body: ChatIn):
     if not text:
         raise HTTPException(400, "Mesaj boş olamaz")
 
+    notice = identity.handle_code(text)  # "1234" locks, "<Ad>1234" lets the admin switch sessions
+    if notice:
+        return _notice_stream(notice)
+
+    who = identity.owner()
+    speaker = None if who == db.ALL else who
+    if who == identity.GUEST:
+        db.log_security(f"Misafir mesajı ({body.via})", text)
+
     conversation_id = body.conversation_id
-    if conversation_id is None or not db.get_conversation(conversation_id):
+    conv = db.get_conversation(conversation_id) if conversation_id else None
+    if conv is None or (who != db.ALL and conv.get("owner") != who):
         title = text if len(text) <= 50 else text[:47].rstrip() + "..."
-        conversation_id = db.create_conversation(title)
+        conversation_id = db.create_conversation(title, speaker)
 
     memory.cancel()  # free the CPU for the reply
     history = db.list_messages(conversation_id)
     start = max(0, len(history) - HISTORY_LIMIT)
     history = history[start - start % HISTORY_STEP:]
-    db.add_message(conversation_id, "user", text)
+    db.add_message(conversation_id, "user", text, speaker)
 
     settings = config.load()
-    messages = [{"role": "system", "content": memory.system_prompt_for(conversation_id, settings)}]
+    messages = [{"role": "system", "content": memory.system_prompt_for(conversation_id, settings, who)}]
     messages += [{"role": m["role"], "content": m["content"]} for m in history]
     messages.append({"role": "user", "content": text + memory.clock_note()})  # the note is not saved
     instant = quick.answer(text)  # "saat kaç?" etc. come from the clock, not the model
@@ -160,7 +196,8 @@ async def chat(body: ChatIn):
         yield instant
 
     async def stream():
-        yield _line({"type": "meta", "conversation_id": conversation_id, "instant": bool(instant)})
+        yield _line({"type": "meta", "conversation_id": conversation_id, "instant": bool(instant),
+                     "identity": identity.state()})
         parts = []
         try:
             source = from_clock() if instant else llm.chat_stream(settings["model"], messages)
@@ -172,7 +209,7 @@ async def chat(body: ChatIn):
             return
         finally:
             memory.schedule(settings)
-        reply = "".join(parts).strip()
+        reply = memory.strip_clock_echo("".join(parts))
         if reply:
             db.add_message(conversation_id, "assistant", reply)
         yield _line({"type": "done"})
@@ -188,7 +225,8 @@ class MemoryIn(BaseModel):
 
 @app.get("/api/memories")
 def memories():
-    return db.list_memories()
+    who = identity.owner()
+    return [] if who == identity.GUEST else db.list_memories(who)
 
 
 @app.post("/api/memories")
@@ -196,7 +234,10 @@ def add_memory(body: MemoryIn):
     content = body.content.strip()
     if not content:
         raise HTTPException(400, "Boş bilgi eklenemez")
-    return {"id": db.add_memory(content)}
+    who = identity.owner()
+    if who == identity.GUEST:
+        raise HTTPException(403, "Misafir modunda hafızaya bilgi eklenemez.")
+    return {"id": db.add_memory(content, None if who == db.ALL else who)}
 
 
 @app.post("/api/memories/learn")
@@ -214,6 +255,9 @@ async def learn_memories():
 
 @app.delete("/api/memories/{memory_id}")
 def delete_memory(memory_id: int):
+    item, who = db.get_memory(memory_id), identity.owner()
+    if not item or (who != db.ALL and item.get("owner") != who):
+        raise HTTPException(404, "Bilgi bulunamadı")
     db.delete_memory(memory_id)
     return {"ok": True}
 
@@ -227,6 +271,8 @@ async def transcribe_warmup():
     memory.schedule(settings)  # restart the idle countdown (it must never be dropped)
     try:
         await run_in_threadpool(stt.load, settings["whisper_model"], settings["whisper_device"])
+        if identity.active():
+            await run_in_threadpool(voiceid.warm_up)
     except Exception as e:
         log.warning("Ses modeli yüklenemedi: %s", e)
     return {"ok": True}
@@ -245,6 +291,14 @@ async def transcribe(audio: UploadFile = File(...)):
         text, device = await run_in_threadpool(
             stt.transcribe, path, settings["whisper_model"], settings["language"], settings["whisper_device"]
         )
+        score = None
+        if identity.active():
+            name, score = await run_in_threadpool(voiceid.identify, path)
+            if name:
+                identity.verified_by_voice(name, score)
+            elif score is not None:  # enough speech, but nobody we know
+                identity.unknown_voice(score, text)
+            # score None: too little speech to tell; the current identity stays
     except ImportError:
         raise HTTPException(500, "Ses tanıma paketi (faster-whisper) kurulu değil. kurulum.bat'ı tekrar çalıştır.")
     except Exception as e:
@@ -252,7 +306,65 @@ async def transcribe(audio: UploadFile = File(...)):
         raise HTTPException(500, f"Ses tanınamadı: {e}")
     finally:
         os.remove(path)
-    return {"text": text, "device": device}
+    return {"text": text, "device": device, "identity": identity.state(), "voice_score": score}
+
+
+# Voice profiles and security log
+
+@app.get("/api/voice/profiles")
+def voice_profiles():
+    _require_admin()
+    return [{"id": s["id"], "name": s["name"], "admin": s["is_admin"], "created_at": s["created_at"]}
+            for s in db.list_speakers()]
+
+
+@app.post("/api/voice/enroll")
+async def voice_enroll(name: str = Form(...), audio: list[UploadFile] = File(...)):
+    _require_admin()
+    name = name.strip()
+    if not name or len(name) > 30 or any(c.isspace() for c in name):
+        raise HTTPException(400, "Ad tek kelime olmalı (en fazla 30 harf).")
+    paths = []
+    try:
+        for upload in audio:
+            suffix = Path(upload.filename or "").suffix or ".webm"
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                tmp.write(await upload.read())
+                paths.append(tmp.name)
+        first = not identity.active()
+        result = await run_in_threadpool(voiceid.enroll, name, paths, first)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except ImportError:
+        raise HTTPException(500, "Ses tanıma paketi (sherpa-onnx) kurulu değil. baslat.bat'ı kapatıp yeniden aç.")
+    except Exception as e:
+        log.exception("Ses profili kaydedilemedi")
+        raise HTTPException(500, f"Ses profili kaydedilemedi: {e}")
+    finally:
+        for path in paths:
+            os.remove(path)
+    identity.enrolled(name)
+    return {**result, "identity": identity.state()}
+
+
+@app.delete("/api/voice/profiles/{speaker_id}")
+def voice_delete(speaker_id: int):
+    _require_admin()
+    speakers = db.list_speakers()
+    target = next((s for s in speakers if s["id"] == speaker_id), None)
+    if not target:
+        raise HTTPException(404, "Profil bulunamadı")
+    if target["is_admin"] and len(speakers) > 1:
+        raise HTTPException(400, "Yönetici profili, başka profiller varken silinemez.")
+    db.delete_speaker(speaker_id)
+    db.log_security("Ses profili silindi", target["name"])
+    return {"ok": True, "identity": identity.state()}
+
+
+@app.get("/api/security-log")
+def security_log():
+    _require_admin()
+    return db.list_security_log()
 
 
 class TtsIn(BaseModel):

@@ -5,7 +5,7 @@ import logging
 import re
 from datetime import datetime
 
-from . import db, llm
+from . import db, identity, llm
 from .quick import DAYS_TR
 
 log = logging.getLogger("asistan.memory")
@@ -44,28 +44,45 @@ def clock_note() -> str:
     so Ollama can reuse its cache (much faster on a slow computer).
     """
     now = datetime.now()
-    return f"\n\n(Şu an: {now:%d.%m.%Y}, {DAYS_TR[now.weekday()]}, saat {now:%H:%M})"
+    return f"\n\n[Sistem notu, yanıtta yazma: {now:%d.%m.%Y}, {DAYS_TR[now.weekday()]}, saat {now:%H:%M}]"
+
+
+# Small models sometimes copy the note into their answer; this removes it (old and new wording).
+_CLOCK_ECHO = re.compile(r"\s*[\[(](?:Sistem notu[^\])]*|Şu an:[^\])]*)[\])]\s*")
+
+
+def strip_clock_echo(text: str) -> str:
+    return _CLOCK_ECHO.sub(" ", text).strip()
 
 
 _prompts: dict[int, tuple[str, str]] = {}  # conversation id -> (assistant name, system prompt)
 
 
-def system_prompt_for(conversation_id: int, settings: dict) -> str:
+def system_prompt_for(conversation_id: int, settings: dict, owner: str = db.ALL) -> str:
     """The system prompt is fixed for the whole conversation.
 
     If it changed whenever a new fact was learned, the model would have to re-read the entire
     conversation from scratch (minutes on a slow computer). New facts apply from the next conversation;
     the current one already contains them anyway.
     """
+    key = f"{settings['assistant_name']}|{owner}"
     cached = _prompts.get(conversation_id)
-    if cached is None or cached[0] != settings["assistant_name"]:
-        cached = (settings["assistant_name"], system_prompt(settings))
+    if cached is None or cached[0] != key:
+        cached = (key, system_prompt(settings, owner))
         _prompts[conversation_id] = cached
     return cached[1]
 
 
-def system_prompt(settings: dict) -> str:
-    memories = db.list_memories()[-MAX_MEMORIES_IN_PROMPT:]
+def system_prompt(settings: dict, owner: str = db.ALL) -> str:
+    if owner == identity.GUEST:
+        return f"""Sen {settings['assistant_name']}, bu bilgisayarın sahiplerinin kişisel yapay zekâ asistanısın.
+Şu an konuştuğun kişi sesinden TANINMADI (misafir). Kibar ve yardımsever ol; genel sorulara normal cevap ver.
+Bilgisayarın sahipleri hakkında hiçbir kişisel bilgi bilmiyorsun ve tahmin de etmezsin: adları, aileleri, sağlıkları,
+planları gibi kişisel sorulara "bunu yalnızca sahibinin sesiyle doğrulandığında konuşabilirim" de.
+Uygun bir anda kibarca kiminle konuştuğunu sorabilirsin. Kullanıcı hangi dilde yazarsa o dilde, kısa ve sade yanıt ver.
+Kullanıcının son mesajının sonundaki köşeli parantezli "Sistem notu" tarih ve saati verir; onu yanıtına yazma."""
+    memories = db.list_memories(owner)[-MAX_MEMORIES_IN_PROMPT:]
+    who = "" if owner == db.ALL else f"\nŞu an konuştuğun kişi: {owner} (sesinden tanındı).\n"
     if memories:
         known = "\n".join(f"- {m['content']}" for m in memories)
     else:
@@ -75,9 +92,9 @@ Tamamen kullanıcının kendi bilgisayarında çalışıyorsun; konuşmalar hiç
 Samimi, net ve yardımsever ol. Kullanıcı hangi dilde yazarsa o dilde yanıt ver.
 Yanıtlarını gereksiz uzatma; sesli okunabilecekleri için sade tut.
 
-Kullanıcının son mesajının sonundaki "(Şu an: ...)" notunu sistem ekler: tarih ve saati oradan al,
-sorulmadıkça bu nottan bahsetme.
-
+Kullanıcının son mesajının sonundaki köşeli parantezli "Sistem notu"nu sistem ekler: tarih ve saati oradan al,
+ama bu notu yanıtına ASLA yazma ve sorulmadıkça ondan bahsetme.
+{who}
 Önceki sohbetlerden kullanıcı hakkında hatırladıkların:
 {known}
 
@@ -146,10 +163,14 @@ async def _extract_batch(settings: dict) -> tuple[int, bool]:
     added = 0
 
     # Only the user's own words: the assistant's replies made small models "learn" things like
-    # "I saved your name to memory".
-    said = [m["content"] for m in messages if m["role"] == "user"]
-    if said:
-        known = [m["content"] for m in db.list_memories()]
+    # "I saved your name to memory". Each person's facts go to their own memory; guests teach nothing.
+    by_speaker: dict[str | None, list[str]] = {}
+    for m in messages:
+        if m["role"] == "user" and m.get("speaker") != identity.GUEST:
+            by_speaker.setdefault(m.get("speaker"), []).append(m["content"])
+    for speaker, said in by_speaker.items():
+        owner = speaker if identity.active() else None
+        known = [m["content"] for m in db.list_memories(owner if owner else db.ALL)]
         turkish = settings.get("language", "tr") in ("tr", "")
         known_text = "\n".join(f"- {k}" for k in known) or ("(yok)" if turkish else "(none)")
         said_text = "\n".join(f"- {t}" for t in said)
@@ -165,7 +186,7 @@ async def _extract_batch(settings: dict) -> tuple[int, bool]:
             [{"role": "system", "content": prompt}, {"role": "user", "content": request}],
             keep_alive=keep_alive,
         )
-        added = _save(data, known)
+        added += _save(data, known, owner)
 
     db.set_meta(_CURSOR_KEY, str(messages[-1]["id"]))
     return added, len(messages) == BATCH_SIZE
@@ -197,13 +218,13 @@ def _key(text: str) -> str:
     return re.sub(r"[\s.!?,;:]+", " ", text).strip().casefold()
 
 
-def _save(data, known: list[str]) -> int:
+def _save(data, known: list[str], owner: str | None = None) -> int:
     seen = {_key(k) for k in known}
     added = 0
     for item in _facts(data):
         text = item.strip()
         if text and len(text) <= 300 and _key(text) not in seen:
-            db.add_memory(text)
+            db.add_memory(text, owner)
             seen.add(_key(text))
             added += 1
     return added

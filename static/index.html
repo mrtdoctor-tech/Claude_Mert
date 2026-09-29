@@ -15,6 +15,7 @@
       <div class="sidebar-footer">
         <button id="open-memory" class="ghost wide">🧠 Hafıza</button>
         <button id="open-settings" class="ghost wide">⚙️ Ayarlar</button>
+        <button id="open-security" class="ghost wide" hidden>🛡️ Güvenlik kaydı</button>
         <button id="config-summary" class="summary" title="Ayarları aç"></button>
         <p class="version">Sürüm {{VERSION}}</p>
       </div>
@@ -44,6 +45,7 @@
         <textarea id="input" rows="1" placeholder="Mesajını yaz..." autofocus></textarea>
         <button type="submit" id="send" class="primary">Gönder</button>
       </form>
+      <div id="identity-bar" class="identity" hidden></div>
     </main>
   </div>
 
@@ -59,6 +61,27 @@
     </form>
     <p id="memory-status" class="hint"></p>
     <ul id="memory-list" class="memory-list"></ul>
+  </dialog>
+
+  <dialog id="security-dialog">
+    <div class="dialog-head">
+      <h2>🛡️ Güvenlik kaydı</h2>
+      <button class="icon close" data-close>✕</button>
+    </div>
+    <p class="hint">Tanınmayan sesler, misafirlerin yazdıkları, kilitleme ve oturum değişiklikleri. "Benzerlik", sesin kayıtlı en yakın sese ne kadar benzediğidir (1'e yakın = çok benzer).</p>
+    <ul id="security-list" class="memory-list log-list"></ul>
+  </dialog>
+
+  <dialog id="enroll-dialog">
+    <div class="dialog-head">
+      <h2>🎙️ Ses tanıt</h2>
+      <button class="icon close" data-close>✕</button>
+    </div>
+    <p class="hint" id="enroll-intro"></p>
+    <input id="enroll-name" placeholder="Ad (tek kelime, ör. Mert)" maxlength="30">
+    <div id="enroll-sentence" class="enroll-sentence"></div>
+    <button id="enroll-record" class="primary wide">Kaydı başlat</button>
+    <p id="enroll-status" class="hint"></p>
   </dialog>
 
   <dialog id="settings-dialog">
@@ -114,6 +137,14 @@
       </label>
       <button class="primary">Kaydet</button>
     </form>
+    <div class="profiles">
+      <div class="profiles-head">
+        <span>🎙️ Ses profilleri</span>
+        <button type="button" id="enroll-open" class="ghost">+ Ses tanıt</button>
+      </div>
+      <small id="profiles-hint"></small>
+      <ul id="profile-list" class="memory-list"></ul>
+    </div>
   </dialog>
 
   <script src="/static/app.js?v={{VERSION}}"></script>
