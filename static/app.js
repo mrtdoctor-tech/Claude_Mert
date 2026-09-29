@@ -580,6 +580,8 @@ function applyIdentity(id) {
       : "👤 Misafir — tanınmıyor. Kendi oturumun için konuş.")
     : `👤 ${id.name}${id.admin ? " · yönetici" : ""}`;
   $("#open-security").hidden = !(id.active && id.admin);
+  $("#open-reminders").hidden = !!id.guest; // reminders are personal
+  if (id.guest) $("#reminders-dialog").close();
   // Only the admin reaches Settings (enrolling voices, models); everyone else uses the admin's settings.
   const locked = !!(id.active && !id.admin);
   $("#open-settings").hidden = locked;
@@ -860,3 +862,176 @@ window.addEventListener("focus", checkVersion);
 
 loadSettings().catch((err) => setStatus(err.message, true));
 loadConversations().catch((err) => setStatus(err.message, true));
+
+// Reminders, alarms and timers: the server fires them; this page rings, speaks and shows running timers.
+
+const REPEAT_LABELS = { daily: "her gün", weekly: "her hafta", monthly: "her ay", yearly: "her yıl" };
+const alertQueue = [];
+const alertSeen = new Set();
+let alertShowing = null;
+let timers = []; // [{id, text, endsAt}]
+
+function fmtLeft(ms) {
+  const total = Math.max(0, Math.round(ms / 1000));
+  const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), sec = total % 60;
+  const two = (n) => String(n).padStart(2, "0");
+  return h ? `${h}:${two(m)}:${two(sec)}` : `${two(m)}:${two(sec)}`;
+}
+
+function renderTimers() {
+  const bar = $("#timer-bar");
+  bar.hidden = !timers.length;
+  bar.innerHTML = "";
+  for (const t of timers) {
+    const chip = document.createElement("span");
+    chip.className = "timer-chip";
+    chip.innerHTML = `⏳ <b></b><span></span><button title="İptal et">✕</button>`;
+    chip.querySelector("b").textContent = fmtLeft(t.endsAt - Date.now());
+    chip.querySelector("span").textContent = t.text;
+    chip.querySelector("button").onclick = async () => {
+      await api(`/api/reminders/${t.id}`, { method: "DELETE" }).catch(() => {});
+      timers = timers.filter((x) => x.id !== t.id);
+      renderTimers();
+    };
+    bar.appendChild(chip);
+  }
+}
+setInterval(() => { if (timers.length) renderTimers(); }, 1000);
+
+// A two-tone chime made in the browser (no sound file needed), repeated until "Tamam".
+let chimeTimer = null;
+let audioCtx = null;
+function chime() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx.resume();
+    [880, 660].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const t0 = audioCtx.currentTime + i * 0.25;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.3, t0 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(t0);
+      osc.stop(t0 + 0.25);
+    });
+  } catch {}
+}
+
+function showNextAlert() {
+  if (alertShowing || !alertQueue.length) return;
+  alertShowing = alertQueue.shift();
+  const a = alertShowing;
+  $("#alert-icon").textContent = a.kind === "timer" ? "⏳" : a.kind === "alarm" ? "⏰" : "🔔";
+  $("#alert-text").textContent = a.text;
+  $("#alert-when").textContent = a.missed ? `Kaçırılan hatırlatma (${a.due}). Asistan o sırada kapalıydı.` : a.due;
+  $("#alert-dialog").showModal();
+  let rings = 0;
+  chime();
+  chimeTimer = setInterval(() => { if (++rings < 40) chime(); }, 1500); // at most one minute
+  const spoken = a.kind === "timer" ? `Süre doldu. ${a.text}` : `Hatırlatma: ${a.text}`;
+  speak(a.missed ? `Kaçırılan hatırlatma. ${a.text}` : spoken);
+}
+
+$("#alert-ok").onclick = async () => {
+  clearInterval(chimeTimer);
+  $("#alert-dialog").close();
+  const done = alertShowing;
+  alertShowing = null;
+  if (done) await api(`/api/alerts/${done.id}/ack`, { method: "POST" }).catch(() => {});
+  showNextAlert();
+};
+$("#alert-dialog").addEventListener("cancel", (e) => { e.preventDefault(); $("#alert-ok").click(); });
+
+async function pollAlerts() {
+  try {
+    const res = await api("/api/alerts");
+    const now = Date.now();
+    timers = res.timers.map((t) => ({ id: t.id, text: t.text, endsAt: now + t.left * 1000 }));
+    renderTimers();
+    for (const a of res.alerts) {
+      if (alertSeen.has(a.id)) continue;
+      alertSeen.add(a.id);
+      alertQueue.push(a);
+    }
+    showNextAlert();
+  } catch {}
+}
+setInterval(pollAlerts, 3000);
+pollAlerts();
+
+async function loadReminders() {
+  const list = $("#reminder-list");
+  list.innerHTML = "";
+  const items = await api("/api/reminders");
+  if (!items.length) {
+    list.innerHTML = `<li class="none">Kurulu hatırlatma yok.</li>`;
+    return;
+  }
+  for (const r of items) {
+    const li = document.createElement("li");
+    li.innerHTML = `<div><span></span><small></small></div><button title="İptal et">✕</button>`;
+    const icon = r.kind === "timer" ? "⏳" : r.kind === "alarm" ? "⏰" : "🔔";
+    li.querySelector("span").textContent = `${icon} ${r.text}`;
+    li.querySelector("small").textContent = r.when + (r.repeat ? ` · ${REPEAT_LABELS[r.repeat]}` : "");
+    li.querySelector("button").onclick = async () => {
+      await api(`/api/reminders/${r.id}`, { method: "DELETE" });
+      loadReminders();
+      pollAlerts();
+    };
+    list.appendChild(li);
+  }
+}
+
+$("#open-reminders").onclick = async () => {
+  $("#reminder-status").textContent = "";
+  const soon = new Date(Date.now() + 60 * 60 * 1000);
+  soon.setMinutes(0, 0, 0);
+  const local = new Date(soon.getTime() - soon.getTimezoneOffset() * 60000);
+  $("#reminder-when").value = local.toISOString().slice(0, 16);
+  $("#reminders-dialog").showModal();
+  loadReminders().catch((err) => { $("#reminder-status").textContent = "⚠️ " + err.message; });
+};
+
+$("#reminder-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try {
+    await api("/api/reminders", {
+      method: "POST",
+      body: JSON.stringify({
+        text: $("#reminder-text").value,
+        due_at: $("#reminder-when").value,
+        repeat: $("#reminder-repeat").value || null,
+      }),
+    });
+    $("#reminder-text").value = "";
+    $("#reminder-status").textContent = "✅ Eklendi.";
+    loadReminders();
+  } catch (err) {
+    $("#reminder-status").textContent = "⚠️ " + err.message;
+  }
+});
+
+// Help: NELER_YAPABILIR.md, the list of things the assistant can do with example commands.
+$("#open-help").onclick = async () => {
+  const body = $("#help-body");
+  body.textContent = "Yükleniyor...";
+  $("#help-dialog").showModal();
+  try {
+    const { markdown } = await api("/api/help");
+    // Join wrapped lines of a paragraph/list item, drop the title and rules, then use the chat's Markdown renderer.
+    const text = markdown
+      .replace(/^# .*\n/, "")
+      .replace(/^---$/gm, "")
+      .replace(/\n(?=[ ]{2,}\S)/g, "")
+      .replace(/([^\n])\n(?=[^\n\-*#\s])/g, "$1 ")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    body.innerHTML = renderMarkdown(text);
+  } catch (err) {
+    body.textContent = "⚠️ " + err.message;
+  }
+};
+

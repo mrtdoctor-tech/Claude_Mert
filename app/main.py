@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import tempfile
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -13,7 +14,7 @@ from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, db, identity, llm, memory, presence, quick, stt, tts, voiceid
+from . import config, db, identity, llm, memory, presence, quick, reminders, stt, tts, voiceid
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("asistan")
@@ -47,6 +48,7 @@ async def _catch_up_memory():
         log.warning("DİKKAT: Asistan şu anda %s bilgisayarında da açık görünüyor.", other)
     _presence_task = asyncio.create_task(presence.keep_marking())
     _background.add(_presence_task)
+    _background.add(asyncio.create_task(reminders.run()))  # fires alarms, timers and reminders
 
 
 _background: set = set()  # keeps background tasks referenced
@@ -66,6 +68,13 @@ def index():
     # The version goes into the asset URLs too, so every update loads fresh CSS/JS.
     html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
     return HTMLResponse(html.replace("{{VERSION}}", config.VERSION))
+
+
+@app.get("/api/help")
+def help_page():
+    """NELER_YAPABILIR.md: what the assistant can do, with example commands."""
+    path = STATIC_DIR.parent / "NELER_YAPABILIR.md"
+    return {"markdown": path.read_text(encoding="utf-8") if path.exists() else ""}
 
 
 @app.get("/api/version")
@@ -191,7 +200,8 @@ async def chat(body: ChatIn):
     messages = [{"role": "system", "content": memory.system_prompt_for(conversation_id, settings, who)}]
     messages += [{"role": m["role"], "content": m["content"]} for m in history]
     messages.append({"role": "user", "content": text + memory.clock_note()})  # the note is not saved
-    instant = quick.answer(text)  # "saat kaç?" etc. come from the clock, not the model
+    # "saat kaç?" comes from the clock, "20 dakikalık sayaç kur" is set by rules: not by the model
+    instant = quick.answer(text) or reminders.handle(text, who)
 
     async def from_clock():
         yield instant
@@ -216,6 +226,79 @@ async def chat(body: ChatIn):
         yield _line({"type": "done"})
 
     return StreamingResponse(stream(), media_type="application/x-ndjson")
+
+
+# Reminders, alarms, timers
+
+class ReminderIn(BaseModel):
+    text: str = ""
+    due_at: str  # "YYYY-MM-DDTHH:MM" from the page's date-time field
+    repeat: str | None = None
+
+
+def _reminder_owner() -> str | None:
+    who = identity.owner()
+    if who == identity.GUEST:
+        raise HTTPException(403, "Hatırlatıcılar kişiye özel; misafir modunda kullanılamaz.")
+    return None if who == db.ALL else who
+
+
+def _reminder_view(r: dict) -> dict:
+    return {"id": r["id"], "kind": r["kind"], "text": reminders.label(r), "due_at": r["due_at"],
+            "repeat": r["repeat"], "when": reminders.when_text(reminders._dt(r["due_at"]))}
+
+
+@app.get("/api/reminders")
+def list_reminders():
+    who = identity.owner()
+    return [] if who == identity.GUEST else [_reminder_view(r) for r in db.list_reminders(who)]
+
+
+@app.post("/api/reminders")
+def add_reminder(body: ReminderIn):
+    owner = _reminder_owner()
+    try:
+        due = datetime.fromisoformat(body.due_at)
+    except ValueError:
+        raise HTTPException(400, "Tarih/saat anlaşılamadı.")
+    if due <= datetime.now() and not body.repeat:
+        raise HTTPException(400, "Bu zaman geçmişte kaldı.")
+    repeat = body.repeat if body.repeat in reminders.REPEAT_TR else None
+    db.add_reminder(owner, "reminder", body.text.strip(), due.strftime("%Y-%m-%d %H:%M:00"), repeat)
+    return {"ok": True}
+
+
+@app.delete("/api/reminders/{reminder_id}")
+def cancel_reminder(reminder_id: int):
+    owner, item = _reminder_owner(), db.get_reminder(reminder_id)
+    if not item or (identity.owner() != db.ALL and item["owner"] != owner):
+        raise HTTPException(404, "Hatırlatma bulunamadı")
+    db.set_reminder_status(reminder_id, "cancelled")
+    return {"ok": True}
+
+
+@app.get("/api/alerts")
+def alerts():
+    """Polled by the page every few seconds: alerts to ring now, and the current person's running timers."""
+    reminders.page_polled()
+    now = datetime.now()
+    ringing = []
+    for a in db.list_alerts():
+        late = (datetime.strptime(a["fired_at"], "%Y-%m-%d %H:%M:%S")
+                - reminders._dt(a["due_at"])).total_seconds() > reminders.MISSED_AFTER
+        ringing.append({"id": a["id"], "kind": a["kind"], "text": reminders.visible_text(a),
+                        "due": reminders.when_text(reminders._dt(a["due_at"]), now), "missed": late})
+    who = identity.owner()
+    timers = [] if who == identity.GUEST else [
+        {"id": r["id"], "text": reminders.label(r), "left": (reminders._dt(r["due_at"]) - now).total_seconds()}
+        for r in db.list_reminders(who) if r["kind"] == "timer"]
+    return {"alerts": ringing, "timers": timers}
+
+
+@app.post("/api/alerts/{alert_id}/ack")
+def ack_alert(alert_id: int):
+    db.ack_alert(alert_id)
+    return {"ok": True}
 
 
 # Memories

@@ -14,6 +14,8 @@
       <nav id="conversations" class="conversations"></nav>
       <div class="sidebar-footer">
         <button id="open-memory" class="ghost wide">🧠 Hafıza</button>
+        <button id="open-reminders" class="ghost wide">⏰ Hatırlatıcılar</button>
+        <button id="open-help" class="ghost wide">❓ Neler yapabilirim?</button>
         <button id="open-settings" class="ghost wide">⚙️ Ayarlar</button>
         <button id="open-security" class="ghost wide" hidden>🛡️ Güvenlik kaydı</button>
         <button id="config-summary" class="summary" title="Ayarları aç"></button>
@@ -38,6 +40,7 @@
         </div>
       </section>
 
+      <div id="timer-bar" class="timer-bar" hidden></div>
       <div id="status" class="status" hidden></div>
 
       <form id="composer" class="composer">
@@ -61,6 +64,43 @@
     </form>
     <p id="memory-status" class="hint"></p>
     <ul id="memory-list" class="memory-list"></ul>
+  </dialog>
+
+  <dialog id="reminders-dialog">
+    <div class="dialog-head">
+      <h2>⏰ Hatırlatıcılar</h2>
+      <button class="icon close" data-close>✕</button>
+    </div>
+    <p class="hint">Sohbette yazman ya da söylemen yeterli: "20 dakikalık sayaç kur", "yarın sabah 7'de uyandır", "15 Ekim'de Sezin'in doğum gününü hatırlat". Buradan elle de ekleyebilirsin. Hatırlatmalar yalnızca sana görünür.</p>
+    <form id="reminder-form" class="reminder-form">
+      <input id="reminder-text" placeholder="Ne hatırlatayım? Örn: Doktoru ara" maxlength="200">
+      <input id="reminder-when" type="datetime-local" required>
+      <select id="reminder-repeat">
+        <option value="">Bir kez</option>
+        <option value="daily">Her gün</option>
+        <option value="weekly">Her hafta</option>
+        <option value="monthly">Her ay</option>
+        <option value="yearly">Her yıl</option>
+      </select>
+      <button class="primary">Ekle</button>
+    </form>
+    <p id="reminder-status" class="hint"></p>
+    <ul id="reminder-list" class="memory-list"></ul>
+  </dialog>
+
+  <dialog id="help-dialog" class="help-dialog">
+    <div class="dialog-head">
+      <h2>❓ Neler yapabilirim?</h2>
+      <button class="icon close" data-close>✕</button>
+    </div>
+    <div id="help-body" class="help-body"></div>
+  </dialog>
+
+  <dialog id="alert-dialog" class="alert-dialog">
+    <div class="alert-icon" id="alert-icon">⏰</div>
+    <h2 id="alert-text"></h2>
+    <p id="alert-when" class="hint"></p>
+    <button id="alert-ok" class="primary wide">Tamam</button>
   </dialog>
 
   <dialog id="security-dialog">

@@ -37,6 +37,12 @@ Do not guess or invent. Write each fact as one short standalone sentence and ref
 Answer with JSON only: {"memories": ["..."]}. If there is nothing new: {"memories": []}"""
 
 
+
+def _is_command(text: str) -> bool:
+    """Clock questions and reminder commands are not facts about the person ("yarın 7'de uyandır")."""
+    from . import quick, reminders  # reminders imports identity/db only; late import keeps startup order simple
+    return bool(quick.answer(text) or reminders.is_command(text))
+
 def clock_note() -> str:
     """Current date and time, added to the newest user message only.
 
@@ -166,7 +172,7 @@ async def _extract_batch(settings: dict) -> tuple[int, bool]:
     # "I saved your name to memory". Each person's facts go to their own memory; guests teach nothing.
     by_speaker: dict[str | None, list[str]] = {}
     for m in messages:
-        if m["role"] == "user" and m.get("speaker") != identity.GUEST:
+        if m["role"] == "user" and m.get("speaker") != identity.GUEST and not _is_command(m["content"]):
             by_speaker.setdefault(m.get("speaker"), []).append(m["content"])
     for speaker, said in by_speaker.items():
         owner = speaker if identity.active() else None

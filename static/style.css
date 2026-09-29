@@ -172,3 +172,24 @@ input:focus, select:focus { border-color: var(--accent); }
   .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 10; transform: translateX(-100%); transition: transform .2s; }
   .sidebar.open { transform: none; box-shadow: 0 0 40px rgba(0, 0, 0, .5); }
 }
+
+/* Reminders (3.5) */
+.timer-bar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 0 16px 6px; }
+.timer-chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+  background: var(--panel-2); border: 1px solid var(--border); font-size: 14px; color: var(--text);
+}
+.timer-chip b { font-variant-numeric: tabular-nums; }
+.timer-chip button { background: none; color: var(--muted); padding: 0 2px; }
+.timer-chip button:hover { color: var(--danger); }
+.reminder-form { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.reminder-form #reminder-text { flex: 1 1 100%; }
+.reminder-form input[type=datetime-local], .reminder-form select { flex: 1 1 160px; }
+.memory-list li small { display: block; color: var(--muted); margin-top: 2px; }
+.alert-dialog { text-align: center; max-width: 420px; }
+.alert-icon { font-size: 56px; animation: ring 1s ease-in-out infinite; }
+.alert-dialog h2 { margin: 8px 0; font-size: 22px; }
+@keyframes ring { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
+.help-dialog { max-width: 680px; }
+.help-body { max-height: 70vh; overflow-y: auto; font-size: 14px; line-height: 1.55; margin-top: 8px; }
+.help-body strong { color: var(--text); }

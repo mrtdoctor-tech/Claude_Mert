@@ -108,6 +108,22 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Misafirin harf+rakam içeren tek kelimesi **şifre denemesi** sayılır: modele/geçmişe gitmez, metni loglanmaz ("Yanlış
   şifre denemesi n/5"); 5 yanlışta 10 dk kapanır (`MAX_TRIES`, `PAUSE_SECONDS`, süreç içi). Oturum açıkken böyle
   kelimeler (ör. "iPhone15") normal mesajdır.
+- **Hatırlatıcılar (3.5):** `app/reminders.py`. Türkçe zaman ifadeleri **kurallarla** çözülür (`parse`; model değil):
+  sayı kelimeleri (`_numbers`: yirmi beş, yarım saat, buçuk), süre → sayaç (`timer`), gün (bugün/yarın/öbür gün, gün
+  adları, "15 Ekim", "30.09.2026") + saat (`_CLOCK`: yalnızca "saat X", X:YY, "buçuk", ek ('de/'da) ya da dönem kelimesinden
+  sonra kabul; çıplak sayı saat değildir) + dönem (sabah/akşam/gece…, +12) + tekrar (her gün/hafta/ay/yıl, her
+  pazartesi). Saatsiz tarih 09:00. "saat 3'te" öğleden sonra ise 15:00; "uyandır" ise sabah. Metin: zaman ve istek kelimeleri
+  çıkarılır, kullanıcının büyük harfleri korunur. Tetik kelimesi (`_TRIGGER`: hatırlat, uyandır, alarm, sayaç, haber ver…)
+  + zaman yoksa mesaj modele gider. `handle` chat'te `quick.answer`'dan sonra çağrılır (anında cevap, mesajlar kaydedilir);
+  liste/iptal/"ne kadar kaldı" de burada. Misafir: kuramaz. `db`: `reminders` (owner, kind, text, due_at yerel
+  "YYYY-MM-DD HH:MM:SS", repeat, status) + `alerts` (acknowledged). Başlangıçta `reminders.run()` her 3 sn `fire_due`:
+  vakti gelen → alert, tekrarlayan ileri alınır. Sayfa `/api/alerts`'ı 3 sn'de bir sorar (çalışan sayaçlar + çalan
+  uyarılar; başkasının uyarısında metin gizli: `visible_text`); son sorgu 20 sn'den eskiyse Windows bildirimi (PowerShell
+  WinRT toast, PowerShell'in AppID'si; **gerçek Windows'ta denenmedi**). Kapalıyken geçen uyarılar açılışta `missed`.
+  Arayüz: `#timer-bar` geri sayım çipleri, `#alert-dialog` (WebAudio zil 1,5 sn'de bir, en çok 1 dk + `speak`),
+  `#reminders-dialog` (elle ekleme, datetime-local). Hafıza çıkarma komutları atlar (`memory._is_command`).
+- **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
+  yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
   "[Sistem notu, yanıtta yazma: …]" ve `memory.strip_clock_echo` cevaptan (kaydetmeden önce) temizler.
 - `data/` git'e girmez: kullanıcının özel verileri orada.
@@ -224,8 +240,22 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-29 (3.4):** Kullanıcı isteği: hastalıkta ses değişirse şifreyle kendi profiline girebilmek. Profil başına
   şifre eklendi (yönetici belirler). İlk denemede bulunan açık: bekleme süresinde doğru şifre misafir mesajı olarak düz
   metin loglanıyordu, yanlış denemeler de → misafirin kod benzeri tek kelimeleri artık hiç loglanmıyor/gönderilmiyor.
+- **2026-09-29 (3.5):** Kullanıcı kararları: hatırlatmalar kişiye özel (ortak "aile" yok); tarayıcı kapalıyken Windows
+  bildirimi, asistan kapalıyken sonraki açılışta kaçırılanlar; yalnızca ev bilgisayarında kullanılacak (başka bilgisayar
+  düşünülmüyor). Ayrıca **telefon takvimine kayıt** istedi (telefonda bildirim için) → hangi takvim olduğu soruldu
+  (Google / iPhone-iCloud / Outlook); bulut servisi olduğundan kullanıcı onayıyla yapılacak ve misafire kapalı olacak.
+  Komut örnekli belge (`NELER_YAPABILIR.md`) istendi → eklendi. Windows bildirimi gerçek Windows'ta denenmedi.
 
 ## Sıradaki fikirler
+
+- **KURAL (kullanıcı, 2026-09-29): İnternet gerektiren her özellik (hava durumu, haberler, takvim eşitleme vb.) misafir
+  modunda KAPALI olmalı.** Yalnızca sesle/şifreyle tanınmış kişiler kullanabilir.
+- **Kullanıcının seçtiği sıra (2026-09-29):** 1) ✅ 3.5'te yapıldı: Hatırlatıcılar (sayaç, alarm, tarihli hatırlatma; kişiye özel, ortak
+  "aile" yok; tarayıcı kapalıyken Windows bildirimi, asistan kapalıyken sonraki açılışta "kaçırılanlar"; yalnızca ev
+  bilgisayarı) + **takvim kaydı oluşturma** (telefona bildirim gelsin diye; hangi takvim olduğu sorulacak — bulut servisi,
+  kullanıcı onayı gerekir). 2) Yapabildiklerini komut örnekleriyle anlatan belge. Sonra listeden: notlar/alışveriş
+  listesi, fotoğraf anlama (gemma3:4b görebilir), belge yükleme, sabah özeti, uyandırma sözcüğü ("Asiye"), eski
+  sohbetlerde arama, hava durumu/haber (internet → kullanıcı onayı + misafire kapalı). Kullanıcı "hepsi çok güzel" dedi.
 
 - Kullanıcı conda ortamlarını (ComfyUI, comfyui, ai_assistant, muzik, tts, asistan) düzenlemek/birleştirmek için yardım isteyecek.
 - Ses tanıma: Sezin'in 3.3 puanlarını gör (özellikle Mert profiline benzerliği); gerekirse eşik/MARGIN ayarı.

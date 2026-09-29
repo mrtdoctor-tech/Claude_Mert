@@ -42,6 +42,26 @@ CREATE TABLE IF NOT EXISTS speakers (
     is_admin INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
+CREATE TABLE IF NOT EXISTS reminders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner TEXT,
+    kind TEXT NOT NULL,              -- timer / alarm / reminder
+    text TEXT NOT NULL DEFAULT '',
+    due_at TEXT NOT NULL,            -- local time "YYYY-MM-DD HH:MM:SS"
+    repeat TEXT,                     -- NULL / daily / weekly / monthly / yearly
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS alerts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reminder_id INTEGER,
+    owner TEXT,
+    kind TEXT NOT NULL,
+    text TEXT NOT NULL DEFAULT '',
+    due_at TEXT NOT NULL,
+    fired_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    acknowledged INTEGER NOT NULL DEFAULT 0
+);
 CREATE TABLE IF NOT EXISTS security_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
@@ -242,3 +262,67 @@ def list_security_log(limit: int = 500) -> list[dict]:
     with session() as conn:
         rows = conn.execute("SELECT * FROM security_log ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
         return [dict(r) for r in rows]
+
+
+# Reminders (3.5)
+
+def add_reminder(owner: str | None, kind: str, text: str, due_at: str, repeat: str | None = None) -> int:
+    with session() as conn:
+        return conn.execute(
+            "INSERT INTO reminders (owner, kind, text, due_at, repeat) VALUES (?, ?, ?, ?, ?)",
+            (owner, kind, text, due_at, repeat),
+        ).lastrowid
+
+
+def list_reminders(owner: str = ALL) -> list[dict]:
+    """Active reminders, soonest first."""
+    where, params = _owner_filter(owner)
+    where = (where + " AND" if where else " WHERE") + " status = 'active'"
+    with session() as conn:
+        rows = conn.execute(f"SELECT * FROM reminders{where} ORDER BY due_at", params).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_reminder(reminder_id: int) -> dict | None:
+    with session() as conn:
+        row = conn.execute("SELECT * FROM reminders WHERE id = ?", (reminder_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def set_reminder_status(reminder_id: int, status: str):
+    with session() as conn:
+        conn.execute("UPDATE reminders SET status = ? WHERE id = ?", (status, reminder_id))
+
+
+def move_reminder(reminder_id: int, due_at: str):
+    with session() as conn:
+        conn.execute("UPDATE reminders SET due_at = ? WHERE id = ?", (due_at, reminder_id))
+
+
+def due_reminders(now: str) -> list[dict]:
+    with session() as conn:
+        rows = conn.execute(
+            "SELECT * FROM reminders WHERE status = 'active' AND due_at <= ? ORDER BY due_at", (now,)
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def add_alert(reminder: dict):
+    with session() as conn:
+        conn.execute(
+            "INSERT INTO alerts (reminder_id, owner, kind, text, due_at) VALUES (?, ?, ?, ?, ?)",
+            (reminder["id"], reminder["owner"], reminder["kind"], reminder["text"], reminder["due_at"]),
+        )
+
+
+def list_alerts() -> list[dict]:
+    """Alerts nobody has acknowledged yet (everyone's: an alarm rings whoever sits at the computer)."""
+    with session() as conn:
+        rows = conn.execute("SELECT * FROM alerts WHERE acknowledged = 0 ORDER BY id").fetchall()
+    return [dict(r) for r in rows]
+
+
+def ack_alert(alert_id: int):
+    with session() as conn:
+        conn.execute("UPDATE alerts SET acknowledged = 1 WHERE id = ?", (alert_id,))
+
