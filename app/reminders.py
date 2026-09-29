@@ -15,7 +15,7 @@ import time
 from datetime import datetime, timedelta
 from xml.sax.saxutils import escape
 
-from . import db, identity
+from . import db, identity, outlook
 from .quick import DAYS_TR, MONTHS_TR
 
 log = logging.getLogger("asistan.reminders")
@@ -315,6 +315,7 @@ def handle(text: str, owner: str, now: datetime | None = None) -> str | None:
             targets = targets[-1:] if kind == "timer" else sorted(targets, key=lambda r: r["due_at"])[:1]
         for r in targets:
             db.set_reminder_status(r["id"], "cancelled")
+            outlook.remove_later(r)
         return "İptal ettim: " + ", ".join(label(r) for r in targets) + "."
 
     if parsed.get("past"):
@@ -323,13 +324,18 @@ def handle(text: str, owner: str, now: datetime | None = None) -> str | None:
     if parsed["kind"] == "timer" and not parsed["text"]:
         length = duration_text((due - now).total_seconds())
         parsed["text"] = f"{length}{_lik(length)} sayaç"
-    db.add_reminder(who, parsed["kind"], parsed["text"], due.strftime("%Y-%m-%d %H:%M:%S"), parsed["repeat"])
+    new_id = db.add_reminder(who, parsed["kind"], parsed["text"], due.strftime("%Y-%m-%d %H:%M:%S"),
+                             parsed["repeat"])
+    calendar = ""
+    if outlook.will_sync(who, parsed["kind"]):
+        outlook.add_later(new_id)
+        calendar = " 📅 Outlook takvimine de ekliyorum."
     if parsed["kind"] == "timer":
         return f"⏳ Tamam, {duration_text((due - now).total_seconds())} sonra ({due:%H:%M}) haber vereceğim."
     repeat = f", {REPEAT_TR[parsed['repeat']]}" if parsed["repeat"] else ""
     what = f": {parsed['text']}" if parsed["text"] else ""
     icon = "⏰" if parsed["kind"] == "alarm" else "🔔"
-    return f"{icon} Tamam, {when_text(due, now)}{repeat} hatırlatacağım{what}."
+    return f"{icon} Tamam, {when_text(due, now)}{repeat} hatırlatacağım{what}.{calendar}"
 
 
 def _dt(value: str) -> datetime:

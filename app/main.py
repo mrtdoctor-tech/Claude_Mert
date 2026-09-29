@@ -14,7 +14,7 @@ from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, db, identity, llm, memory, presence, quick, reminders, stt, tts, voiceid
+from . import config, db, identity, llm, memory, outlook, pc, presence, quick, reminders, stt, tts, voiceid
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("asistan")
@@ -112,6 +112,7 @@ class SettingsIn(BaseModel):
     auto_listen: bool | None = None
     memory_model: str | None = None
     whisper_device: str | None = None
+    outlook_sync: bool | None = None
 
 
 @app.get("/api/settings")
@@ -202,6 +203,8 @@ async def chat(body: ChatIn):
     messages.append({"role": "user", "content": text + memory.clock_note()})  # the note is not saved
     # "saat kaç?" comes from the clock, "20 dakikalık sayaç kur" is set by rules: not by the model
     instant = quick.answer(text) or reminders.handle(text, who)
+    if not instant and pc.is_command(text):  # Excel, music, Spotify on this computer
+        instant = await run_in_threadpool(pc.handle, text, who)
 
     async def from_clock():
         yield instant
@@ -245,7 +248,8 @@ def _reminder_owner() -> str | None:
 
 def _reminder_view(r: dict) -> dict:
     return {"id": r["id"], "kind": r["kind"], "text": reminders.label(r), "due_at": r["due_at"],
-            "repeat": r["repeat"], "when": reminders.when_text(reminders._dt(r["due_at"]))}
+            "repeat": r["repeat"], "when": reminders.when_text(reminders._dt(r["due_at"])),
+            "calendar": bool(r.get("calendar_id")), "calendar_note": r.get("calendar_note") or ""}
 
 
 @app.get("/api/reminders")
@@ -264,7 +268,9 @@ def add_reminder(body: ReminderIn):
     if due <= datetime.now() and not body.repeat:
         raise HTTPException(400, "Bu zaman geçmişte kaldı.")
     repeat = body.repeat if body.repeat in reminders.REPEAT_TR else None
-    db.add_reminder(owner, "reminder", body.text.strip(), due.strftime("%Y-%m-%d %H:%M:00"), repeat)
+    new_id = db.add_reminder(owner, "reminder", body.text.strip(), due.strftime("%Y-%m-%d %H:%M:00"), repeat)
+    if outlook.will_sync(owner, "reminder"):
+        outlook.add_later(new_id)
     return {"ok": True}
 
 
@@ -274,7 +280,14 @@ def cancel_reminder(reminder_id: int):
     if not item or (identity.owner() != db.ALL and item["owner"] != owner):
         raise HTTPException(404, "Hatırlatma bulunamadı")
     db.set_reminder_status(reminder_id, "cancelled")
+    outlook.remove_later(item)
     return {"ok": True}
+
+
+@app.post("/api/outlook/test")
+async def outlook_test():
+    _require_admin()
+    return {"message": await run_in_threadpool(outlook.test)}
 
 
 @app.get("/api/alerts")

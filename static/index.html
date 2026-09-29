@@ -168,6 +168,14 @@
         <input type="checkbox" name="auto_listen">
         Sesli sohbet: yanıt okununca mikrofonu kendiliğinden tekrar aç
       </label>
+      <label class="check">
+        <input type="checkbox" name="outlook_sync">
+        📅 Hatırlatmalarımı Outlook takvimime de ekle (telefonda da bildirim çıksın)
+      </label>
+      <div class="outlook-test">
+        <button type="button" id="outlook-test" class="ghost">Outlook bağlantısını dene</button>
+        <small id="outlook-status">Bilgisayarda klasik Outlook programı kurulu ve hesabın ekli olmalı. Yalnızca senin (yöneticinin) hatırlatmaları eklenir; sayaçlar eklenmez.</small>
+      </div>
       <label>Konuşma dili
         <select name="language">
           <option value="tr">Türkçe</option>

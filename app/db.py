@@ -78,6 +78,8 @@ _NEW_COLUMNS = [
     ("messages", "speaker", "TEXT"),
     ("memories", "owner", "TEXT"),
     ("speakers", "passcode", "TEXT"),  # "salt$hash" (PBKDF2), never the code itself
+    ("reminders", "calendar_id", "TEXT"),  # Outlook appointment EntryID (3.6)
+    ("reminders", "calendar_note", "TEXT"),  # why it could not be added to Outlook
 ]
 
 
@@ -325,4 +327,10 @@ def list_alerts() -> list[dict]:
 def ack_alert(alert_id: int):
     with session() as conn:
         conn.execute("UPDATE alerts SET acknowledged = 1 WHERE id = ?", (alert_id,))
+
+
+def set_reminder_calendar(reminder_id: int, calendar_id: str | None, note: str):
+    with session() as conn:
+        conn.execute("UPDATE reminders SET calendar_id = ?, calendar_note = ? WHERE id = ?",
+                     (calendar_id, note, reminder_id))
 

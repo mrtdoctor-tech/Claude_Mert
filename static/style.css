@@ -193,3 +193,6 @@ input:focus, select:focus { border-color: var(--accent); }
 .help-dialog { max-width: 680px; }
 .help-body { max-height: 70vh; overflow-y: auto; font-size: 14px; line-height: 1.55; margin-top: 8px; }
 .help-body strong { color: var(--text); }
+.outlook-test { display: flex; flex-direction: column; gap: 4px; margin-top: -6px; }
+.outlook-test button { align-self: flex-start; padding: 6px 10px; }
+.outlook-test small { color: var(--muted); font-size: 12px; }

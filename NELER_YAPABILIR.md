@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.5
+Sürüm: 3.6
 
 ---
 
@@ -72,6 +72,50 @@ Bu sorular yapay zekâya gitmez; doğrudan bilgisayarın saatinden, anında ve h
   yalnızca "Sezin için bir hatırlatma var" yazar, içeriği görünmez. Misafir hatırlatma kuramaz.
 - Sol menüdeki **⏰ Hatırlatıcılar** panelinden hepsini görebilir, elle ekleyebilir ve silebilirsin.
 
+## 📅 Outlook takvimi ve telefon (3.6)
+
+Hatırlatmaların Outlook takvimine de eklenir, böylece telefonunda da bildirim çıkar.
+
+- Açmak için (bir kez): **⚙️ Ayarlar** → "📅 Hatırlatmalarımı Outlook takvimime de ekle" kutusunu işaretle →
+  **Outlook bağlantısını dene** → **Kaydet**.
+- Sonra her hatırlatmada "📅 Outlook takvimine de ekliyorum" dersin. İptal edince takvimden de silinir.
+- Yalnızca yöneticinin (Mert'in) hatırlatmaları eklenir; sayaçlar eklenmez.
+- Bilgisayarda **klasik Outlook** programı kurulu ve hesabın ekli olmalı ("yeni Outlook" desteklenmiyor).
+
+## 📊 Excel ve dosyalar (3.6)
+
+- "Excel'i aç"
+- "Bütçe dosyasını Excel'de aç"
+- "Notlar dosyasını aç" (Word, PDF, PowerPoint dosyalarını da açar)
+- "Açık Excel dosyaları neler?"
+- "Bütçe dosyasını kaydet"
+- "Excel'i kaydederek kapat"
+- "Excel'i kaydetmeden kapat"
+- "Bütçe dosyasını kaydetmeden kapat"
+- "Excel'i kapat" (kaydedilmemiş değişiklik varsa Excel kendisi sorar)
+
+Dosyalar Masaüstü, Belgeler, İndirilenler ve OneDrive klasörlerinde adına göre aranır. Aynı adda birden çok dosya
+varsa en son değiştirilen açılır. Hiç kaydedilmemiş yeni bir kitap ("Kitap1") "kaydederek kapat" denince açık bırakılır,
+çünkü bir dosya adı yoktur.
+
+Excel hakkında soru sormak ("Düşeyara nasıl kullanılır?") komut sayılmaz; asistan normal cevap verir.
+
+## 🎵 Müzik ve Spotify (3.6)
+
+Bilgisayarda çalan müziği (Spotify, YouTube, vb.) yönetir:
+
+- "Sonraki şarkı" / "Önceki şarkı"
+- "Müziği durdur" / "Müziğe devam et"
+- "Sesi aç" / "Sesi kıs" / "Sesi kapat"
+
+Spotify:
+
+- "Spotify'ı aç"
+- "Spotify'da Tarkan çal" → Spotify'da aramayı açar; çalmak için sonuçlardan birine basarsın.
+  (Şarkıyı kendiliğinden başlatmak için Spotify Premium bağlantısı gerekir; planlananlar arasında.)
+
+Misafir modunda bilgisayar komutları (Excel, dosyalar, müzik, Spotify) çalışmaz.
+
 ## 🧠 Hafıza
 
 Asistan sohbetlerden senin hakkındaki önemli bilgileri kendiliğinden öğrenir ve yeni sohbetlerde de hatırlar.
@@ -104,7 +148,7 @@ Herkesin hafızası ayrıdır.
 
 ## 🔜 Planlananlar
 
-- 📅 Telefon takvimine kayıt (hatırlatma telefonunda da bildirim olarak çıksın)
+- 🎧 Spotify'da şarkıyı kendiliğinden başlatma (Premium hesap + bağlantı gerekir)
 - 📝 Notlar ve alışveriş listesi ("Listeye süt ekle")
 - 🖼️ Fotoğraf anlama ("Bu fişte ne yazıyor?")
 - 📄 Belge yükleme ("Bu PDF'i özetle")

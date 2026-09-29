@@ -8,3 +8,4 @@ edge-tts>=6.1
 watchfiles>=0.21
 sherpa-onnx>=1.10  # speaker identification (voiceprints), offline
 numpy
+pywin32; sys_platform == "win32"  # Excel and Outlook automation (3.6)

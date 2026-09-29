@@ -122,6 +122,20 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   WinRT toast, PowerShell'in AppID'si; **gerçek Windows'ta denenmedi**). Kapalıyken geçen uyarılar açılışta `missed`.
   Arayüz: `#timer-bar` geri sayım çipleri, `#alert-dialog` (WebAudio zil 1,5 sn'de bir, en çok 1 dk + `speak`),
   `#reminders-dialog` (elle ekleme, datetime-local). Hafıza çıkarma komutları atlar (`memory._is_command`).
+- **Bilgisayar kontrolü (3.6):** `app/pc.py`, chat'te reminders'tan sonra `run_in_threadpool(pc.handle)`. Misafire kapalı.
+  Excel: pywin32 COM (`GetActiveObject("Excel.Application")`), açma `os.startfile` (dosya araması `find_file`: Masaüstü,
+  Belgeler, İndirilenler, OneDrive; tüm sorgu kelimeleri adda geçmeli; tam ad > en yeni). "kaydederek/kaydetmeden kapat",
+  "kaydet", "açık dosyalar"; seçim yoksa Excel'in kendi sorusu (arka plan thread'inde `Quit`). Hiç kaydedilmemiş kitap
+  (Path boş) "kaydederek"te açık bırakılır. **Dikkat:** "kaydederek" ≠ "kaydet" alt dizgisi (`_SAVE` = `kayded|kaydet(?!me)`).
+  "Excel" geçmeden "<ad> dosyasını aç/kapat/kaydet" de komut; açma o zaman Word/PDF/PPT'yi de bulur. Soru kelimesi
+  (nasıl, nedir, formül…) varsa komut sayılmaz. Müzik: `keybd_event` medya tuşları. Spotify: `spotify:` /
+  `spotify:search:<q>` (Premium'suz otomatik çalma yok). `COM` her thread'de `pythoncom.CoInitialize` (`pc.com`).
+- **Outlook takvimi (3.6):** `app/outlook.py`, ayar `outlook_sync` (Ayarlar'da, yönetici). Microsoft Graph/uygulama kaydı
+  yerine **klasik Outlook COM**: `CreateItem(1)` randevu (Start yerel "YYYY-MM-DD HH:MM" dizgisi, 15 dk, meşgul değil,
+  hatırlatma 0 dk; tekrar → `GetRecurrencePattern`, NoEndDate). EntryID `reminders.calendar_id`'de, hata
+  `calendar_note`'ta (panelde ⚠️). İptal → `GetItemFromID().Delete()`. Yalnızca yöneticinin (ya da kimlik kapalıyken)
+  hatırlatma/alarmları; sayaç yok. "Yeni Outlook"ta COM yok → test mesajı bunu söyler. `/api/outlook/test`.
+  **Gerçek Windows/Excel/Outlook'ta denenmedi**; bulutta sahte `win32com`/`pythoncom` modülleriyle test edildi.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -245,6 +259,11 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   düşünülmüyor). Ayrıca **telefon takvimine kayıt** istedi (telefonda bildirim için) → hangi takvim olduğu soruldu
   (Google / iPhone-iCloud / Outlook); bulut servisi olduğundan kullanıcı onayıyla yapılacak ve misafire kapalı olacak.
   Komut örnekli belge (`NELER_YAPABILIR.md`) istendi → eklendi. Windows bildirimi gerçek Windows'ta denenmedi.
+- **2026-09-29 (3.6):** 3.5'in Windows bildirimi gerçekte **çalıştı** (sayaç). Kullanıcı Microsoft takvimi kullanıyor
+  (kişisel Microsoft hesabı, outlook.com). Graph API için Azure uygulama kaydı gerekeceğinden önce klasik Outlook COM
+  yolu seçildi; Outlook'ta hangi hesabın/"yeni Outlook" mu olduğu bilinmiyor → "Outlook bağlantısını dene" sonucu
+  beklenecek. Olmazsa: Microsoft Graph + cihaz kodu girişi (msal; kullanıcının kendi Azure uygulama kaydı) düşünülebilir.
+  Ayrıca Spotify (Premium olup olmadığı soruldu) ve Excel aç/kapat/kaydet istedi → eklendi.
 
 ## Sıradaki fikirler
 
@@ -257,6 +276,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   listesi, fotoğraf anlama (gemma3:4b görebilir), belge yükleme, sabah özeti, uyandırma sözcüğü ("Asiye"), eski
   sohbetlerde arama, hava durumu/haber (internet → kullanıcı onayı + misafire kapalı). Kullanıcı "hepsi çok güzel" dedi.
 
+- Spotify Premium varsa: Spotify Web API (developer.spotify.com uygulama kaydı, PKCE) ile "X çal" doğrudan çalsın.
 - Kullanıcı conda ortamlarını (ComfyUI, comfyui, ai_assistant, muzik, tts, asistan) düzenlemek/birleştirmek için yardım isteyecek.
 - Ses tanıma: Sezin'in 3.3 puanlarını gör (özellikle Mert profiline benzerliği); gerekirse eşik/MARGIN ayarı.
 - 1b yetersiz kalırsa zayıf bilgisayar için başka küçük model dene (ör. `gemma3n:e2b`, `qwen3:1.7b`); sonucu kullanıcıdan öğren.

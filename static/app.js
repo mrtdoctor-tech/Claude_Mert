@@ -789,6 +789,7 @@ $("#open-settings").onclick = async () => {
   form.language.value = state.settings.language;
   form.tts_voice.value = state.settings.tts_voice;
   form.auto_listen.checked = !!state.settings.auto_listen;
+  form.outlook_sync.checked = !!state.settings.outlook_sync;
 
   const select = form.model;
   select.innerHTML = "";
@@ -819,6 +820,7 @@ els.settingsForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(els.settingsForm));
   data.auto_listen = els.settingsForm.auto_listen.checked;
+  data.outlook_sync = els.settingsForm.outlook_sync.checked;
   await api("/api/settings", { method: "PUT", body: JSON.stringify(data) });
   await loadSettings();
   els.settingsDialog.close();
@@ -975,7 +977,8 @@ async function loadReminders() {
     li.innerHTML = `<div><span></span><small></small></div><button title="İptal et">✕</button>`;
     const icon = r.kind === "timer" ? "⏳" : r.kind === "alarm" ? "⏰" : "🔔";
     li.querySelector("span").textContent = `${icon} ${r.text}`;
-    li.querySelector("small").textContent = r.when + (r.repeat ? ` · ${REPEAT_LABELS[r.repeat]}` : "");
+    li.querySelector("small").textContent = r.when + (r.repeat ? ` · ${REPEAT_LABELS[r.repeat]}` : "")
+      + (r.calendar ? " · 📅 Outlook'ta" : "") + (r.calendar_note ? ` · ⚠️ ${r.calendar_note}` : "");
     li.querySelector("button").onclick = async () => {
       await api(`/api/reminders/${r.id}`, { method: "DELETE" });
       loadReminders();
@@ -1032,6 +1035,16 @@ $("#open-help").onclick = async () => {
     body.innerHTML = renderMarkdown(text);
   } catch (err) {
     body.textContent = "⚠️ " + err.message;
+  }
+};
+
+$("#outlook-test").onclick = async () => {
+  const status = $("#outlook-status");
+  status.textContent = "⏳ Outlook'a bağlanılıyor (Outlook kapalıysa açılması biraz sürebilir)...";
+  try {
+    status.textContent = (await api("/api/outlook/test", { method: "POST" })).message;
+  } catch (err) {
+    status.textContent = "⚠️ " + err.message;
   }
 };
 
