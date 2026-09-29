@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.10
+Sürüm: 3.11
 
 ---
 
@@ -123,6 +123,28 @@ Spotify:
 
 Misafir modunda bilgisayar komutları (Excel, dosyalar, müzik, Spotify) çalışmaz.
 
+## 🌦️ Hava durumu ve 📰 haberler (3.11)
+
+Bu ikisi internetten gelir; **misafir modunda çalışmaz**. Şehrini bir kez **⚙️ Ayarlar → Hava durumu için şehir**
+kısmına yaz.
+
+**Hava durumu** (Open-Meteo; dışarıya yalnızca şehir adı gider):
+- "Hava nasıl?" / "Kaç derece?"
+- "Yarın hava nasıl olacak?"
+- "Yarın yağmur yağacak mı?" (şemsiye önerisiyle)
+- "Hafta sonu hava nasıl?" / "Bu hafta hava nasıl?" (7 günlük)
+- "İstanbul'da hava nasıl?" / "Ankara'da yarın hava nasıl?"
+
+Sağdaki ajandanın en üstünde de şehrinin anlık hava durumu görünür.
+
+**Haberler** (NTV ve BBC Türkçe'nin herkese açık haber akışlarından):
+- "Haberler neler?" / "Son haberleri oku" / "Gündem ne?"
+- "Ekonomi haberleri" / "Spor haberleri" / "Dünya haberleri" / "Teknoloji haberleri" / "Sağlık haberleri"
+
+Başlıklara tıklayınca haberin kendisi tarayıcıda açılır. Sesli yanıt açıksa başlıklar okunur.
+
+Hava durumu ve haber cevapları yapay zekâdan değil doğrudan kaynaktan gelir; sayıları asla uydurmaz.
+
 ## 🧠 Hafıza
 
 Asistan sohbetlerden senin hakkındaki önemli bilgileri kendiliğinden öğrenir ve yeni sohbetlerde de hatırlar.
@@ -162,4 +184,3 @@ Herkesin hafızası ayrıdır.
 - ☀️ Sabah özeti ("Günaydın" deyince günün hatırlatmaları)
 - 👂 Uyandırma sözcüğü (mikrofona basmadan "Asiye" diye seslenmek)
 - 🔎 Eski sohbetlerde arama
-- 🌦️ Hava durumu ve haberler (internet gerekir; yalnızca tanınan kişiler kullanabilir)

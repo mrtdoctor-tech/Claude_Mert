@@ -266,3 +266,8 @@ table.grid td.nowrap { white-space: nowrap; font-variant-numeric: tabular-nums; 
 @media (max-width: 1100px) { .agenda { display: none; } #toggle-agenda { display: none; } }
 .agenda-item.outlook { background: rgba(0, 120, 212, .12); border-left: 3px solid #2b88d8; }
 .agenda-item.outlook .time { color: #6cb8f6; }
+.agenda-weather { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 12px; background: var(--panel-2); }
+.agenda-weather .w-icon { font-size: 28px; }
+.agenda-weather b { display: block; font-size: 15px; }
+.agenda-weather small { color: var(--muted); font-size: 12px; }
+.bubble a { color: var(--accent-2); }

@@ -14,7 +14,7 @@ from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, db, identity, llm, memory, outlook, pc, presence, quick, reminders, stt, tts, voiceid
+from . import config, db, identity, llm, memory, online, outlook, pc, presence, quick, reminders, stt, tts, voiceid
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("asistan")
@@ -113,6 +113,7 @@ class SettingsIn(BaseModel):
     memory_model: str | None = None
     whisper_device: str | None = None
     outlook_sync: bool | None = None
+    weather_city: str | None = None
 
 
 @app.get("/api/settings")
@@ -205,6 +206,8 @@ async def chat(body: ChatIn):
     instant = quick.answer(text) or reminders.handle(text, who)
     if not instant and pc.is_command(text):  # Excel, music, Spotify on this computer
         instant = await run_in_threadpool(pc.handle, text, who)
+    if not instant and online.is_command(text):  # weather and news from the internet (never for guests)
+        instant = await run_in_threadpool(online.handle, text, who)
 
     async def from_clock():
         yield instant
@@ -302,6 +305,18 @@ async def outlook_events(start: str, end: str):
         log.warning("Outlook takvimi okunamadı: %s", e)
         return {"events": [], "available": True, "error": f"Outlook takvimi okunamadı: {e}"}
     return {"events": found, "available": True}
+
+
+@app.get("/api/weather")
+async def weather():
+    """Short weather line for the agenda. Internet feature: never for guests."""
+    if identity.owner() == identity.GUEST:
+        return {"weather": None}
+    try:
+        return {"weather": await run_in_threadpool(online.weather_summary)}
+    except Exception as e:
+        log.warning("Hava durumu alınamadı: %s", e)
+        return {"weather": None, "error": str(e)}
 
 
 @app.post("/api/outlook/test")

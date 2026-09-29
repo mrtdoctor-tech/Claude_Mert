@@ -30,6 +30,7 @@ DEFAULTS = {
     "auto_listen": True,  # reopen the microphone after a spoken reply
     "memory_model": "",  # model that learns facts in the background; "" = same as the chat model
     "outlook_sync": False,  # copy the admin's reminders into the Outlook calendar (3.6)
+    "weather_city": "",  # city for "hava nasıl?" and the agenda's weather line (3.11)
 }
 
 

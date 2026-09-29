@@ -57,6 +57,7 @@
         <h3>📅 Ajanda</h3>
         <button type="button" id="agenda-add" class="ghost" title="Hatırlatma ekle">+ Ekle</button>
       </div>
+      <div id="agenda-weather" class="agenda-weather" hidden></div>
       <div class="month">
         <div class="month-nav">
           <button type="button" class="icon" id="month-prev" title="Önceki ay">‹</button>
@@ -212,6 +213,10 @@
         <button type="button" id="outlook-test" class="ghost">Outlook bağlantısını dene</button>
         <small id="outlook-status">Bilgisayarda klasik Outlook programı kurulu ve hesabın ekli olmalı. Yalnızca senin (yöneticinin) hatırlatmaları eklenir; sayaçlar eklenmez.</small>
       </div>
+      <label>Hava durumu için şehir
+        <input name="weather_city" placeholder="Örn: Bursa">
+        <small>"Hava nasıl?" diye sorunca ve sağdaki ajandada bu şehir kullanılır. Hava durumu ve haberler internetten gelir (şehir adı Open-Meteo'ya gider); misafir modunda kapalıdır.</small>
+      </label>
       <label>Konuşma dili
         <select name="language">
           <option value="tr">Türkçe</option>

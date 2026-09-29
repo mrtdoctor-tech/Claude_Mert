@@ -59,6 +59,7 @@ function renderMarkdown(src) {
     return escapeHtml(part)
       .replace(/`([^`\n]+)`/g, "<code>$1</code>")
       .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
       .replace(/^\s*[-*] (.+)$/gm, "• $1")
       .replace(/^#{1,6} (.+)$/gm, "<strong>$1</strong>")
       .replace(/\n/g, "<br>");
@@ -66,7 +67,7 @@ function renderMarkdown(src) {
 }
 
 function plainText(src) {
-  return src.replace(/```[\s\S]*?```/g, " ").replace(/[*_`#>]/g, "").replace(/\s+/g, " ").trim();
+  return src.replace(/```[\s\S]*?```/g, " ").replace(/\[([^\]\n]+)\]\([^)\s]+\)/g, "$1").replace(/[*_`#>]/g, "").replace(/\s+/g, " ").trim();
 }
 
 function autoGrow() {
@@ -169,7 +170,7 @@ function replyTimer(bubble, sttMs, sttDevice) {
       if (sttMs != null) parts.push(`ses→yazı ${seconds(sttMs)}${sttDevice ? ` (${sttDevice.toUpperCase()})` : ""}`);
       parts.push(`ilk kelime ${seconds(firstMs ?? performance.now() - start)}`);
       parts.push(`toplam ${seconds(performance.now() - start)}`);
-      parts.push(this.instant ? "bilgisayar saatinden" : state.settings.model);
+      parts.push(this.instant ? "hazır cevap (yapay zekâ kullanılmadı)" : state.settings.model);
       el.textContent = "⏱ " + parts.join(" · ");
     },
   };
@@ -583,6 +584,8 @@ function applyIdentity(id) {
   $("#open-security").hidden = !(id.active && id.admin);
   $("#open-reminders").hidden = !!id.guest; // reminders are personal
   showAgenda(!id.guest);
+  if (id.guest) $("#agenda-weather").hidden = true;
+  else if (before !== identityKey(id)) loadAgendaWeather(true);
   if (id.guest) $("#reminders-dialog").close();
   // Only the admin reaches Settings (enrolling voices, models); everyone else uses the admin's settings.
   const locked = !!(id.active && !id.admin);
@@ -870,6 +873,7 @@ $("#open-settings").onclick = async () => {
   form.tts_voice.value = state.settings.tts_voice;
   form.auto_listen.checked = !!state.settings.auto_listen;
   form.outlook_sync.checked = !!state.settings.outlook_sync;
+  form.weather_city.value = state.settings.weather_city || "";
 
   const select = form.model;
   select.innerHTML = "";
@@ -903,6 +907,7 @@ els.settingsForm.addEventListener("submit", async (e) => {
   data.outlook_sync = els.settingsForm.outlook_sync.checked;
   await api("/api/settings", { method: "PUT", body: JSON.stringify(data) });
   await loadSettings();
+  loadAgendaWeather(true);
   els.settingsDialog.close();
 });
 
@@ -1198,6 +1203,28 @@ async function loadAgenda() {
   renderMonth();
   renderAgendaList();
   loadOutlookEvents(own); // slower (Outlook may need to start): added when it arrives
+  loadAgendaWeather();
+}
+
+// Weather line at the top of the agenda (the city from Settings), refreshed at most every 15 minutes.
+let weatherLoadedAt = 0;
+async function loadAgendaWeather(force = false) {
+  const box = $("#agenda-weather");
+  if (!force && Date.now() - weatherLoadedAt < 15 * 60 * 1000) return;
+  weatherLoadedAt = Date.now();
+  try {
+    const { weather: w } = await api("/api/weather");
+    box.hidden = !w;
+    if (!w) return;
+    box.innerHTML = `<span class="w-icon"></span><div><b></b><small></small></div>`;
+    box.querySelector(".w-icon").textContent = w.icon;
+    box.querySelector("b").textContent = `${w.place} ${w.temp}`;
+    box.querySelector("small").textContent = `${w.words} · en yüksek ${w.max}, en düşük ${w.min}`
+      + (w.rain != null ? ` · yağış %${w.rain}` : "");
+    box.title = "Hava durumu (Open-Meteo)";
+  } catch {
+    box.hidden = true;
+  }
 }
 
 // The admin's Outlook appointments, read-only, for the shown month and the next 30 days (3.10).

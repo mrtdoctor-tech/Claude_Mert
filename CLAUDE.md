@@ -46,7 +46,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `_key` ile noktalama/büyük-küçük harf duyarsız tekrar kontrolü. Ayar `memory_model` ("" = sohbet modeli);
   farklıysa `keep_alive=2m` ile çağrılır ki RAM'de kalıcı yer tutmasın.
 - `app/quick.py`: "Saat kaç?", "Bugün ayın kaçı?" gibi kısa (≤60 karakter) sorular modele gitmeden bilgisayar saatinden
-  cevaplanır (1b verilen saati bile yanlış okuyordu). `meta` olayında `instant: true`; sayaç "bilgisayar saatinden" yazar.
+  cevaplanır (1b verilen saati bile yanlış okuyordu). `meta` olayında `instant: true`; sayaç "hazır cevap (yapay zekâ kullanılmadı)" yazar (3.11; hatırlatıcı, bilgisayar, hava/haber cevapları da böyle).
 - `app/db.py`: SQLite (`data/asistan.db`): `conversations`, `messages`, `memories`, `meta`.
 - `app/stt.py`: **faster-whisper** ile çevrimdışı ses→yazı (model ilk kullanımda indirilir). 2.9: ayar `whisper_device`
   ("auto"/"cpu"). "auto"da CTranslate2 CUDA görürse ve CUDA DLL'leri (`CUDA_DLLS`, ctypes ile tek tek denenir — eksik DLL
@@ -153,6 +153,16 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   hatırlatmalar) çıkarılır. 60 sn önbellek; ekleme/silmede temizlenir. `GET /api/outlook/events` yalnızca yönetici (ya da
   kimlik kapalıyken) + `outlook_sync` açık + klasik Outlook ve profil varsa. Arayüz: salt okunur mavi kayıtlar, çok günlü
   (tüm gün) kayıtlar her güne nokta koyar. **Gerçek Outlook'ta denenmedi** (sahte COM ile test edildi).
+- **Hava durumu + haberler (3.11):** `app/online.py`, chat'te pc'den sonra `run_in_threadpool(online.handle)`; **misafire
+  kapalı** (kullanıcı kuralı). Hava: Open-Meteo geocoding (`language=tr`) + forecast (current + 7 günlük daily), WMO
+  kodları Türkçe (`WEATHER_CODES`); cevap kurallarla kurulur (model değil). Gün seçimi: bugün/yarın/öbür gün/gün adı/hafta
+  sonu/bu hafta. Şehir: "X'da hava" (`_CITY`, `_NOT_CITIES` + tam kelime kontrolü: "hafta" → "haf"+"ta" hatası oldu) ya da
+  ayar `weather_city`. Haber: NTV (Atom) + BBC Türkçe (RSS) akışları (`NEWS_FEEDS`, kategori: gündem/ekonomi/spor/dünya/
+  teknoloji/sağlık), RSS+Atom ayrıştırma, tarih sıralı, başlık tekrarları atılır, 7 başlık Markdown bağlantısıyla.
+  Önbellek: hava 15 dk, haber 10 dk. "haber ver" hatırlatıcı kelimesi sayılmaz; "nedir/neden" soruları modele gider.
+  `/api/weather` → ajandanın üstündeki hava satırı. `renderMarkdown` artık `[metin](https://…)` bağlantılarını açar;
+  `plainText` sesli okumada bağlantı adresini atar. **Bulutta dış ağ kapalı: gerçek servislerle denenmedi**, sahte
+  yanıtlarla test edildi (feed adresleri: ntv.com.tr/<kategori>.rss, feeds.bbci.co.uk/turkce/rss.xml).
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -304,6 +314,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-30:** 3.10 **gerçek Outlook'ta doğrulandı**: tüm gün, tekrarlanan ve Teams toplantısı kayıtları ajandada doğru
   gün/saatte görünüyor (Türkçe Windows'ta `Restrict` tarih biçimi çalıştı). Asistanın eklediği "deneme 13:00" tek kez
   (🔔 + "📅 Outlook'ta") görünüyor; mavi kopya gizleniyor → kullanıcıya bunun normal olduğu açıklandı.
+- **2026-09-30 (3.11):** Kullanıcı 7'yi seçti: hava durumu + haberler (misafire kapalı). API anahtarsız kaynaklar:
+  Open-Meteo, NTV/BBC Türkçe RSS. Gerçek ağda ilk deneme kullanıcıda olacak; RSS adresleri değişmişse haber hata verir.
 
 ## Sıradaki fikirler
 
@@ -314,7 +326,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   bilgisayarı) + **takvim kaydı oluşturma** (telefona bildirim gelsin diye; hangi takvim olduğu sorulacak — bulut servisi,
   kullanıcı onayı gerekir). 2) Yapabildiklerini komut örnekleriyle anlatan belge. Sonra listeden: notlar/alışveriş
   listesi, fotoğraf anlama (gemma3:4b görebilir), belge yükleme, sabah özeti, uyandırma sözcüğü ("Asiye"), eski
-  sohbetlerde arama, hava durumu/haber (internet → kullanıcı onayı + misafire kapalı). Kullanıcı "hepsi çok güzel" dedi.
+  sohbetlerde arama, ✅ hava durumu/haber (3.11). Kullanıcı "hepsi çok güzel" dedi.
 
 - Spotify: kullanıcı ücretsiz hesapta → otomatik çalma yok. Premium'a geçerse Spotify Web API (PKCE) ile "X çal".
 - Kullanıcı conda ortamlarını (ComfyUI, comfyui, ai_assistant, muzik, tts, asistan) düzenlemek/birleştirmek için yardım isteyecek.
