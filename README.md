@@ -66,11 +66,11 @@ sonra komut isteminde `ollama ps` yaz: **PROCESSOR** sütununda "100% GPU" görm
 Asistan kimin konuştuğunu sesinden anlar. Özel bilgiler (hafıza, eski sohbetler) yalnızca tanıdığı kişiye açılır.
 
 1. **Ayarlar → 🎙️ Ses profilleri → "+ Ses tanıt"**. Adını yaz (ör. `Mert`), "Kaydı başlat"a bas ve ekrana gelen 3 kısa
-   cümleyi normal sesinle oku. **İlk tanıtılan kişi yöneticidir**; o ana kadarki sohbetler ve hafıza onun olur.
+   cümleyi normal sesinle oku (cümleler Türkçedeki bütün sesleri içerecek şekilde seçildi; kayıttan önce ekranda görünür). **İlk tanıtılan kişi yöneticidir**; o ana kadarki sohbetler ve hafıza onun olur.
 2. Aynı yerden eşin için de tanıt (ör. `Sezin`). Onun hafızası ve sohbetleri ayrıdır.
 3. Mikrofonla konuşunca ekranın altında adın yazar (**👤 Mert · yönetici**). Sonra klavyeden yazdıkların da senin sayılır.
 4. Tanınmayan bir ses konuşursa ya da klavyeden **`1234`** yazılırsa **Misafir** moduna geçilir: genel sorular cevaplanır,
-   özel bilgiler söylenmez, misafirin yazdıkları hafızaya karışmaz. Kilidi yalnızca tanınan bir ses açar.
+   özel bilgiler söylenmez, misafirin yazdıkları hafızaya karışmaz. Misafir **Ayarlar**'ı göremez, yani yeni ses tanıtamaz. Kilidi yalnızca tanınan bir ses açar.
 5. Yönetici olarak oturumundayken **`Sezin1234`** yazarsan Sezin'in oturumuna geçersin (test etmek için).
 6. **🛡️ Güvenlik kaydı** (yalnızca yönetici görür): tanınmayan sesler, misafir mesajları, kilitlemeler ve "benzerlik" puanları.
 
@@ -105,6 +105,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.1** — Ses tanıtmada okunacak 3 cümle, Türkçedeki bütün sesleri (ç, ğ, ı, ö, ş, ü, j...) içeren cümlelerle değişti ve kayıttan önce hepsi ekranda gösteriliyor. Misafir modunda Ayarlar gizli (kimse yeni ses tanıtamaz, ayar değiştiremez); Sezin Ayarlar'ı görür ama ses profillerini göremez.
 - **3.0** — Ses ile tanıma: asistan Mert ve Sezin'i sesinden tanır, herkesin hafızası ayrı; tanınmayan ses ya da `1234` → Misafir modu; yönetici `Sezin1234` ile oturum değiştirebilir; güvenlik kaydı. Ayrıca yanıtların sonunda "(Şu an: …saat…)" yazması düzeltildi.
 - **2.9** — Ses tanıma NVIDIA ekran kartı varsa onda çalışır (çok daha hızlı); yoksa ya da sorun çıkarsa kendiliğinden işlemciye geçer. Sayaçta ve sol altta GPU/CPU yazar. Yeni seçenek: "En iyi (large-v3-turbo)".
 - **2.8** — Model artık 8192 token'lık metin okuyabiliyor (Ollama'nın varsayılanı 4096'ydı; uzun sohbetlerde başı, hafızayla birlikte, sessizce kesiliyordu).

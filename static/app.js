@@ -577,6 +577,10 @@ function applyIdentity(id) {
     ? "👤 Misafir — tanınmıyor. Kendi oturumun için konuş."
     : `👤 ${id.name}${id.admin ? " · yönetici" : ""}`;
   $("#open-security").hidden = !(id.active && id.admin);
+  // A guest must not reach Settings (no enrolling a new voice, no changing models).
+  $("#open-settings").hidden = !!id.guest;
+  $("#config-summary").disabled = !!id.guest;
+  if (id.guest) els.settingsDialog.close();
   if (before !== null && before !== identityKey(id)) {
     // Another person: their own conversations and a fresh chat.
     state.conversationId = null;
@@ -586,11 +590,13 @@ function applyIdentity(id) {
   }
 }
 
+// Chosen to cover every Turkish vowel and consonant (ç ğ ı ö ş ü j f h v z ...) so the voiceprint
+// hears the whole range of the voice, not just a few sounds.
 const ENROLL_SENTENCES = [
-  "Merhaba, ben asistanıma kendi sesimi tanıtıyorum. Bugün hava güzel, biraz yürüyüşe çıkabilirim.",
-  "Sabahları kahvemi içerken haberleri okurum, akşamları da ailemle vakit geçirmeyi severim.",
-  "Bir, iki, üç, dört, beş. Bu cümleyi normal konuşma sesimle, acele etmeden okuyorum.",
-];
+  "Şu köşedeki büyük ağacın gölgesinde oturup çay içmeyi, kuşları dinlemeyi çok severim.",
+  "Pazartesi sabahı fırından taze poğaça, zeytin, bal ve beyaz peynir alıp eve döndüm.",
+  "Jale, dokuz yüz altmış yedi numaralı vapura binip hızla Üsküdar'a geçti.",
+]
 const ENROLL_MS = 7000;
 
 async function recordFor(ms, onTick) {
@@ -615,7 +621,9 @@ $("#enroll-open").onclick = () => {
   $("#enroll-intro").textContent = first
     ? "İlk tanıtılan kişi yönetici olur ve şimdiye kadarki sohbetler ve hafıza onun olur. Sessiz bir yerde, normal sesinle 3 kısa cümle okuyacaksın."
     : "Tanıtılacak kişi (ör. Sezin) 3 kısa cümleyi kendi sesiyle, normal konuşur gibi okusun. Aynı adla tekrar kaydedersen o kişinin sesi yenilenir.";
-  $("#enroll-sentence").textContent = "Adı yazıp \"Kaydı başlat\"a bas.";
+  $("#enroll-sentence").textContent = "Okunacak cümleler (önceden bir göz at):\n"
+    + ENROLL_SENTENCES.map((t, i) => `${i + 1}. ${t}`).join("\n")
+    + "\n\nAdı yazıp \"Kaydı başlat\"a bas. Her cümle sırayla burada büyük yazılacak.";
   $("#enroll-status").textContent = "";
   $("#enroll-record").disabled = false;
   $("#enroll-dialog").showModal();
@@ -661,6 +669,7 @@ async function loadProfiles() {
   list.innerHTML = "";
   const id = state.identity || {};
   $("#enroll-open").hidden = !!(id.active && !id.admin);
+  $("#profiles").hidden = !!(id.active && !id.admin);
   if (!id.active) {
     hint.textContent = "Henüz ses tanıtılmadı. İlk tanıtılan kişi yönetici olur; o andan itibaren asistan konuşanı sesinden tanır, tanımadıklarını misafir sayar.";
     return;
