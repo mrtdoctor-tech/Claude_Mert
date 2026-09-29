@@ -166,6 +166,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   CPU/GPU**, CONTEXT 4096; CPU %100, paylaşılan GPU belleği 14,5 GB; ilk kelime 222 sn. Öneri: sohbet `gemma3:4b` (tam
   GPU'ya sığar), istenirse hafıza modeli daha büyük (ör. `gemma3:12b`, arka planda). Ayrıca 4096 bağlam sınırı fark
   edildi → `num_ctx=8192`. README'ye VRAM'e göre model tablosu eklendi.
+- **2026-09-29:** Ev bilgisayarında `gemma3:4b`'ye geçildi: `ollama ps` → 3,0 GB, **100% GPU**, CONTEXT **8192** (2.8 doğrulandı).
+  Sayaç: ses→yazı 5,7 sn · ilk kelime 6,4 sn · toplam 10,8 sn (31b'de 309 sn). Kullanıcı memnun ("çok hızlı").
+  Artık en yavaş halka Whisper (CPU'da medium ~5,7 sn) → GPU'ya taşıma önerildi; kullanıcının cevabı bekleniyor.
 
 ## SIRADAKİ ADIM (kullanıcının istediği, 2026-09-28): Ses ile kimlik doğrulama
 
