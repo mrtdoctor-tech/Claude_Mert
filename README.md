@@ -72,7 +72,11 @@ Asistan kimin konuştuğunu sesinden anlar. Özel bilgiler (hafıza, eski sohbet
 4. Tanınmayan bir ses konuşursa ya da klavyeden **`1234`** yazılırsa **Misafir** moduna geçilir: genel sorular cevaplanır,
    özel bilgiler söylenmez, misafirin yazdıkları hafızaya karışmaz. **Ayarlar**'ı yalnızca yönetici görür; Sezin ve misafirler yöneticinin seçtiği ayarlarla kullanır, yeni ses tanıtamaz. Kilidi yalnızca tanınan bir ses açar.
 5. Yönetici olarak oturumundayken **`Sezin1234`** yazarsan Sezin'in oturumuna geçersin (test etmek için).
-6. **🛡️ Güvenlik kaydı** (yalnızca yönetici görür): tanınmayan sesler, misafir mesajları, kilitlemeler ve "benzerlik" puanları.
+6. **Şifre (sesin değişirse):** Ayarlar → Ses profilleri → kişinin yanındaki **🔑**. En az 6 karakter, içinde harf ve
+   rakam olsun, `1234` içermesin (ör. `Kartal77`). Sesin tanınmadığında (hastayken) şifreni mesaj kutusuna yazıp gönder;
+   kendi oturumuna geçersin. Şifre asistana gitmez, hiçbir yere açık yazılmaz. Misafir 5 kez yanlış denerse şifreyle giriş
+   10 dakika kapanır. Sezin'in şifresini de sen belirlersin.
+7. **🛡️ Güvenlik kaydı** (yalnızca yönetici görür): tanınmayan sesler, misafir mesajları, kilitlemeler ve "benzerlik" puanları.
 
 İlk kullanımda yaklaşık 40 MB'lık ses parmak izi modeli bir kez indirilir; sonra tamamen internetsiz çalışır.
 Uyarı: Bu bir caydırıcıdır, güçlü bir kilit değildir (ses kaydıyla kandırılabilir). Asıl koruma için Windows hesabına
@@ -105,6 +109,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.4** — Kişisel şifre: hastalıkta sesin değişirse, şifreni yazarak kendi oturumuna girebilirsin (Ayarlar → Ses profilleri → 🔑). Şifre bilgisayarda şifrelenmiş (geri çözülemez) hâlde saklanır; misafir 5 kez yanlış denerse şifreyle giriş 10 dakika kapanır.
 - **3.3** — Kısa cümlelerde ses tanıma iyileşti: tanıma sınırı 0,40 → 0,33 (ama iki kişiye çok yakın benziyorsa kimseye verilmez), asistan konuştukça sesini daha iyi öğrenir, çok kısa konuşunca "bir cümle daha söyle" der. Güvenlik kaydında her sesli mesaj, tüm kişilerin puanlarıyla yazılır.
 - **3.2** — Ayarlar'ı artık yalnızca yönetici (Mert) görür ve değiştirebilir; Sezin ve misafirler, yöneticinin seçtiği ayarlarla çalışır.
 - **3.1** — Ses tanıtmada okunacak 3 cümle, Türkçedeki bütün sesleri (ç, ğ, ı, ö, ş, ü, j...) içeren cümlelerle değişti ve kayıttan önce hepsi ekranda gösteriliyor. Misafir modunda Ayarlar gizli (kimse yeni ses tanıtamaz, ayar değiştiremez); Sezin Ayarlar'ı görür ama ses profillerini göremez.

@@ -102,6 +102,12 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   (`_notice_stream`). `db`: `conversations.owner`, `messages.speaker`, `memories.owner` (+ `_NEW_COLUMNS` göçü), `speakers`,
   `security_log`. Misafir: hafızasız ayrı sistem istemi, mesajları "Misafir mesajı" olarak loglanır, hafıza çıkarma
   `speaker=misafir`'i atlar. Güvenlik kaydı ve profil listesi yalnızca yöneticiye açık. 3.2: Ayarlar yalnızca yöneticiye açık (özellik aktifken yönetici olmayan herkes için düğme gizli, sol alt özet tıklanmaz, `PUT /api/settings` → `_require_admin` 403). Ayarlar bilgisayar başına tektir; herkes yöneticinin seçtiklerini kullanır (kullanıcı kararı).
+  3.4: profil başına **şifre** (`speakers.passcode` = "salt$hash", PBKDF2-SHA256 200k; `PUT /api/voice/profiles/{id}/passcode`,
+  yalnızca yönetici). Kural: ≥6 karakter, harf + rakam, boşluksuz, `1234` içermez, profiller arası benzersiz.
+  `identity._passcode_attempt` `handle_code` içinde (1234'ten sonra, `<Ad>1234`'ten önce): doğruysa o profile geçer.
+  Misafirin harf+rakam içeren tek kelimesi **şifre denemesi** sayılır: modele/geçmişe gitmez, metni loglanmaz ("Yanlış
+  şifre denemesi n/5"); 5 yanlışta 10 dk kapanır (`MAX_TRIES`, `PAUSE_SECONDS`, süreç içi). Oturum açıkken böyle
+  kelimeler (ör. "iPhone15") normal mesajdır.
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
   "[Sistem notu, yanıtta yazma: …]" ve `memory.strip_clock_echo` cevaptan (kaydetmeden önce) temizler.
 - `data/` git'e girmez: kullanıcının özel verileri orada.
@@ -215,6 +221,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Sezin profiline benzerliği 0,10–0,17 → ayrım net, eşik 0,33 + MARGIN uygun, değişiklik gerekmedi. "Benim adım Mert",
   "Asya?" gibi tek kelime/çok kısa sesler puansız (misafir kalır); kullanıcı "cümle uzayınca benzerlik artıyor, problem
   değil" dedi. Sezin'in bu sürümdeki puanları henüz görülmedi.
+- **2026-09-29 (3.4):** Kullanıcı isteği: hastalıkta ses değişirse şifreyle kendi profiline girebilmek. Profil başına
+  şifre eklendi (yönetici belirler). İlk denemede bulunan açık: bekleme süresinde doğru şifre misafir mesajı olarak düz
+  metin loglanıyordu, yanlış denemeler de → misafirin kod benzeri tek kelimeleri artık hiç loglanmıyor/gönderilmiyor.
 
 ## Sıradaki fikirler
 

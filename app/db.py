@@ -57,6 +57,7 @@ _NEW_COLUMNS = [
     ("conversations", "owner", "TEXT"),
     ("messages", "speaker", "TEXT"),
     ("memories", "owner", "TEXT"),
+    ("speakers", "passcode", "TEXT"),  # "salt$hash" (PBKDF2), never the code itself
 ]
 
 
@@ -210,6 +211,11 @@ def save_speaker(name: str, embedding: list[float], is_admin: bool):
             "ON CONFLICT(name) DO UPDATE SET embedding = excluded.embedding",
             (name, json.dumps(embedding), int(is_admin)),
         )
+
+
+def set_passcode(speaker_id: int, hashed: str | None):
+    with session() as conn:
+        conn.execute("UPDATE speakers SET passcode = ? WHERE id = ?", (hashed, speaker_id))
 
 
 def delete_speaker(speaker_id: int):

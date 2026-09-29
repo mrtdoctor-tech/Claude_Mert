@@ -153,6 +153,13 @@ input:focus, select:focus { border-color: var(--accent); }
 }
 .memory-list li button { background: none; color: var(--muted); padding: 0 4px; }
 .memory-list li button:hover { color: var(--danger); }
+.memory-list li.profile { flex-wrap: wrap; align-items: center; }
+.profile-actions { display: flex; gap: 2px; }
+.memory-list li .key:hover { color: var(--accent); }
+.passcode-form { display: flex; gap: 6px; width: 100%; flex-wrap: wrap; }
+.passcode-form input { flex: 1; min-width: 180px; }
+.memory-list li .passcode-form button { padding: 6px 10px; }
+.memory-list li .passcode-form .primary { background: var(--accent); color: #fff; }
 .memory-list .none { background: none; color: var(--muted); justify-content: center; }
 .settings { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
 .settings label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--muted); }

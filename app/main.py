@@ -319,8 +319,31 @@ async def transcribe(audio: UploadFile = File(...)):
 @app.get("/api/voice/profiles")
 def voice_profiles():
     _require_admin()
-    return [{"id": s["id"], "name": s["name"], "admin": s["is_admin"], "created_at": s["created_at"]}
-            for s in db.list_speakers()]
+    return [{"id": s["id"], "name": s["name"], "admin": s["is_admin"], "created_at": s["created_at"],
+             "has_passcode": bool(s.get("passcode"))} for s in db.list_speakers()]
+
+
+class PasscodeIn(BaseModel):
+    passcode: str = ""  # empty = remove
+
+
+@app.put("/api/voice/profiles/{speaker_id}/passcode")
+def voice_passcode(speaker_id: int, body: PasscodeIn):
+    _require_admin()
+    target = next((s for s in db.list_speakers() if s["id"] == speaker_id), None)
+    if not target:
+        raise HTTPException(404, "Profil bulunamadı")
+    code = body.passcode.strip()
+    if not code:
+        db.set_passcode(speaker_id, None)
+        db.log_security("Şifre kaldırıldı", target["name"])
+        return {"ok": True}
+    problem = identity.passcode_problem(code, speaker_id)
+    if problem:
+        raise HTTPException(400, problem)
+    db.set_passcode(speaker_id, identity.hash_passcode(code))
+    db.log_security("Şifre belirlendi", target["name"])
+    return {"ok": True}
 
 
 @app.post("/api/voice/enroll")

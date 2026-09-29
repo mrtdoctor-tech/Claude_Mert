@@ -682,12 +682,41 @@ async function loadProfiles() {
     hint.textContent = "Ses profillerini yalnızca yönetici görebilir ve değiştirebilir.";
     return;
   }
-  hint.textContent = "Kilitlemek için 1234 yaz. Yönetici olarak başka birinin oturumuna geçmek için adını ve 1234 yaz (ör. Sezin1234).";
+  hint.textContent = "Kilitlemek için 1234 yaz. Yönetici olarak başka birinin oturumuna geçmek için adını ve 1234 yaz (ör. Sezin1234). 🔑 ile kişiye şifre verirsen, sesi tanınmadığında (ör. hastayken) şifresini yazarak kendi oturumuna girebilir.";
   for (const p of await api("/api/voice/profiles")) {
     const li = document.createElement("li");
-    li.innerHTML = `<span></span><button title="Sil">✕</button>`;
-    li.querySelector("span").textContent = `${p.name}${p.admin ? " · yönetici" : ""}`;
-    li.querySelector("button").onclick = async () => {
+    li.className = "profile";
+    li.innerHTML = `<span></span><span class="profile-actions"><button class="key" title="Şifre">🔑</button><button class="del" title="Sil">✕</button></span>
+      <form class="passcode-form" hidden>
+        <input type="password" autocomplete="new-password" placeholder="Yeni şifre: harf + rakam, en az 6">
+        <button class="primary">Kaydet</button>
+        <button type="button" class="ghost remove">Şifreyi kaldır</button>
+      </form>`;
+    li.querySelector("span").textContent = `${p.name}${p.admin ? " · yönetici" : ""}${p.has_passcode ? " · 🔑 şifreli" : ""}`;
+    const pform = li.querySelector(".passcode-form");
+    pform.querySelector(".remove").hidden = !p.has_passcode;
+    li.querySelector(".key").onclick = () => {
+      pform.hidden = !pform.hidden;
+      if (!pform.hidden) pform.querySelector("input").focus();
+    };
+    const savePasscode = async (passcode) => {
+      try {
+        await api(`/api/voice/profiles/${p.id}/passcode`, { method: "PUT", body: JSON.stringify({ passcode }) });
+        hint.textContent = passcode ? `✅ ${p.name} için şifre kaydedildi.` : `${p.name} için şifre kaldırıldı.`;
+        loadProfiles();
+      } catch (err) {
+        hint.textContent = "⚠️ " + err.message;
+      }
+    };
+    pform.onsubmit = (e) => {
+      e.preventDefault();
+      const code = pform.querySelector("input").value.trim();
+      if (code) savePasscode(code);
+    };
+    pform.querySelector(".remove").onclick = () => {
+      if (confirm(`${p.name} şifresi kaldırılsın mı?`)) savePasscode("");
+    };
+    li.querySelector(".del").onclick = async () => {
       if (!confirm(`${p.name} ses profili silinsin mi?`)) return;
       try {
         const res = await api(`/api/voice/profiles/${p.id}`, { method: "DELETE" });
