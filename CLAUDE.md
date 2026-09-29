@@ -202,6 +202,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   ekranında önceden gösteriliyor) ve misafir modunda Ayarlar'ın hiç görünmemesi (kimse ses kaydı yapamasın).
 - **2026-09-29 (3.2):** Kullanıcı: Ayarlar'ı yalnızca admin görsün/kullansın; seçilmiş ayarlar herkes için geçerli.
   Kullanıcı henüz ses kaydı yapmadı (3.1'in cümleleriyle yapacak).
+- **2026-09-29:** Mert ev bilgisayarında sesini tanıttı: tutarlılık **0,906** (örnek kayıttaki 0,85'ten iyi). Sezin'in
+  kaydı ve tanıma puanları bekleniyor.
 
 ## Sıradaki fikirler
 
