@@ -243,6 +243,7 @@ async function send(text, fromVoice = false, sttMs = null, sttDevice = null) {
       return;
     }
     applyIdentity(newIdentity);
+    loadAgenda(); // "yarın 9'da ... hatırlat" shows up on the right at once
     if (speaker) speaker.feed(reply, true);
     if (fromVoice && reply) listenAgainAfterReply(round);
     timer.finish(true);
@@ -581,6 +582,7 @@ function applyIdentity(id) {
     : `👤 ${id.name}${id.admin ? " · yönetici" : ""}`;
   $("#open-security").hidden = !(id.active && id.admin);
   $("#open-reminders").hidden = !!id.guest; // reminders are personal
+  showAgenda(!id.guest);
   if (id.guest) $("#reminders-dialog").close();
   // Only the admin reaches Settings (enrolling voices, models); everyone else uses the admin's settings.
   const locked = !!(id.active && !id.admin);
@@ -732,20 +734,98 @@ async function loadProfiles() {
   }
 }
 
-$("#open-security").onclick = async () => {
-  const list = $("#security-list");
-  list.innerHTML = "";
-  $("#security-dialog").showModal();
-  const entries = await api("/api/security-log").catch((err) => [{ event: "⚠️ " + err.message, detail: "", created_at: "" }]);
-  if (!entries.length) list.innerHTML = `<li class="none">Kayıt yok.</li>`;
-  for (const e of entries) {
-    const li = document.createElement("li");
-    li.innerHTML = `<span class="when"></span><strong></strong><span class="what"></span>`;
-    li.querySelector(".when").textContent = e.created_at + (e.score != null ? ` · benzerlik ${e.score}` : "");
-    li.querySelector("strong").textContent = e.event;
-    li.querySelector(".what").textContent = e.detail;
-    list.appendChild(li);
+// Security log: a table (search, filter by event, sort by column, export for Excel).
+let securityRows = [];
+const securitySort = { key: "date", desc: true };
+
+function securityClass(event) {
+  if (/Tanınmayan|Yanlış şifre|Çok fazla|engellendi/.test(event)) return "bad";
+  if (/tanındı|doğrulandı|Şifre ile girildi/.test(event)) return "good";
+  if (/Misafir|Kilitlendi/.test(event)) return "warn";
+  return "info";
+}
+
+function securityView() {
+  const q = $("#security-search").value.trim().toLocaleLowerCase("tr");
+  const only = $("#security-filter").value;
+  const rows = securityRows.filter((r) => (!only || r.event === only)
+    && (!q || `${r.created_at} ${r.event} ${r.detail} ${r.score ?? ""}`.toLocaleLowerCase("tr").includes(q)));
+  const { key, desc } = securitySort;
+  const value = (r) => key === "score" ? (r.score ?? -1) : key === "event" ? r.event : key === "detail" ? r.detail
+    : key === "time" ? r.created_at.slice(11) : r.created_at;
+  rows.sort((x, y) => {
+    const a = value(x), b = value(y);
+    const c = typeof a === "number" ? a - b : String(a).localeCompare(String(b), "tr");
+    return (desc ? -c : c) || (desc ? y.id - x.id : x.id - y.id);
+  });
+  return rows;
+}
+
+function renderSecurity() {
+  const rows = securityView();
+  const body = $("#security-table tbody");
+  body.innerHTML = "";
+  for (const r of rows) {
+    const tr = document.createElement("tr");
+    const [date, time] = (r.created_at || " ").split(" ");
+    tr.innerHTML = `<td class="nowrap"></td><td class="nowrap"></td><td><span class="badge"></span></td><td></td><td class="num"></td>`;
+    const cells = tr.children;
+    cells[0].textContent = date ? date.split("-").reverse().join(".") : "";
+    cells[1].textContent = time || "";
+    cells[2].firstChild.textContent = r.event;
+    cells[2].firstChild.classList.add(securityClass(r.event));
+    cells[3].textContent = r.detail;
+    cells[4].textContent = r.score != null ? Number(r.score).toFixed(3).replace(".", ",") : "";
+    body.appendChild(tr);
   }
+  if (!rows.length) body.innerHTML = `<tr><td colspan="5" class="agenda-empty">Kayıt yok.</td></tr>`;
+  $("#security-count").textContent = `${rows.length} / ${securityRows.length} kayıt`;
+  document.querySelectorAll("#security-table th").forEach((th) => {
+    th.classList.toggle("sorted", th.dataset.key === securitySort.key);
+    th.classList.toggle("desc", th.dataset.key === securitySort.key && securitySort.desc);
+  });
+}
+
+$("#open-security").onclick = async () => {
+  $("#security-search").value = "";
+  $("#security-dialog").showModal();
+  try {
+    securityRows = await api("/api/security-log");
+  } catch (err) {
+    securityRows = [{ id: 0, created_at: "", event: "⚠️ " + err.message, detail: "", score: null }];
+  }
+  const filter = $("#security-filter");
+  filter.innerHTML = `<option value="">Tüm olaylar</option>`;
+  for (const ev of [...new Set(securityRows.map((r) => r.event))].sort((a, b) => a.localeCompare(b, "tr"))) {
+    filter.add(new Option(ev, ev));
+  }
+  renderSecurity();
+};
+$("#security-search").addEventListener("input", renderSecurity);
+$("#security-filter").addEventListener("change", renderSecurity);
+document.querySelectorAll("#security-table th").forEach((th) => {
+  th.onclick = () => {
+    securitySort.desc = securitySort.key === th.dataset.key ? !securitySort.desc : th.dataset.key !== "event";
+    securitySort.key = th.dataset.key;
+    renderSecurity();
+  };
+});
+
+// CSV with ";" and a BOM: Turkish Excel opens it with the right columns and letters.
+$("#security-export").onclick = () => {
+  const cell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const lines = [["Tarih", "Saat", "Olay", "Ayrıntı", "Benzerlik"].map(cell).join(";")];
+  for (const r of securityView()) {
+    const [date, time] = (r.created_at || " ").split(" ");
+    lines.push([date.split("-").reverse().join("."), time, r.event, r.detail,
+      r.score != null ? String(r.score).replace(".", ",") : ""].map(cell).join(";"));
+  }
+  const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `guvenlik-kaydi-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 };
 
 // Settings dialog
@@ -881,6 +961,7 @@ function fmtLeft(ms) {
 }
 
 function renderTimers() {
+  renderAgendaTimers();
   const bar = $("#timer-bar");
   bar.hidden = !timers.length;
   bar.innerHTML = "";
@@ -983,6 +1064,7 @@ async function loadReminders() {
       await api(`/api/reminders/${r.id}`, { method: "DELETE" });
       loadReminders();
       pollAlerts();
+      loadAgenda();
     };
     list.appendChild(li);
   }
@@ -1012,6 +1094,7 @@ $("#reminder-form").addEventListener("submit", async (e) => {
     $("#reminder-text").value = "";
     $("#reminder-status").textContent = "✅ Eklendi.";
     loadReminders();
+    loadAgenda();
   } catch (err) {
     $("#reminder-status").textContent = "⚠️ " + err.message;
   }
@@ -1047,4 +1130,175 @@ $("#outlook-test").onclick = async () => {
     status.textContent = "⚠️ " + err.message;
   }
 };
+
+// Agenda: the right-hand panel with a month calendar and the person's upcoming reminders (3.9).
+
+const MONTHS = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+const DAYS = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+const agenda = { items: [], month: new Date(new Date().getFullYear(), new Date().getMonth(), 1), selected: null,
+  allowed: false, loadedAt: 0 };
+
+function agendaPref() {
+  try { return localStorage.getItem("agenda") !== "hidden"; } catch { return true; }
+}
+
+function showAgenda(allowed) {
+  agenda.allowed = allowed;
+  $("#toggle-agenda").hidden = !allowed;
+  $("#agenda").hidden = !(allowed && agendaPref());
+  if (!$("#agenda").hidden) loadAgenda();
+}
+
+$("#toggle-agenda").onclick = () => {
+  const show = $("#agenda").hidden;
+  try { localStorage.setItem("agenda", show ? "shown" : "hidden"); } catch {}
+  showAgenda(agenda.allowed);
+};
+
+const dayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const dueDate = (r) => new Date(r.due_at.replace(" ", "T"));
+
+function occursOn(r, day) {
+  const due = dueDate(r);
+  const start = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+  if (day < start) return false;
+  switch (r.repeat) {
+    case "daily": return true;
+    case "weekly": return day.getDay() === due.getDay();
+    case "monthly": return day.getDate() === due.getDate();
+    case "yearly": return day.getDate() === due.getDate() && day.getMonth() === due.getMonth();
+    default: return dayKey(day) === dayKey(due);
+  }
+}
+
+function dayLabel(d) {
+  const today = new Date();
+  const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+  if (dayKey(d) === dayKey(today)) return "Bugün";
+  if (dayKey(d) === dayKey(tomorrow)) return "Yarın";
+  const year = d.getFullYear() !== today.getFullYear() ? ` ${d.getFullYear()}` : "";
+  return `${d.getDate()} ${MONTHS[d.getMonth()]}${year} ${DAYS[d.getDay()]}`;
+}
+
+async function loadAgenda() {
+  if ($("#agenda").hidden) return;
+  agenda.loadedAt = Date.now();
+  try {
+    agenda.items = (await api("/api/reminders")).filter((r) => r.kind !== "timer");
+  } catch {
+    agenda.items = [];
+  }
+  renderMonth();
+  renderAgendaList();
+}
+
+function renderMonth() {
+  const m = agenda.month;
+  $("#month-title").textContent = `${MONTHS[m.getMonth()]} ${m.getFullYear()}`;
+  const grid = $("#month-grid");
+  grid.innerHTML = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"].map((d) => `<span class="dow">${d}</span>`).join("");
+  const offset = (m.getDay() + 6) % 7; // Monday first
+  const today = dayKey(new Date());
+  for (let i = 0; i < 42; i++) {
+    const day = new Date(m.getFullYear(), m.getMonth(), 1 - offset + i);
+    const key = dayKey(day);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = day.getDate();
+    btn.classList.toggle("other", day.getMonth() !== m.getMonth());
+    btn.classList.toggle("today", key === today);
+    btn.classList.toggle("selected", key === agenda.selected);
+    const count = agenda.items.filter((r) => occursOn(r, day)).length;
+    btn.classList.toggle("has", count > 0);
+    btn.title = count ? `${count} hatırlatma` : "";
+    btn.onclick = () => {
+      agenda.selected = agenda.selected === key ? null : key;
+      renderMonth();
+      renderAgendaList();
+    };
+    grid.appendChild(btn);
+  }
+}
+
+function agendaItem(r, showDay) {
+  const div = document.createElement("div");
+  div.className = "agenda-item";
+  const icon = r.kind === "alarm" ? "⏰" : "🔔";
+  div.innerHTML = `<span class="time"></span><span class="what"><span></span><small></small></span><button title="İptal et">✕</button>`;
+  const due = dueDate(r);
+  div.querySelector(".time").textContent = `${String(due.getHours()).padStart(2, "0")}:${String(due.getMinutes()).padStart(2, "0")}`;
+  div.querySelector(".what span").textContent = `${icon} ${r.text}`;
+  const notes = [];
+  if (showDay) notes.push(dayLabel(due));
+  if (r.repeat) notes.push(REPEAT_LABELS[r.repeat]);
+  if (r.calendar) notes.push("📅 Outlook'ta");
+  if (r.calendar_note) notes.push("⚠️ " + r.calendar_note);
+  div.querySelector("small").textContent = notes.join(" · ");
+  div.querySelector("button").onclick = async () => {
+    if (!confirm(`"${r.text}" iptal edilsin mi?`)) return;
+    await api(`/api/reminders/${r.id}`, { method: "DELETE" }).catch(() => {});
+    loadAgenda();
+  };
+  return div;
+}
+
+function renderAgendaList() {
+  const list = $("#agenda-list");
+  list.innerHTML = "";
+  $("#agenda-all").hidden = !agenda.selected;
+  if (agenda.selected) {
+    const day = new Date(agenda.selected + "T00:00");
+    $("#agenda-list-title").textContent = dayLabel(day);
+    const items = agenda.items.filter((r) => occursOn(r, day))
+      .sort((a, b) => a.due_at.slice(11).localeCompare(b.due_at.slice(11)));
+    if (!items.length) list.innerHTML = `<div class="agenda-empty">Bu gün için hatırlatma yok.</div>`;
+    for (const r of items) list.appendChild(agendaItem(r, false));
+    return;
+  }
+  $("#agenda-list-title").textContent = "Yaklaşanlar";
+  if (!agenda.items.length) {
+    list.innerHTML = `<div class="agenda-empty">Kurulu hatırlatma yok. Sohbette "yarın 9'da doktoru aramamı hatırlat" yazabilirsin.</div>`;
+    return;
+  }
+  let last = "";
+  for (const r of [...agenda.items].sort((a, b) => a.due_at.localeCompare(b.due_at)).slice(0, 40)) {
+    const label = dayLabel(dueDate(r));
+    if (label !== last) {
+      const h = document.createElement("div");
+      h.className = "agenda-day";
+      h.textContent = label;
+      list.appendChild(h);
+      last = label;
+    }
+    list.appendChild(agendaItem(r, false));
+  }
+}
+
+function renderAgendaTimers() {
+  const box = $("#agenda-timers");
+  box.hidden = !timers.length;
+  box.innerHTML = timers.length ? `<div class="agenda-subhead"><span>Sayaçlar</span></div>` : "";
+  for (const t of timers) {
+    const div = document.createElement("div");
+    div.className = "agenda-item";
+    div.innerHTML = `<span class="time"></span><span class="what"></span>`;
+    div.querySelector(".time").textContent = fmtLeft(t.endsAt - Date.now());
+    div.querySelector(".what").textContent = `⏳ ${t.text}`;
+    box.appendChild(div);
+  }
+}
+
+$("#month-prev").onclick = () => { agenda.month = new Date(agenda.month.getFullYear(), agenda.month.getMonth() - 1, 1); renderMonth(); };
+$("#month-next").onclick = () => { agenda.month = new Date(agenda.month.getFullYear(), agenda.month.getMonth() + 1, 1); renderMonth(); };
+$("#agenda-all").onclick = () => { agenda.selected = null; renderMonth(); renderAgendaList(); };
+
+// "+ Ekle" opens the reminder window, set to the selected day at 09:00 (or the next full hour).
+$("#agenda-add").onclick = () => {
+  $("#open-reminders").click();
+  if (agenda.selected) $("#reminder-when").value = `${agenda.selected}T09:00`;
+  $("#reminder-text").focus();
+};
+
+setInterval(() => { if (Date.now() - agenda.loadedAt > 20000) loadAgenda(); }, 5000);
+showAgenda(true);
 

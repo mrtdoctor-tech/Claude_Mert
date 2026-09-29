@@ -114,6 +114,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.9** — Sağda **📅 Ajanda** paneli: ay takvimi (hatırlatma olan günler noktalı), çalışan sayaçlar, yaklaşan hatırlatmalar; güne tıklayınca o günün listesi. Tanınan kişide görünür, misafirde gizli; başlıktaki 📅 ile açılıp kapanır. **Güvenlik kaydı** artık tablo: arama, olaya göre süzme, sütuna tıklayınca sıralama, "Excel'e aktar".
 - **3.8** — Klasik Outlook kurulu ama içinde hesap yoksa asistan Outlook'u açmıyor ("hesap ekle" sihirbazı çıkmıyor), ne yapılacağını söylüyor.
 - **3.7** — "Outlook bağlantısını dene" artık klasik Outlook kurulu değilse kurulum sihirbazını açmıyor, durumu söylüyor. Spotify mesajı ücretsiz hesaba göre düzeltildi.
 - **3.6** — Outlook takvimi: hatırlatmaların Outlook'a da eklenir, telefonda bildirim çıkar (Ayarlar'dan açılır). Excel/dosya komutları ("Bütçe dosyasını Excel'de aç", "Excel'i kaydetmeden kapat"), müzik kontrolü ("sonraki şarkı", "sesi kıs") ve Spotify ("Spotify'da Tarkan çal"). Misafire kapalı.

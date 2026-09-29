@@ -140,6 +140,11 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   profili yok** (M365 Personal var → klasik Outlook kurulu; kullanıcı yeni Outlook kullanıyor) → `has_mail_profile()`
   (HKCU `Software\Microsoft\Office\16.0|15.0\Outlook\Profiles` alt anahtar sayısı) yoksa COM'a hiç gidilmez.
   **Gerçek Windows/Excel/Outlook'ta denenmedi**; bulutta sahte `win32com`/`pythoncom` modülleriyle test edildi.
+- **Ajanda + güvenlik tablosu (3.9):** Sağda `<aside id="agenda">` (300 px; ≤1100 px genişlikte CSS ile gizli).
+  `applyIdentity` → `showAgenda(!guest)`; tercih `localStorage["agenda"]`, başlıkta `#toggle-agenda`. `/api/reminders`'ı
+  (sayaç hariç) 20 sn'de bir ve sohbet/ekleme/silme sonrası yükler; ay takvimi Pazartesi başlar, tekrarlar istemcide
+  (`occursOn`: due_at = sonraki oluşum, öncesi gösterilmez). Güvenlik kaydı `<table class="grid">`: arama, olay süzgeci,
+  başlığa tıkla-sırala, CSV dışa aktarma (`;` + BOM + virgüllü ondalık: Türkçe Excel doğru açsın).
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -283,6 +288,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   telefonda (Android) bildirim çıkıp çıkmadığı henüz bildirilmedi. Gmail yoluna gerek kalmadı.
 - **2026-09-30:** **Outlook takvimi uçtan uca doğrulandı:** "deneme" hatırlatması panelde "📅 Outlook'ta" göründü ve
   kullanıcının Android telefonundaki takvime işlendi. (Aynı anda "deneme" adlı bir sayaç da vardı; sayaçlar takvime gitmez.)
+- **2026-09-30 (3.9):** Kullanıcı isteği: güvenlik kaydı tablo gibi, hatırlatıcılar sağda takvim görünümlü bir bölümde
+  (profil açılınca). Kullanıcının asıl sıradaki seçimi bundan sonra sorulacak (notlar/liste, fotoğraf, belge, sabah özeti,
+  uyandırma sözcüğü, eski sohbet arama, hava/haber). Excel/müzik komutları gerçek bilgisayarda henüz denenmedi.
 
 ## Sıradaki fikirler
 

@@ -27,6 +27,7 @@
       <header class="chat-header">
         <button id="toggle-sidebar" class="icon" title="Menü">☰</button>
         <h1 id="chat-title">Yeni sohbet</h1>
+        <button id="toggle-agenda" class="icon" title="Ajandayı göster/gizle" hidden>📅</button>
         <label class="toggle" title="Yanıtları sesli oku">
           <input type="checkbox" id="speak-toggle"> 🔊 Sesli yanıt
         </label>
@@ -50,6 +51,27 @@
       </form>
       <div id="identity-bar" class="identity" hidden></div>
     </main>
+
+    <aside class="agenda" id="agenda" hidden>
+      <div class="agenda-head">
+        <h3>📅 Ajanda</h3>
+        <button type="button" id="agenda-add" class="ghost" title="Hatırlatma ekle">+ Ekle</button>
+      </div>
+      <div class="month">
+        <div class="month-nav">
+          <button type="button" class="icon" id="month-prev" title="Önceki ay">‹</button>
+          <span id="month-title"></span>
+          <button type="button" class="icon" id="month-next" title="Sonraki ay">›</button>
+        </div>
+        <div class="month-grid" id="month-grid"></div>
+      </div>
+      <div id="agenda-timers" class="agenda-section" hidden></div>
+      <div class="agenda-section">
+        <div class="agenda-subhead"><span id="agenda-list-title">Yaklaşanlar</span>
+          <button type="button" id="agenda-all" class="link" hidden>Tümü</button></div>
+        <div id="agenda-list"></div>
+      </div>
+    </aside>
   </div>
 
   <dialog id="memory-dialog">
@@ -103,13 +125,27 @@
     <button id="alert-ok" class="primary wide">Tamam</button>
   </dialog>
 
-  <dialog id="security-dialog">
+  <dialog id="security-dialog" class="wide-dialog">
     <div class="dialog-head">
       <h2>🛡️ Güvenlik kaydı</h2>
       <button class="icon close" data-close>✕</button>
     </div>
-    <p class="hint">Tanınmayan sesler, misafirlerin yazdıkları, kilitleme ve oturum değişiklikleri. "Benzerlik", sesin kayıtlı en yakın sese ne kadar benzediğidir (1'e yakın = çok benzer).</p>
-    <ul id="security-list" class="memory-list log-list"></ul>
+    <p class="hint">Tanınmayan sesler, misafirlerin yazdıkları, şifre denemeleri, kilitleme ve oturum değişiklikleri. "Benzerlik", sesin kayıtlı en yakın sese ne kadar benzediğidir (1'e yakın = çok benzer). Sütun başlığına tıklayınca sıralanır.</p>
+    <div class="table-tools">
+      <input id="security-search" placeholder="🔎 Ara (ör. Sezin, misafir, şifre)">
+      <select id="security-filter"><option value="">Tüm olaylar</option></select>
+      <span id="security-count" class="hint"></span>
+      <button type="button" id="security-export" class="ghost">📥 Excel'e aktar</button>
+    </div>
+    <div class="table-wrap">
+      <table class="grid" id="security-table">
+        <thead><tr>
+          <th data-key="date">Tarih</th><th data-key="time">Saat</th><th data-key="event">Olay</th>
+          <th data-key="detail">Ayrıntı</th><th data-key="score" class="num">Benzerlik</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </dialog>
 
   <dialog id="enroll-dialog">

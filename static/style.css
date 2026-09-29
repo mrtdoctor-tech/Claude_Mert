@@ -196,3 +196,71 @@ input:focus, select:focus { border-color: var(--accent); }
 .outlook-test { display: flex; flex-direction: column; gap: 4px; margin-top: -6px; }
 .outlook-test button { align-self: flex-start; padding: 6px 10px; }
 .outlook-test small { color: var(--muted); font-size: 12px; }
+
+/* Security log as a table (3.9) */
+.wide-dialog { width: min(1100px, 95vw); max-width: none; }
+.table-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; }
+.table-tools input { flex: 1 1 220px; }
+.table-tools select { flex: 0 1 220px; }
+.table-tools .hint { margin: 0; font-size: 13px; }
+.table-wrap { max-height: 62vh; overflow: auto; border: 1px solid var(--border); border-radius: 10px; }
+table.grid { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.grid th, table.grid td { padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+table.grid th {
+  position: sticky; top: 0; background: var(--panel-2); color: var(--muted); font-weight: 600;
+  cursor: pointer; user-select: none; white-space: nowrap; z-index: 1;
+}
+table.grid th:hover { color: var(--text); }
+table.grid th.sorted::after { content: " ▲"; font-size: 10px; }
+table.grid th.sorted.desc::after { content: " ▼"; }
+table.grid tbody tr:nth-child(even) { background: rgba(255, 255, 255, .02); }
+table.grid tbody tr:hover { background: var(--panel-2); }
+table.grid td.num, table.grid th.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.grid td.nowrap { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; background: var(--panel-2); white-space: nowrap; }
+.badge.bad { background: rgba(255, 107, 107, .15); color: #ff9b9b; }
+.badge.good { background: rgba(80, 200, 120, .15); color: #7fe0a0; }
+.badge.warn { background: rgba(255, 184, 77, .15); color: #ffc46b; }
+.badge.info { background: rgba(124, 108, 255, .18); color: var(--accent-2); }
+
+/* Right panel: agenda (3.9) */
+.agenda {
+  width: 300px; flex-shrink: 0; background: var(--panel); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 14px; padding: 14px; overflow-y: auto;
+}
+.agenda[hidden] { display: none; }
+.agenda-head { display: flex; align-items: center; justify-content: space-between; }
+.agenda-head h3 { margin: 0; font-size: 16px; }
+.agenda-head .ghost { padding: 6px 10px; }
+.month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+.month-nav .icon { padding: 2px 10px; font-size: 18px; }
+.month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 12px; }
+.month-grid .dow { color: var(--muted); font-size: 11px; padding: 2px 0; }
+.month-grid button {
+  position: relative; background: none; color: var(--text); padding: 6px 0 8px; border-radius: 8px; font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.month-grid button:hover { background: var(--panel-2); }
+.month-grid button.other { color: var(--muted); opacity: .45; }
+.month-grid button.today { outline: 1px solid var(--accent); }
+.month-grid button.selected { background: var(--accent); color: #fff; }
+.month-grid button.has::after {
+  content: ""; position: absolute; left: 50%; bottom: 2px; width: 4px; height: 4px; margin-left: -2px;
+  border-radius: 50%; background: var(--accent-2);
+}
+.month-grid button.selected.has::after { background: #fff; }
+.agenda-section { display: flex; flex-direction: column; gap: 6px; }
+.agenda-subhead { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px;
+  text-transform: uppercase; letter-spacing: .04em; }
+.link { background: none; color: var(--accent-2); padding: 0; font-size: 12px; text-transform: none; letter-spacing: 0; }
+.agenda-day { color: var(--muted); font-size: 12px; margin: 8px 0 2px; }
+.agenda-item {
+  display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border-radius: 10px; background: var(--panel-2); font-size: 13px;
+}
+.agenda-item .time { font-variant-numeric: tabular-nums; color: var(--accent-2); min-width: 40px; }
+.agenda-item .what { flex: 1; overflow-wrap: anywhere; }
+.agenda-item small { display: block; color: var(--muted); font-size: 11px; }
+.agenda-item button { background: none; color: var(--muted); padding: 0 2px; }
+.agenda-item button:hover { color: var(--danger); }
+.agenda-empty { color: var(--muted); font-size: 13px; padding: 6px 2px; }
+@media (max-width: 1100px) { .agenda { display: none; } #toggle-agenda { display: none; } }

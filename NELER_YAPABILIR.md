@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.8
+Sürüm: 3.9
 
 ---
 
@@ -71,6 +71,9 @@ Bu sorular yapay zekâya gitmez; doğrudan bilgisayarın saatinden, anında ve h
 - Hatırlatmalar **kişiye özel**: Mert'inkileri Sezin görmez, Sezin'inkileri Mert görmez. Başkasının alarmı çalarsa
   yalnızca "Sezin için bir hatırlatma var" yazar, içeriği görünmez. Misafir hatırlatma kuramaz.
 - Sol menüdeki **⏰ Hatırlatıcılar** panelinden hepsini görebilir, elle ekleyebilir ve silebilirsin.
+- Ekranın sağındaki **📅 Ajanda**'da ay takvimi (hatırlatma olan günlerin altında nokta), çalışan sayaçlar ve yaklaşan
+  hatırlatmalar görünür. Bir güne tıklayınca o günün hatırlatmaları listelenir; **+ Ekle** o güne hatırlatma ekler.
+  Başlıktaki 📅 düğmesiyle gizleyip açabilirsin. Misafir modunda ajanda görünmez. (Dar pencerede yer olmadığı için gizlenir.)
 
 ## 📅 Outlook takvimi ve telefon (3.6)
 
@@ -137,7 +140,8 @@ Herkesin hafızası ayrıdır.
 - **`1234`** yaz: kilitlenir ve misafir moduna geçer. Kilidi tanınan bir ses ya da şifre açar.
 - **Kişisel şifre** (ör. hastayken sesin değişirse): şifreni yazıp gönder, kendi oturumuna geçersin.
 - **`Sezin1234`** (yalnızca yönetici, kendi oturumundayken): Sezin'in oturumuna geçer.
-- **🛡️ Güvenlik kaydı** (yalnızca yönetici): tanınmayan sesler, misafir mesajları, şifre denemeleri.
+- **🛡️ Güvenlik kaydı** (yalnızca yönetici): tanınmayan sesler, misafir mesajları, şifre denemeleri. Tablo hâlinde;
+  arayabilir, olay türüne göre süzebilir, sütun başlığına tıklayıp sıralayabilir, **📥 Excel'e aktar** ile indirebilirsin.
 - **⚙️ Ayarlar** yalnızca yöneticiye görünür.
 
 ## 💡 İpuçları
