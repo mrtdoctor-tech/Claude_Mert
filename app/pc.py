@@ -238,28 +238,73 @@ def _excel(text: str) -> str | None:
 
 # Music: the keyboard's media keys work with Spotify, YouTube in the browser, Windows Media Player...
 
-_VK = {"play": 0xB3, "next": 0xB0, "prev": 0xB1, "up": 0xAF, "down": 0xAE, "mute": 0xAD}
+_VK = {"toggle": 0xB3, "next": 0xB0, "prev": 0xB1, "up": 0xAF, "down": 0xAE, "mute": 0xAD}
+_APPCOMMAND = {"toggle": 14, "next": 11, "prev": 12}  # APPCOMMAND_MEDIA_PLAY_PAUSE, _NEXTTRACK, _PREVIOUSTRACK
 _MEDIA = [
     (re.compile(r"sonraki\s+şarkı|sıradaki\s+şarkı|şarkıyı\s+(geç|atla|değiştir)|diğer\s+şarkı"), "next", 1,
      "Sonraki şarkıya geçtim."),
     (re.compile(r"önceki\s+şarkı|bir\s+önceki|geri\s+(al|dön)\s+şarkı"), "prev", 1, "Önceki şarkıya döndüm."),
-    (re.compile(r"(müziği|şarkıyı|spotify'?ı?)\s*(durdur|duraklat|kes)|müzik\s+dursun"), "play", 1,
+    (re.compile(r"(müziği|müzik|şarkıyı|spotify'?ı?)\s*(durdur|duraklat|kes|kapat)|müzik\s+dursun"), "pause", 1,
      "Müziği durdurdum."),
-    (re.compile(r"(müziğe|müziği|şarkıya|çalmaya)\s+devam|müziği\s+(başlat|devam\s+ettir)"), "play", 1,
+    (re.compile(r"(müziğe|müziği|şarkıya|çalmaya)\s+devam|müziği\s+(başlat|devam\s+ettir|aç)"), "play", 1,
      "Müziğe devam ediyorum."),
     (re.compile(r"sesi\s+(aç|yükselt|artır|arttır)|sesi\s+biraz\s+aç"), "up", 5, "Sesi açtım."),
     (re.compile(r"sesi\s+(kıs|azalt|düşür)|sesi\s+biraz\s+kıs"), "down", 5, "Sesi kıstım."),
     (re.compile(r"sesi\s+(kapat|sustur)|sessize\s+al"), "mute", 1, "Sesi kapattım (tekrar söylersen açarım)."),
 ]
+_IDLE_TITLES = {"spotify", "spotify free", "spotify premium", ""}  # Spotify's window title when nothing plays
 
 
 def _press(key: str, times: int = 1):
+    """The keyboard's media keys. They are "extended" keys: without that flag some programs ignore them."""
     import ctypes
 
     for _ in range(times):
-        ctypes.windll.user32.keybd_event(_VK[key], 0, 0, 0)
-        ctypes.windll.user32.keybd_event(_VK[key], 0, 2, 0)  # key up
+        ctypes.windll.user32.keybd_event(_VK[key], 0, 1, 0)  # KEYEVENTF_EXTENDEDKEY
+        ctypes.windll.user32.keybd_event(_VK[key], 0, 3, 0)  # + KEYEVENTF_KEYUP
         time.sleep(0.03)
+
+
+def _spotify_window():
+    """(window, title) of the Spotify desktop app, or None. The title is "Artist - Song" while music plays."""
+    import ctypes
+    from ctypes import wintypes
+
+    user32, kernel32 = ctypes.windll.user32, ctypes.windll.kernel32
+    found = []
+
+    @ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    def visit(hwnd, _):
+        length = user32.GetWindowTextLengthW(hwnd)
+        if not length and not user32.IsWindowVisible(hwnd):
+            return True
+        pid = wintypes.DWORD()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        process = kernel32.OpenProcess(0x1000, False, pid.value)  # PROCESS_QUERY_LIMITED_INFORMATION
+        if not process:
+            return True
+        try:
+            path = ctypes.create_unicode_buffer(1024)
+            size = wintypes.DWORD(1024)
+            if kernel32.QueryFullProcessImageNameW(process, 0, path, ctypes.byref(size)) \
+                    and path.value.lower().endswith("\\spotify.exe") and length:
+                title = ctypes.create_unicode_buffer(length + 1)
+                user32.GetWindowTextW(hwnd, title, length + 1)
+                found.append((hwnd, title.value))
+        finally:
+            kernel32.CloseHandle(process)
+        return True
+
+    user32.EnumWindows(visit, 0)
+    # The main window is the one with a real title (Spotify also has hidden helper windows).
+    found.sort(key=lambda w: w[1].lower() in _IDLE_TITLES)
+    return found[0] if found else None
+
+
+def _spotify_command(hwnd, command: str):
+    import ctypes
+
+    ctypes.windll.user32.SendMessageW(hwnd, 0x0319, 0, _APPCOMMAND[command] << 16)  # WM_APPCOMMAND
 
 
 def _media(text: str) -> str | None:
@@ -267,9 +312,29 @@ def _media(text: str) -> str | None:
     if len(low) > 60:
         return None
     for pattern, key, times, reply in _MEDIA:
-        if pattern.search(low):
+        if not pattern.search(low):
+            continue
+        if key in ("up", "down", "mute"):  # the computer's volume
             _press(key, times)
             return reply
+        spotify = _spotify_window()
+        if spotify:
+            hwnd, title = spotify
+            playing = title.strip().lower() not in _IDLE_TITLES
+            if key == "pause" and not playing:
+                return "Spotify'da çalan bir şey yok, müzik zaten durmuş."
+            if key == "play" and playing:
+                return f"Zaten çalıyor: {title}."
+            _spotify_command(hwnd, "toggle" if key in ("pause", "play") else key)
+            if key in ("next", "prev"):
+                time.sleep(0.8)  # let Spotify show the new song in its title
+                now = _spotify_window()
+                if now and now[1].strip().lower() not in _IDLE_TITLES:
+                    return f"{reply} Şimdi çalan: {now[1]}."
+            return reply
+        # No Spotify app: the media keys reach whatever plays (e.g. Spotify or YouTube in the browser).
+        _press("toggle" if key in ("pause", "play") else key, times)
+        return reply
     return None
 
 
@@ -316,7 +381,7 @@ def handle(text: str, owner: str) -> str | None:
     if problem:
         return problem
     try:
-        return _excel(text) or _spotify(text) or _media(text)
+        return _excel(text) or _media(text) or _spotify(text)  # "Spotify'ı durdur" is a music command
     except ImportError:
         return "Excel kontrolü için gereken paket (pywin32) kurulu değil. baslat.bat'ı kapatıp yeniden aç."
     except Exception as e:

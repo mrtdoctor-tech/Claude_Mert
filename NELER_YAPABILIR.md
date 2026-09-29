@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.11
+Sürüm: 3.12
 
 ---
 
@@ -111,8 +111,8 @@ Excel hakkında soru sormak ("Düşeyara nasıl kullanılır?") komut sayılmaz;
 
 Bilgisayarda çalan müziği (Spotify, YouTube, vb.) yönetir:
 
-- "Sonraki şarkı" / "Önceki şarkı"
-- "Müziği durdur" / "Müziğe devam et"
+- "Sonraki şarkı" / "Önceki şarkı" (sonra hangi şarkının çaldığını söyler)
+- "Müziği durdur" / "Spotify'ı durdur" / "Müziğe devam et" (müzik zaten durmuşsa ya da çalıyorsa bunu söyler)
 - "Sesi aç" / "Sesi kıs" / "Sesi kapat"
 
 Spotify:

@@ -128,7 +128,12 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   "kaydet", "açık dosyalar"; seçim yoksa Excel'in kendi sorusu (arka plan thread'inde `Quit`). Hiç kaydedilmemiş kitap
   (Path boş) "kaydederek"te açık bırakılır. **Dikkat:** "kaydederek" ≠ "kaydet" alt dizgisi (`_SAVE` = `kayded|kaydet(?!me)`).
   "Excel" geçmeden "<ad> dosyasını aç/kapat/kaydet" de komut; açma o zaman Word/PDF/PPT'yi de bulur. Soru kelimesi
-  (nasıl, nedir, formül…) varsa komut sayılmaz. Müzik: `keybd_event` medya tuşları. Spotify: `spotify:` /
+  (nasıl, nedir, formül…) varsa komut sayılmaz. Müzik (3.12): Spotify masaüstü penceresi bulunursa (`_spotify_window`:
+  EnumWindows + işlem yolu `spotify.exe`) ona `WM_APPCOMMAND` (oynat/duraklat 14, sonraki 11, önceki 12); pencere başlığı
+  "Spotify"/"Spotify Free/Premium" ise duruyor, "Sanatçı - Şarkı" ise çalıyor → "durdur" zaten durmuşsa geçiş yapmaz.
+  Spotify yoksa `keybd_event` medya tuşları **KEYEVENTF_EXTENDEDKEY (1/3)** ile (3.6'da bayraksızdı: "müziği durdur" kullanıcıda
+  çalışmadı; ayrıca Chrome, TTS sesi yüzünden medya tuşlarını kendine alıyor olabilir). Ses aç/kıs sistem tuşları.
+  `handle` sırası: excel → media → spotify ("Spotify'ı durdur" açma değil durdurma). Spotify: `spotify:` /
   `spotify:search:<q>` (Premium'suz otomatik çalma yok). `COM` her thread'de `pythoncom.CoInitialize` (`pc.com`).
 - **Outlook takvimi (3.6):** `app/outlook.py`, ayar `outlook_sync` (Ayarlar'da, yönetici). Microsoft Graph/uygulama kaydı
   yerine **klasik Outlook COM**: `CreateItem(1)` randevu (Start yerel "YYYY-MM-DD HH:MM" dizgisi, 15 dk, meşgul değil,
@@ -316,6 +321,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   (🔔 + "📅 Outlook'ta") görünüyor; mavi kopya gizleniyor → kullanıcıya bunun normal olduğu açıklandı.
 - **2026-09-30 (3.11):** Kullanıcı 7'yi seçti: hava durumu + haberler (misafire kapalı). API anahtarsız kaynaklar:
   Open-Meteo, NTV/BBC Türkçe RSS. Gerçek ağda ilk deneme kullanıcıda olacak; RSS adresleri değişmişse haber hata verir.
+- **2026-09-30 (3.12):** Kullanıcı: "Spotify açıyor, müziği durdur çalışmıyor" → Spotify'a doğrudan WM_APPCOMMAND,
+  genişletilmiş medya tuşları. Hava/haber (3.11) gerçek ağda henüz denendiği bildirilmedi.
 
 ## Sıradaki fikirler
 
