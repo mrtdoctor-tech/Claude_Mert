@@ -281,6 +281,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-29:** 3.8 sonrası kullanıcı klasik Outlook'a hesabını ekledi → "Outlook bağlantısını dene": **✅ Outlook
   çalışıyor, takvim "Calendar" (kişisel Outlook.com hesabı)**. `outlook_sync` açıldı. Takvime gerçekten randevu eklenip
   telefonda (Android) bildirim çıkıp çıkmadığı henüz bildirilmedi. Gmail yoluna gerek kalmadı.
+- **2026-09-30:** **Outlook takvimi uçtan uca doğrulandı:** "deneme" hatırlatması panelde "📅 Outlook'ta" göründü ve
+  kullanıcının Android telefonundaki takvime işlendi. (Aynı anda "deneme" adlı bir sayaç da vardı; sayaçlar takvime gitmez.)
 
 ## Sıradaki fikirler
 
