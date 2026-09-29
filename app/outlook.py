@@ -10,6 +10,7 @@ the admin turned it on in Settings. Timers are never copied.
 """
 
 import logging
+import os
 import threading
 from datetime import datetime
 
@@ -22,12 +23,43 @@ OL_APPOINTMENT = 1
 RECURRENCE = {"daily": 0, "weekly": 1, "monthly": 2, "yearly": 5}  # olRecursDaily, ...Weekly, ...Monthly, ...Yearly
 
 
+def classic_outlook_path() -> str | None:
+    """Where the classic Outlook program is, or None.
+
+    Asking Windows for "Outlook.Application" when classic Outlook is not really installed (e.g. a leftover Office 2016
+    registration) starts the Office setup wizard, so the registered program file is checked first.
+    """
+    import winreg
+
+    try:
+        clsid = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, r"Outlook.Application\CLSID")
+    except OSError:
+        return None
+    for view in (winreg.KEY_WOW64_64KEY, winreg.KEY_WOW64_32KEY):
+        try:
+            with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, rf"CLSID\{clsid}\LocalServer32", 0,
+                                winreg.KEY_READ | view) as key:
+                command = winreg.QueryValueEx(key, "")[0]
+        except OSError:
+            continue
+        path = command.split('"')[1] if command.startswith('"') else command.split(" /")[0]
+        path = os.path.expandvars(path.strip())
+        if path.lower().endswith("outlook.exe") and os.path.exists(path):
+            return path
+    return None
+
+
+NOT_INSTALLED = ("Bu bilgisayarda klasik Outlook programı kurulu görünmüyor (kayıtlı Outlook eksik ya da yarım kurulmuş; açılmaya "
+                 "çalışılınca kurulum sihirbazı çıkıyor). \"Yeni Outlook\" ya da tarayıcıdaki Outlook bu bağlantıyı "
+                 "desteklemiyor.")
+
+
 def _admin_name() -> str | None:
     return next((s["name"] for s in db.list_speakers() if s["is_admin"]), None)
 
 
 def will_sync(owner: str | None, kind: str) -> bool:
-    if kind == "timer" or not config.load().get("outlook_sync") or windows_only():
+    if kind == "timer" or not config.load().get("outlook_sync") or windows_only() or not classic_outlook_path():
         return False
     return owner is None or owner == _admin_name()
 
@@ -91,6 +123,8 @@ def test() -> str:
     problem = windows_only()
     if problem:
         return problem
+    if not classic_outlook_path():
+        return "⚠️ " + NOT_INSTALLED
 
     def check():
         ns = _outlook().GetNamespace("MAPI")

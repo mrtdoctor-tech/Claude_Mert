@@ -135,6 +135,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   hatırlatma 0 dk; tekrar → `GetRecurrencePattern`, NoEndDate). EntryID `reminders.calendar_id`'de, hata
   `calendar_note`'ta (panelde ⚠️). İptal → `GetItemFromID().Delete()`. Yalnızca yöneticinin (ya da kimlik kapalıyken)
   hatırlatma/alarmları; sayaç yok. "Yeni Outlook"ta COM yok → test mesajı bunu söyler. `/api/outlook/test`.
+  3.7: `Dispatch` öncesi `classic_outlook_path()` (kayıt defteri `Outlook.Application\CLSID` → `LocalServer32` → dosya
+  var mı): kullanıcıda eski/yarım Outlook 2016 kaydı vardı, `Dispatch` **Office kurulum sihirbazını açtı**.
   **Gerçek Windows/Excel/Outlook'ta denenmedi**; bulutta sahte `win32com`/`pythoncom` modülleriyle test edildi.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
@@ -264,6 +266,12 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   yolu seçildi; Outlook'ta hangi hesabın/"yeni Outlook" mu olduğu bilinmiyor → "Outlook bağlantısını dene" sonucu
   beklenecek. Olmazsa: Microsoft Graph + cihaz kodu girişi (msal; kullanıcının kendi Azure uygulama kaydı) düşünülebilir.
   Ayrıca Spotify (Premium olup olmadığı soruldu) ve Excel aç/kapat/kaydet istedi → eklendi.
+- **2026-09-29 (3.7):** "Outlook bağlantısını dene" Outlook 2016 kurulum sihirbazını açtı (kullanıcı iptal etti);
+  kullanıcının kullandığı Outlook büyük olasılıkla "yeni Outlook" → COM yolu kapalı. Spotify: **ücretsiz** hesap,
+  Windows uygulaması kurulu → Web API ile çalma mümkün değil (Premium gerekir), arama açma + medya tuşları kalır.
+  Takvim/telefon bildirimi için seçenekler soruldu: (1) ntfy ile doğrudan telefon bildirimi (kolay, takvim kaydı yok),
+  (2) Microsoft Graph ile Outlook.com takvimi (tam otomatik; Microsoft'ta bir kerelik uygulama kaydı gerekir,
+  kişisel hesapta ücretsiz Azure hesabı isteyebilir), (3) klasik Outlook kurmak (3.6 kodu çalışır).
 
 ## Sıradaki fikirler
 
@@ -276,7 +284,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   listesi, fotoğraf anlama (gemma3:4b görebilir), belge yükleme, sabah özeti, uyandırma sözcüğü ("Asiye"), eski
   sohbetlerde arama, hava durumu/haber (internet → kullanıcı onayı + misafire kapalı). Kullanıcı "hepsi çok güzel" dedi.
 
-- Spotify Premium varsa: Spotify Web API (developer.spotify.com uygulama kaydı, PKCE) ile "X çal" doğrudan çalsın.
+- Spotify: kullanıcı ücretsiz hesapta → otomatik çalma yok. Premium'a geçerse Spotify Web API (PKCE) ile "X çal".
 - Kullanıcı conda ortamlarını (ComfyUI, comfyui, ai_assistant, muzik, tts, asistan) düzenlemek/birleştirmek için yardım isteyecek.
 - Ses tanıma: Sezin'in 3.3 puanlarını gör (özellikle Mert profiline benzerliği); gerekirse eşik/MARGIN ayarı.
 - 1b yetersiz kalırsa zayıf bilgisayar için başka küçük model dene (ör. `gemma3n:e2b`, `qwen3:1.7b`); sonucu kullanıcıdan öğren.

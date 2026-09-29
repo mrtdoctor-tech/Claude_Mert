@@ -114,6 +114,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.7** — "Outlook bağlantısını dene" artık klasik Outlook kurulu değilse kurulum sihirbazını açmıyor, durumu söylüyor. Spotify mesajı ücretsiz hesaba göre düzeltildi.
 - **3.6** — Outlook takvimi: hatırlatmaların Outlook'a da eklenir, telefonda bildirim çıkar (Ayarlar'dan açılır). Excel/dosya komutları ("Bütçe dosyasını Excel'de aç", "Excel'i kaydetmeden kapat"), müzik kontrolü ("sonraki şarkı", "sesi kıs") ve Spotify ("Spotify'da Tarkan çal"). Misafire kapalı.
 - **3.5** — Hatırlatıcılar: "20 dakikalık sayaç kur", "yarın sabah 7'de uyandır", "15 Ekim'de ... hatırlat", "her gün saat 22'de ...". Zamanı gelince zil + sesli okuma; tarayıcı kapalıysa Windows bildirimi; asistan kapalıysa sonraki açılışta "kaçırılan". Kişiye özel. Yeni: sol menüde ⏰ Hatırlatıcılar ve ❓ Neler yapabilirim? (komut örnekleri: NELER_YAPABILIR.md).
 - **3.4** — Kişisel şifre: hastalıkta sesin değişirse, şifreni yazarak kendi oturumuna girebilirsin (Ayarlar → Ses profilleri → 🔑). Şifre bilgisayarda şifrelenmiş (geri çözülemez) hâlde saklanır; misafir 5 kez yanlış denerse şifreyle giriş 10 dakika kapanır.

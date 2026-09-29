@@ -291,7 +291,7 @@ def _spotify(text: str) -> str | None:
         return "Spotify'ı açıyorum."
     os.startfile("spotify:search:" + quote(query))
     return (f"Spotify'da \"{query}\" aramasını açtım; çalmak için sonuçlardan birine bas. "
-            "(Şarkıyı kendiliğinden başlatmak için Spotify Premium bağlantısı gerekir.)")
+            "(Ücretsiz Spotify hesabında şarkıyı dışarıdan başlatmaya Spotify izin vermiyor.)")
 
 
 # Entry point for the chat

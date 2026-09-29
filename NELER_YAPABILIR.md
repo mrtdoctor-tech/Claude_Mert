@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.6
+Sürüm: 3.7
 
 ---
 
@@ -81,6 +81,7 @@ Hatırlatmaların Outlook takvimine de eklenir, böylece telefonunda da bildirim
 - Sonra her hatırlatmada "📅 Outlook takvimine de ekliyorum" dersin. İptal edince takvimden de silinir.
 - Yalnızca yöneticinin (Mert'in) hatırlatmaları eklenir; sayaçlar eklenmez.
 - Bilgisayarda **klasik Outlook** programı kurulu ve hesabın ekli olmalı ("yeni Outlook" desteklenmiyor).
+  Klasik Outlook yoksa "Dene" düğmesi bunu söyler (kurulum sihirbazı açmaz).
 
 ## 📊 Excel ve dosyalar (3.6)
 
@@ -112,7 +113,7 @@ Spotify:
 
 - "Spotify'ı aç"
 - "Spotify'da Tarkan çal" → Spotify'da aramayı açar; çalmak için sonuçlardan birine basarsın.
-  (Şarkıyı kendiliğinden başlatmak için Spotify Premium bağlantısı gerekir; planlananlar arasında.)
+  (Ücretsiz Spotify hesabında şarkıyı dışarıdan başlatmaya Spotify izin vermiyor; Premium'da mümkün.)
 
 Misafir modunda bilgisayar komutları (Excel, dosyalar, müzik, Spotify) çalışmaz.
 
@@ -148,7 +149,6 @@ Herkesin hafızası ayrıdır.
 
 ## 🔜 Planlananlar
 
-- 🎧 Spotify'da şarkıyı kendiliğinden başlatma (Premium hesap + bağlantı gerekir)
 - 📝 Notlar ve alışveriş listesi ("Listeye süt ekle")
 - 🖼️ Fotoğraf anlama ("Bu fişte ne yazıyor?")
 - 📄 Belge yükleme ("Bu PDF'i özetle")
