@@ -57,17 +57,18 @@ def state() -> dict:
     }
 
 
-def verified_by_voice(name: str, score: float):
+def verified_by_voice(name: str, score: float, scores: str = ""):
+    """Every spoken message is logged with all profiles' scores, so the threshold can be tuned with real voices."""
     global _current
-    if _current != name:
-        _current = name
-        db.log_security("Ses ile tanındı", name, score)
+    event = "Ses ile tanındı" if _current != name else "Ses doğrulandı"
+    _current = name
+    db.log_security(event, f"{name} — {scores}" if scores else name, score)
 
 
-def unknown_voice(score: float, text: str):
+def unknown_voice(score: float, text: str, scores: str = ""):
     global _current
     _current = None
-    db.log_security("Tanınmayan ses", text, score)
+    db.log_security("Tanınmayan ses", f"{text} — {scores}" if scores else text, score)
 
 
 def handle_code(text: str) -> str | None:

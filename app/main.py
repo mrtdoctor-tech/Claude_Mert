@@ -293,13 +293,16 @@ async def transcribe(audio: UploadFile = File(...)):
             stt.transcribe, path, settings["whisper_model"], settings["language"], settings["whisper_device"]
         )
         score = None
+        too_short = False
         if identity.active():
-            name, score = await run_in_threadpool(voiceid.identify, path)
-            if name:
-                identity.verified_by_voice(name, score)
-            elif score is not None:  # enough speech, but nobody we know
-                identity.unknown_voice(score, text)
-            # score None: too little speech to tell; the current identity stays
+            result = await run_in_threadpool(voiceid.identify, path)
+            score, scores = result["score"], voiceid.describe(result["scores"])
+            if result["name"]:
+                identity.verified_by_voice(result["name"], score, scores)
+            elif score is not None:  # enough speech, but nobody we know (or too close to call)
+                identity.unknown_voice(score, text, scores)
+            else:  # too little speech to tell; the current identity stays
+                too_short = True
     except ImportError:
         raise HTTPException(500, "Ses tanıma paketi (faster-whisper) kurulu değil. kurulum.bat'ı tekrar çalıştır.")
     except Exception as e:
@@ -307,7 +310,8 @@ async def transcribe(audio: UploadFile = File(...)):
         raise HTTPException(500, f"Ses tanınamadı: {e}")
     finally:
         os.remove(path)
-    return {"text": text, "device": device, "identity": identity.state(), "voice_score": score}
+    return {"text": text, "device": device, "identity": identity.state(), "voice_score": score,
+            "voice_too_short": too_short}
 
 
 # Voice profiles and security log

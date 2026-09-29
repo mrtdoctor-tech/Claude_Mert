@@ -340,7 +340,8 @@ async function startListening(auto) {
       const form = new FormData();
       form.append("audio", blob, "kayit.webm");
       const sttStart = performance.now();
-      const { text, device, identity } = await api("/api/transcribe", { method: "POST", body: form });
+      const { text, device, identity, voice_too_short: tooShort } = await api("/api/transcribe", { method: "POST", body: form });
+      state.voiceTooShort = !!tooShort; // guest bar asks for a longer sentence
       const sttMs = performance.now() - sttStart;
       showSttDevice(device);
       applyIdentity(identity); // a different voice starts its own conversation
@@ -574,7 +575,9 @@ function applyIdentity(id) {
   bar.hidden = !id.active;
   bar.classList.toggle("guest", !!id.guest);
   bar.textContent = id.guest
-    ? "👤 Misafir — tanınmıyor. Kendi oturumun için konuş."
+    ? (state.voiceTooShort
+      ? "👤 Misafir — çok kısa konuştun, sesinden tanıyamadım. Bir cümle daha söyle."
+      : "👤 Misafir — tanınmıyor. Kendi oturumun için konuş.")
     : `👤 ${id.name}${id.admin ? " · yönetici" : ""}`;
   $("#open-security").hidden = !(id.active && id.admin);
   // Only the admin reaches Settings (enrolling voices, models); everyone else uses the admin's settings.

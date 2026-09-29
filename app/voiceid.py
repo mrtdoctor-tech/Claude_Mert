@@ -22,7 +22,12 @@ MODEL_NAME = "3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx"
 MODEL_URL = f"https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/{MODEL_NAME}"
 MODEL_PATH = config.SETTINGS_DIR / "models" / MODEL_NAME
 SAMPLE_RATE = 16000
-THRESHOLD = 0.40
+# Real voices (2026-09-29, home PC): Mert's short spoken messages scored 0.36-0.55 against a voiceprint read aloud
+# with 0.91 consistency; Sezin 0.66; nobody was ever matched to the wrong person. 0.40 turned Mert into a guest once.
+THRESHOLD = 0.33
+MARGIN = 0.08  # the best match must beat the next profile by this much, or it is not trusted
+ADAPT_MIN = 0.50  # a clearly recognised message is blended into the voiceprint (conversation voice != reading voice)
+ADAPT_WEIGHT = 0.1
 MIN_SPEECH_SECONDS = 0.8  # shorter speech says too little about the voice; the identity is left unchanged
 
 _lock = threading.Lock()
@@ -92,17 +97,30 @@ def embed_file(path: str) -> np.ndarray | None:
     return vector / np.linalg.norm(vector)
 
 
-def identify(path: str) -> tuple[str | None, float | None]:
-    """(name of the recognised person or None, best similarity) — (None, None) if too little speech."""
+def identify(path: str) -> dict:
+    """{"name": recognised person or None, "score": best similarity, "scores": {name: similarity}}.
+
+    score None means too little speech to tell anything.
+    """
     vector = embed_file(path)
     if vector is None:
-        return None, None
-    best_name, best_score = None, -1.0
-    for speaker in db.list_speakers():
-        score = float(vector @ np.array(speaker["embedding"], dtype=np.float32))
-        if score > best_score:
-            best_name, best_score = speaker["name"], score
-    return (best_name if best_score >= THRESHOLD else None), round(best_score, 3)
+        return {"name": None, "score": None, "scores": {}}
+    speakers = db.list_speakers()
+    scores = {s["name"]: float(vector @ np.array(s["embedding"], dtype=np.float32)) for s in speakers}
+    ranked = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+    best_name, best = ranked[0]
+    second = ranked[1][1] if len(ranked) > 1 else -1.0
+    name = best_name if best >= THRESHOLD and best - second >= MARGIN else None
+    if name and best >= ADAPT_MIN and best - second >= 2 * MARGIN:
+        profile = next(s for s in speakers if s["name"] == name)
+        blended = (1 - ADAPT_WEIGHT) * np.array(profile["embedding"], dtype=np.float32) + ADAPT_WEIGHT * vector
+        db.save_speaker(name, (blended / np.linalg.norm(blended)).tolist(), profile["is_admin"])
+    return {"name": name, "score": round(best, 3), "scores": {k: round(v, 3) for k, v in ranked}}
+
+
+def describe(scores: dict) -> str:
+    """"Mert 0,51 · Sezin 0,12" for the security log."""
+    return " · ".join(f"{k} {v:.2f}".replace(".", ",") for k, v in scores.items())
 
 
 def enroll(name: str, paths: list[str], is_admin: bool) -> dict:

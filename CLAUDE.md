@@ -92,8 +92,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `baslat.bat` her açılışta `pip install -r requirements.txt` çalıştırır; güncellemelerle gelen yeni paketler kendiliğinden kurulur.
 - **Ses ile kimlik (3.0):** `app/voiceid.py` sherpa-onnx `SpeakerEmbeddingExtractor` + 3D-Speaker ERes2Net modeli
   (~40 MB, ilk kullanımda GitHub releases'ten `SETTINGS_DIR/models`'e iner). Sessiz 30 ms kareler atılır (`_speech_only`),
-  <0,8 sn konuşma → (None, None) = kimlik değişmez. Kosinüs benzerliği, `THRESHOLD=0.40` (örnek kayıtta aynı kişi ≥0,44,
-  farklı ≤0,26; **gerçek seslerle ayarlanmalı**, puanlar güvenlik kaydında). Kayıt: 3 cümle × 7 sn, ortalama vektör; cümleler (`ENROLL_SENTENCES`) tüm Türkçe ünlü/ünsüzleri kapsar (3.1).
+  <0,8 sn konuşma → (None, None) = kimlik değişmez. Kosinüs benzerliği. 3.3: `THRESHOLD=0.33` + `MARGIN=0.08` (en iyi eşleşme ikinciyi bu kadar
+  geçmeli); `score ≥ ADAPT_MIN=0.50` ve fark ≥ 2×MARGIN ise mesajın vektörü profile %10 karıştırılır (okuma sesi ≠ sohbet
+  sesi). Her sesli mesaj tüm profillerin puanlarıyla loglanır ("Ses doğrulandı"/"Ses ile tanındı"/"Tanınmayan ses";
+  `voiceid.describe`). Çok kısa konuşmada `voice_too_short` → misafir çubuğu "bir cümle daha söyle" der. Kayıt: 3 cümle × 7 sn, ortalama vektör; cümleler (`ENROLL_SENTENCES`) tüm Türkçe ünlü/ünsüzleri kapsar (3.1).
   `app/identity.py`: süreç içi `_current` (yeniden başlatınca misafir). Hiç profil yoksa özellik kapalı, owner `db.ALL`
   ("*"). İlk profil yönetici olur ve `assign_unowned` ile eski tüm veriler onun olur. `1234` → misafir; yönetici
   `<Ad>1234` → o profilin oturumu (misafir yazarsa normal mesaj sayılır). Kodlar veritabanına/modele gitmez
@@ -204,6 +206,11 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Kullanıcı henüz ses kaydı yapmadı (3.1'in cümleleriyle yapacak).
 - **2026-09-29:** Mert ev bilgisayarında sesini tanıttı: tutarlılık **0,906** (örnek kayıttaki 0,85'ten iyi). Sezin'in
   kaydı ve tanıma puanları bekleniyor.
+- **2026-09-29 (3.3):** Gerçek seslerle ilk test (ev bilgisayarı; Sezin iki kez kaydedildi): Mert kısa sesli mesajlarda
+  0,43 / 0,50 / 0,55 / 0,44 / 0,51 ve bir kez **0,364 → misafir sayıldı**; Sezin 0,655. İki kez "Merhaba ben Mert"
+  çok kısa bulundu (puan yok, misafir kaldı). Yanlış kişiye eşleşme **hiç olmadı**, ama çapraz puanlar (Sezin'in sesinin
+  Mert profiline benzerliği) loglanmıyordu → 3.3'te eklendi. Kullanıcıdan yeni kayıttaki puanlar beklenecek; eşik ve
+  MARGIN buna göre ayarlanacak.
 
 ## Sıradaki fikirler
 

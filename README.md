@@ -105,6 +105,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.3** — Kısa cümlelerde ses tanıma iyileşti: tanıma sınırı 0,40 → 0,33 (ama iki kişiye çok yakın benziyorsa kimseye verilmez), asistan konuştukça sesini daha iyi öğrenir, çok kısa konuşunca "bir cümle daha söyle" der. Güvenlik kaydında her sesli mesaj, tüm kişilerin puanlarıyla yazılır.
 - **3.2** — Ayarlar'ı artık yalnızca yönetici (Mert) görür ve değiştirebilir; Sezin ve misafirler, yöneticinin seçtiği ayarlarla çalışır.
 - **3.1** — Ses tanıtmada okunacak 3 cümle, Türkçedeki bütün sesleri (ç, ğ, ı, ö, ş, ü, j...) içeren cümlelerle değişti ve kayıttan önce hepsi ekranda gösteriliyor. Misafir modunda Ayarlar gizli (kimse yeni ses tanıtamaz, ayar değiştiremez); Sezin Ayarlar'ı görür ama ses profillerini göremez.
 - **3.0** — Ses ile tanıma: asistan Mert ve Sezin'i sesinden tanır, herkesin hafızası ayrı; tanınmayan ses ya da `1234` → Misafir modu; yönetici `Sezin1234` ile oturum değiştirebilir; güvenlik kaydı. Ayrıca yanıtların sonunda "(Şu an: …saat…)" yazması düzeltildi.
