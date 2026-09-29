@@ -301,6 +301,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   uyandırma sözcüğü, eski sohbet arama, hava/haber). Excel/müzik komutları gerçek bilgisayarda henüz denenmedi.
 - **2026-09-30 (3.10):** Kullanıcı: ajanda boş ama Outlook'ta kayıtlar var → Outlook kayıtları ajandada salt okunur
   gösteriliyor. Gerçek Outlook'ta tarih biçimi (`Restrict`) sorun çıkarırsa ajandada ⚠️ mesajı görünür.
+- **2026-09-30:** 3.10 **gerçek Outlook'ta doğrulandı**: tüm gün, tekrarlanan ve Teams toplantısı kayıtları ajandada doğru
+  gün/saatte görünüyor (Türkçe Windows'ta `Restrict` tarih biçimi çalıştı). Asistanın eklediği "deneme 13:00" tek kez
+  (🔔 + "📅 Outlook'ta") görünüyor; mavi kopya gizleniyor → kullanıcıya bunun normal olduğu açıklandı.
 
 ## Sıradaki fikirler
 
