@@ -49,6 +49,23 @@ def classic_outlook_path() -> str | None:
     return None
 
 
+def has_mail_profile() -> bool:
+    """Classic Outlook without an account shows its "add an account" wizard when started; check for a profile first."""
+    import winreg
+
+    for version in ("16.0", "15.0"):
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, rf"Software\Microsoft\Office\{version}\Outlook\Profiles") as key:
+                if winreg.QueryInfoKey(key)[0] > 0:  # number of profiles
+                    return True
+        except OSError:
+            continue
+    return False
+
+
+NO_PROFILE = ("Klasik Outlook kurulu ama içinde henüz hesap yok (bu yüzden açılınca \"hesap ekle\" sihirbazı çıkıyor). "
+              "Başlat menüsünden \"Outlook (klasik)\" programını bir kez aç, e-posta hesabını ekle, sonra tekrar dene.")
+
 NOT_INSTALLED = ("Bu bilgisayarda klasik Outlook programı kurulu görünmüyor (kayıtlı Outlook eksik ya da yarım kurulmuş; açılmaya "
                  "çalışılınca kurulum sihirbazı çıkıyor). \"Yeni Outlook\" ya da tarayıcıdaki Outlook bu bağlantıyı "
                  "desteklemiyor.")
@@ -59,7 +76,9 @@ def _admin_name() -> str | None:
 
 
 def will_sync(owner: str | None, kind: str) -> bool:
-    if kind == "timer" or not config.load().get("outlook_sync") or windows_only() or not classic_outlook_path():
+    if kind == "timer" or not config.load().get("outlook_sync") or windows_only():
+        return False
+    if not classic_outlook_path() or not has_mail_profile():
         return False
     return owner is None or owner == _admin_name()
 
@@ -125,6 +144,8 @@ def test() -> str:
         return problem
     if not classic_outlook_path():
         return "⚠️ " + NOT_INSTALLED
+    if not has_mail_profile():
+        return "⚠️ " + NO_PROFILE
 
     def check():
         ns = _outlook().GetNamespace("MAPI")

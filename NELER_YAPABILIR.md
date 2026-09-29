@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.7
+Sürüm: 3.8
 
 ---
 
@@ -81,7 +81,8 @@ Hatırlatmaların Outlook takvimine de eklenir, böylece telefonunda da bildirim
 - Sonra her hatırlatmada "📅 Outlook takvimine de ekliyorum" dersin. İptal edince takvimden de silinir.
 - Yalnızca yöneticinin (Mert'in) hatırlatmaları eklenir; sayaçlar eklenmez.
 - Bilgisayarda **klasik Outlook** programı kurulu ve hesabın ekli olmalı ("yeni Outlook" desteklenmiyor).
-  Klasik Outlook yoksa "Dene" düğmesi bunu söyler (kurulum sihirbazı açmaz).
+  Klasik Outlook yoksa ya da içinde hesap yoksa "Dene" düğmesi bunu söyler. Microsoft 365'te klasik Outlook kuruludur:
+  Başlat menüsünden **Outlook (klasik)**'i bir kez açıp hesabını eklemen yeterli.
 
 ## 📊 Excel ve dosyalar (3.6)
 

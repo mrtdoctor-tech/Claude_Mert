@@ -136,7 +136,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `calendar_note`'ta (panelde ⚠️). İptal → `GetItemFromID().Delete()`. Yalnızca yöneticinin (ya da kimlik kapalıyken)
   hatırlatma/alarmları; sayaç yok. "Yeni Outlook"ta COM yok → test mesajı bunu söyler. `/api/outlook/test`.
   3.7: `Dispatch` öncesi `classic_outlook_path()` (kayıt defteri `Outlook.Application\CLSID` → `LocalServer32` → dosya
-  var mı): kullanıcıda eski/yarım Outlook 2016 kaydı vardı, `Dispatch` **Office kurulum sihirbazını açtı**.
+  var mı): kullanıcıda `Dispatch` bir sihirbaz açtı. 3.8: asıl neden büyük olasılıkla klasik Outlook'ta **posta
+  profili yok** (M365 Personal var → klasik Outlook kurulu; kullanıcı yeni Outlook kullanıyor) → `has_mail_profile()`
+  (HKCU `Software\Microsoft\Office\16.0|15.0\Outlook\Profiles` alt anahtar sayısı) yoksa COM'a hiç gidilmez.
   **Gerçek Windows/Excel/Outlook'ta denenmedi**; bulutta sahte `win32com`/`pythoncom` modülleriyle test edildi.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
@@ -272,6 +274,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Takvim/telefon bildirimi için seçenekler soruldu: (1) ntfy ile doğrudan telefon bildirimi (kolay, takvim kaydı yok),
   (2) Microsoft Graph ile Outlook.com takvimi (tam otomatik; Microsoft'ta bir kerelik uygulama kaydı gerekir,
   kişisel hesapta ücretsiz Azure hesabı isteyebilir), (3) klasik Outlook kurmak (3.6 kodu çalışır).
+- **2026-09-29 (3.8):** 3.7'den sonra da sihirbaz açıldı (kullanıcı 3.7'yi çekmemiş olabilir; ya da sihirbaz "hesap ekle"
+  penceresiydi). Kullanıcıda **Microsoft 365 Personal** var, telefon **Android**. Yol: klasik Outlook'u bir kez açıp
+  hesabı eklemek → 3.6 COM yolu. Olmazsa kullanıcının 2. tercihi **Gmail/Google Takvim** (Google Cloud projesi +
+  OAuth; kart gerekmez). Spotify Chrome'da (web oynatıcı) da aynı: çalma kontrolü API'si Premium ister, medya tuşları çalışır.
 
 ## Sıradaki fikirler
 
