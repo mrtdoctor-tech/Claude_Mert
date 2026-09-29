@@ -154,7 +154,13 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   **Hourglow betikleri** bunu ve Comfy ortamlarından birini kullanıyor), `muzik`, `tts` (müzikle ilgili Python kodu için,
   başka bir konuşmada yapılmış — bu oturumda bilgisi yok). Pinokio'nun Miniconda'sı `P:\pinokio\bin\miniconda` PATH'te
   ve "base" olarak görünüyor. Ayrıca PATH'te Microsoft Store'un sahte `WindowsApps\python.exe`'si var. Kurulum artık
-  conda'nın ortam listesinden Anaconda'yı buluyor; kullanıcının denemesi bekleniyor.
+  conda'nın ortam listesinden Anaconda'yı buluyor.
+- **2026-09-29:** 2.7 ile evdeki bilgisayarda **kurulum başarılı** (Anaconda `asistan` ortamı). **Ev bilgisayarı:** Intel
+  i7-14700F (20 çekirdek/28 iş parçacığı), 32 GB DDR4-3200, NVIDIA GeForce RTX (model/VRAM henüz bilinmiyor), NVMe SSD;
+  Pinokio `P:` (USB disk). Ayarlar: sohbet `gemma4:31b`, hafıza "aynı", Whisper `medium`, Emel. Sayaç: ses→yazı ~6 sn,
+  ilk kelime 174–218 sn, toplam ~260–290 sn (~2 kelime/sn). RAM %83 dolu, GPU kullanımı %12 → 31b VRAM'e sığmıyor, çoğu
+  CPU'da çalışıyor. Kullanıcıdan GPU adı + "Dedicated GPU memory" ve `ollama ps` (PROCESSOR sütunu) istendi; VRAM'e
+  sığan model önerilecek (kural: model boyutu < VRAM − 1-2 GB).
 
 ## SIRADAKİ ADIM (kullanıcının istediği, 2026-09-28): Ses ile kimlik doğrulama
 
@@ -183,7 +189,9 @@ doğrudan açılabilir → Windows hesap şifresi / disk şifreleme önerilecek)
 - Ana bilgisayara kurulum (henüz yapılmadı).
 - İstenirse tamamen yerel kadın sesi: NVIDIA olduğu için ses klonlama (XTTS-v2 / Chatterbox Multilingual gibi,
   Türkçe destekli) eklenebilir; kullanıcı bir kadın sesi örneği verir.
-- NVIDIA varken Whisper'ı `device="cuda"` ile çalıştırmak sesi yazıya çok daha hızlı çevirir.
+- NVIDIA varken Whisper'ı `device="cuda"` ile çalıştırmak sesi yazıya çok daha hızlı çevirir (ev bilgisayarında medium
+  CPU'da ~6 sn). Windows'ta cuBLAS/cuDNN DLL'leri gerekir (ör. pip `nvidia-cublas-cu12`, `nvidia-cudnn-cu12`);
+  yüklenemezse CPU'ya geri düşen "otomatik" seçenek olarak yapılmalı.
 - Hafıza büyüdükçe: tüm bilgileri isteme koymak yerine anlamsal arama (Ollama embedding modeli).
 - Eski sohbetlerde arama.
 - Dosya/belge yükleyip onun hakkında konuşma.
