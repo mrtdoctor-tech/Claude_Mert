@@ -114,6 +114,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.13** — "Müziğe devam et" düzeltildi: asistan Spotify'ın gizli yardımcı penceresine ("GDI+ Window") bakıp müziği çalıyor sanıyordu; artık yalnızca ana pencereye bakıyor.
 - **3.12** — Müzik komutları Spotify uygulamasına doğrudan gidiyor ("Müziği durdur" artık çalışmalı); Spotify çalıyor mu duruyor mu bilir, "sonraki şarkı"dan sonra çalan şarkıyı söyler. Medya tuşları "genişletilmiş tuş" olarak gönderiliyor.
 - **3.11** — Hava durumu ("Hava nasıl?", "Yarın yağmur yağacak mı?", "İstanbul'da hava nasıl?", "Bu hafta hava") ve haberler ("Haberler neler?", "Ekonomi haberleri"; tıklanabilir başlıklar). Ajandanın üstünde hava durumu satırı. İnternet gerektirdiği için misafirde kapalı. Şehir Ayarlar'dan.
 - **3.10** — Ajandada Outlook takvimindeki kayıtlar da görünür (mavi, 📆; salt okunur, yalnızca yöneticiye). Asistanın Outlook'a eklediği hatırlatmalar iki kez görünmez.

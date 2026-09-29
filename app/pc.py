@@ -288,17 +288,28 @@ def _spotify_window():
             size = wintypes.DWORD(1024)
             if kernel32.QueryFullProcessImageNameW(process, 0, path, ctypes.byref(size)) \
                     and path.value.lower().endswith("\\spotify.exe") and length:
-                title = ctypes.create_unicode_buffer(length + 1)
-                user32.GetWindowTextW(hwnd, title, length + 1)
-                found.append((hwnd, title.value))
+                # Only the main window (a Chromium window) tells what plays; Spotify also owns helper windows
+                # such as "GDI+ Window (Spotify.exe)" whose title means nothing.
+                kind = ctypes.create_unicode_buffer(256)
+                user32.GetClassNameW(hwnd, kind, 256)
+                if kind.value.startswith("Chrome_WidgetWin"):
+                    title = ctypes.create_unicode_buffer(length + 1)
+                    user32.GetWindowTextW(hwnd, title, length + 1)
+                    found.append((hwnd, title.value))
         finally:
             kernel32.CloseHandle(process)
         return True
 
     user32.EnumWindows(visit, 0)
-    # The main window is the one with a real title (Spotify also has hidden helper windows).
-    found.sort(key=lambda w: w[1].lower() in _IDLE_TITLES)
-    return found[0] if found else None
+    if not found:
+        return None
+    # Of Spotify's Chromium windows the main one is visible or carries the song / "Spotify" title.
+    found.sort(key=lambda w: (not user32.IsWindowVisible(w[0]), not _looks_like_player(w[1])))
+    return found[0]
+
+
+def _looks_like_player(title: str) -> bool:
+    return title.strip().lower() in _IDLE_TITLES or " - " in title
 
 
 def _spotify_command(hwnd, command: str):
@@ -320,16 +331,17 @@ def _media(text: str) -> str | None:
         spotify = _spotify_window()
         if spotify:
             hwnd, title = spotify
-            playing = title.strip().lower() not in _IDLE_TITLES
-            if key == "pause" and not playing:
+            # "Artist - Song" = playing, "Spotify Free" = paused; anything else: unknown, just press the button.
+            playing = True if " - " in title else False if title.strip().lower() in _IDLE_TITLES else None
+            if key == "pause" and playing is False:
                 return "Spotify'da çalan bir şey yok, müzik zaten durmuş."
-            if key == "play" and playing:
+            if key == "play" and playing is True:
                 return f"Zaten çalıyor: {title}."
             _spotify_command(hwnd, "toggle" if key in ("pause", "play") else key)
             if key in ("next", "prev"):
                 time.sleep(0.8)  # let Spotify show the new song in its title
                 now = _spotify_window()
-                if now and now[1].strip().lower() not in _IDLE_TITLES:
+                if now and " - " in now[1]:
                     return f"{reply} Şimdi çalan: {now[1]}."
             return reply
         # No Spotify app: the media keys reach whatever plays (e.g. Spotify or YouTube in the browser).

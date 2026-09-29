@@ -133,7 +133,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   "Spotify"/"Spotify Free/Premium" ise duruyor, "Sanatçı - Şarkı" ise çalıyor → "durdur" zaten durmuşsa geçiş yapmaz.
   Spotify yoksa `keybd_event` medya tuşları **KEYEVENTF_EXTENDEDKEY (1/3)** ile (3.6'da bayraksızdı: "müziği durdur" kullanıcıda
   çalışmadı; ayrıca Chrome, TTS sesi yüzünden medya tuşlarını kendine alıyor olabilir). Ses aç/kıs sistem tuşları.
-  `handle` sırası: excel → media → spotify ("Spotify'ı durdur" açma değil durdurma). Spotify: `spotify:` /
+  `handle` sırası: excel → media → spotify ("Spotify'ı durdur" açma değil durdurma).
+  3.13: Spotify'ın "GDI+ Window (Spotify.exe)" gibi yardımcı pencereleri de başlık taşıyor → yalnızca sınıfı
+  `Chrome_WidgetWin*` olan pencereler; durum üç değerli: " - " içeren başlık = çalıyor, "Spotify/Spotify Free/Premium" =
+  durmuş, diğer = bilinmiyor (o zaman sadece oynat/duraklat gönderilir, "zaten…" denmez). Spotify: `spotify:` /
   `spotify:search:<q>` (Premium'suz otomatik çalma yok). `COM` her thread'de `pythoncom.CoInitialize` (`pc.com`).
 - **Outlook takvimi (3.6):** `app/outlook.py`, ayar `outlook_sync` (Ayarlar'da, yönetici). Microsoft Graph/uygulama kaydı
   yerine **klasik Outlook COM**: `CreateItem(1)` randevu (Start yerel "YYYY-MM-DD HH:MM" dizgisi, 15 dk, meşgul değil,
@@ -323,6 +326,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Open-Meteo, NTV/BBC Türkçe RSS. Gerçek ağda ilk deneme kullanıcıda olacak; RSS adresleri değişmişse haber hata verir.
 - **2026-09-30 (3.12):** Kullanıcı: "Spotify açıyor, müziği durdur çalışmıyor" → Spotify'a doğrudan WM_APPCOMMAND,
   genişletilmiş medya tuşları. Hava/haber (3.11) gerçek ağda henüz denendiği bildirilmedi.
+- **2026-09-30 (3.13):** 3.12 gerçekte: "sonraki şarkı" (çalan şarkıyı söyledi) ve "müziği durdur" **çalıştı**; "müziğe devam et"
+  "Zaten çalıyor: GDI+ Window (Spotify.exe)" dedi → yardımcı pencere hatası düzeltildi.
 
 ## Sıradaki fikirler
 
