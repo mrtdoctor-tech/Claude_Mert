@@ -479,6 +479,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-30 (3.28):** Kullanıcı: "HourGlow dediğimde Türkçe algılıyor, 'HourGlow Takip Dosyasını Excel'de aç' şaşırıyor" →
   özel kelimeler + Google Drive araması. Whisper'ın gerçekte ne yazdığı bilinmiyor; düzelmezse sayaçtaki/sohbetteki
   yazılışı kullanıcıdan iste ve `vocab`'a örnek ekle.
+- **2026-09-30 (3.29):** 3.28 gerçekte: Whisper "HourGlow"u doğru yazdı, Google Drive aranıyordu, ama
+  `HourGlow_Yayin_Takip.xlsx` bulunamadı: söylenen "yayın" (ı) ≠ dosya adı "Yayin" → `pc._ascii` ile iki taraf da Türkçe
+  harfsiz karşılaştırılıyor. Kullanıcının dosyaları `My Drive (hourglowmusic…)\HourGlowMusic\` altında.
 
 ## Sıradaki fikirler
 

@@ -31,6 +31,14 @@ def _lower(text: str) -> str:
     return text.replace("I", "ı").replace("İ", "i").lower()
 
 
+_ASCII = str.maketrans("çğıöşüâîû", "cgiosuaiu")
+
+
+def _ascii(text: str) -> str:
+    """File names are often written without Turkish letters: compare both without them."""
+    return text.translate(_ASCII)
+
+
 def _words(text: str) -> list[str]:
     """Words without apostrophe suffixes: "Bütçe2026'yı" → "bütçe2026"."""
     return [re.sub(r"['’].*$", "", w) for w in re.findall(r"[\w'’]+", _lower(text))]
@@ -83,7 +91,7 @@ def _search_roots() -> list[Path]:
 
 def find_file(query: str, extensions=EXCEL_EXTENSIONS, roots: list[Path] | None = None) -> list[Path]:
     """Files whose name contains every word of the query, best first (exact name, then most recently changed)."""
-    wanted = _words(query)
+    wanted = [_ascii(w) for w in _words(query)]
     if not wanted:
         return []
     matches = []
@@ -96,7 +104,7 @@ def find_file(query: str, extensions=EXCEL_EXTENSIONS, roots: list[Path] | None 
                 path = Path(folder) / name
                 if path.suffix.lower() not in extensions or name.startswith("~$"):
                     continue
-                stem = _lower(path.stem)
+                stem = _ascii(_lower(path.stem))  # "yayın" (spoken) = "Yayin" (file name) (3.29)
                 joined = re.sub(r"[\s_.-]+", "", stem)  # "HourGlow_Takip" also matches "hour glow takip"
                 if all(w in stem or w in joined for w in wanted) or "".join(wanted) in joined:
                     matches.append(path)
@@ -105,7 +113,7 @@ def find_file(query: str, extensions=EXCEL_EXTENSIONS, roots: list[Path] | None 
     exact = " ".join(wanted)
 
     def rank(p: Path):
-        stem = " ".join(_words(p.stem))
+        stem = " ".join(_ascii(w) for w in _words(p.stem))
         try:
             changed = p.stat().st_mtime
         except OSError:

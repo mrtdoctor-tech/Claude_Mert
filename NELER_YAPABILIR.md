@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.28
+Sürüm: 3.29
 
 ---
 
@@ -120,7 +120,7 @@ Hatırlatmaların Outlook takvimine de eklenir, böylece telefonunda da bildirim
 
 ## 📊 Excel ve dosyalar (3.6)
 
-Dosya aramasında Masaüstü, Belgeler, İndirilenler, OneDrive ve **Google Drive** (3.28) klasörlerine bakılır.
+Dosya aramasında Masaüstü, Belgeler, İndirilenler, OneDrive ve **Google Drive** (3.28) klasörlerine bakılır. Dosya adında Türkçe harf olup olmaması fark etmez ("yayın" = "Yayin").
 
 - "Excel'i aç"
 - "Bütçe dosyasını Excel'de aç"
