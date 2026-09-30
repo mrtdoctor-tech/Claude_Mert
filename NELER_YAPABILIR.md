@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.26
+Sürüm: 3.27
 
 ---
 
@@ -233,7 +233,7 @@ dosyanın yanına aynı adla bir **"….analiz.txt"** raporu yazarım (ör. `sar
 | Söyle / yaz | Ne olur |
 |---|---|
 | "Klasördeki dosyaları analiz et" / "Asiye klasörünü analiz et" | Henüz raporu olmayan (ya da sonradan değişen) dosyaları analiz eder |
-| "Hepsini yeniden analiz et" (klasördeki dosyaları) | Raporu olanlar dahil hepsini baştan yapar |
+| "Hepsini yeniden analiz et" / "Tekrar analiz et" | Raporu olanlar dahil hepsini baştan yapar |
 | "Analiz klasörünü aç" | Klasörü Dosya Gezgini'nde açar |
 
 - **Müzik** (mp3, wav, flac, m4a, ogg, aac, aiff): süre ve biçim, etiketler (parça adı, sanatçı…), ses yüksekliği (LUFS —

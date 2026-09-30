@@ -254,6 +254,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   (EXIF + GPS uyarısı, parlaklık/kontrast/doygunluk/kenar varyansı, MEDIANCUT 6 renk + Türkçe ad) + modele 896 px JPEG
   (`images`, gemma3 görür). İlk müzik dosyası numba derlemesi yüzünden ~30 sn. Sentetik mp3/wav/jpg/png + sahte Ollama ile
   test edildi; **gerçek dosyalar ve gerçek model yorumları denenmedi**.
+  3.27: yalnızca "hepsini/yeniden/tekrar + analiz et" (başka nesne kelimesi yok, `_BARE_WORDS`) da komut. Sistem
+  istemine: model klasör analizi yapamaz, sonuç uydurmasın.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -465,6 +467,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Klasördekiler medya dosyası mı betik mi, hangi analizler ve hangi conda ortamı (not: Hourglow betikleri `ai_assistant`
   ortamını kullanıyor) kullanıcıya soruldu. Kullanıcı: önerilen (asistan kendi analizini yapsın, istenince), "yapabildiği
   bütün analizleri yapsın, tek tek bir txt dosyasına yazsın, aynı klasörde" → 3.26.
+- **2026-09-30 (3.27):** 3.26 gerçekte: "klasörünü aç" çalıştı, gerçek .wav'ın raporu yazıldı. "Hepsini yeniden analiz et."
+  klasör kelimesi olmadığı için modele gitti; model 4 olmayan şarkıyı (BPM/ton/LUFS ile) uydurdu → düzeltildi.
 
 ## Sıradaki fikirler
 

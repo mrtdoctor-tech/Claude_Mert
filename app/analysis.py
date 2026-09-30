@@ -55,6 +55,8 @@ _COMMAND = re.compile(rf"\banaliz\w*\b.*\b{_FOLDER_WORDS}|\b{_FOLDER_WORDS}\w*\b
 _OPEN = re.compile(r"\b(analiz|asiye)\s+klasör\w*\s+(aç|göster)")
 _DO = re.compile(r"analiz\w*\s+(et|yap|başla|eder|yapar)|analiz\w*\s*(lütfen)?\s*[.!?]*$")
 _AGAIN = re.compile(r"\b(yeniden|tekrar|baştan|hepsini|tümünü|tamamını)\b")
+_BARE_WORDS = {"hepsini", "tümünü", "tamamını", "hepsi", "yeniden", "tekrar", "baştan", "et", "eder", "yap", "yapar",
+               "misin", "mısın", "lütfen", "asiye", "merhaba", "bunları", "onları", "şunları", "bir", "de", "da"}
 _QUESTION = re.compile(r"\b(nasıl|nedir|neden|ne demek)\b")
 
 
@@ -62,7 +64,10 @@ def is_command(text: str) -> bool:
     low = text.replace("I", "ı").replace("İ", "i").lower()
     if len(low) > 120 or _QUESTION.search(low):
         return False
-    return bool(_OPEN.search(low) or (_COMMAND.search(low) and _DO.search(low)))
+    # 3.27: "Hepsini yeniden analiz et." has no folder word; it went to the model, which made up four songs.
+    rest = set(re.findall(r"[\wçğıöşü]+", low)) - _BARE_WORDS
+    short_again = bool(_AGAIN.search(low) and _DO.search(low) and not {w for w in rest if not w.startswith("analiz")})
+    return bool(_OPEN.search(low) or (_COMMAND.search(low) and _DO.search(low)) or short_again)
 
 
 def wants_open(text: str) -> bool:
