@@ -630,8 +630,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   İndirme ~1,2 MB/s (≈10 Mbps tavan, speedtest'te de indirme+yükleme ≈10). Chrome indiriyor (127.0.0.1:8188 üzerinden →
   İndirilenler klasörüne; sonra models\diffusion_models / text_encoders / vae'ye taşınmalı). PC link 1000/1000. Ev ağı:
   ZTE ZXHN H1601P (Vodafone, 100 Mbps) → kablo → Linksys Velop WHW01 (10.155.1.x) → TP-Link TL-SG1008D → PC. **PC doğrudan
-  ZTE'ye: 96,3/19,6 Mbps** → hat sağlam; darboğaz Velop, ZTE–Velop kablosu ya da switch–Velop bağlantısı (10 Mbps'e düşmüş
-  link belirtisi). Öneri: indirmeyi doğrudan modemdeyken bitir; sonra PC'yi Velop'un boş portuna takarak switch'i ayır.
+  ZTE'ye: 96,3/19,6 Mbps**, modem+switch 96,5/19,4, **tüm zincir (Velop dahil) 96,6/19,1** → ev ağı sağlam (Velop suçlanmıştı,
+  yanlıştı: ilk speedtest indirme sürerken yapılmıştı). Doğrudan modemdeyken de indirme ~10 Mbps → darboğaz ComfyUI'nin
+  127.0.0.1:8188 üzerinden aktardığı indirme (tek akış). Öneri: şablondaki 🔗 ile asıl Hugging Face adresini Chrome'da açmak;
+  o da yavaşsa çok bağlantılı indirme aracı yazılacak (bulut proxy'si huggingface.co'yu engelliyor, adresler buradan doğrulanamadı).
 
 ## Sıradaki fikirler
 
