@@ -16,7 +16,7 @@ from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, db, identity, llm, memory, notes, online, outlook, pc, presence, quick, reminders, stt, tts, voiceid, wake
+from . import config, db, documents, identity, llm, memory, notes, online, outlook, pc, presence, quick, reminders, stt, tts, voiceid, wake
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("asistan")
@@ -175,6 +175,65 @@ def delete_conversation(conversation_id: int):
     return {"ok": True}
 
 
+# Documents (3.23)
+
+def _document_view(doc: dict) -> dict:
+    return {"id": doc["id"], "name": doc["name"], "about": documents.describe(doc),
+            "long": (doc.get("chars") or len(doc.get("text") or "")) > documents.FULL_CHARS}
+
+
+@app.get("/api/conversations/{conversation_id}/documents")
+def conversation_documents(conversation_id: int):
+    _own_conversation(conversation_id)
+    return [_document_view(d) for d in db.list_documents(conversation_id, with_text=False)]
+
+
+@app.post("/api/documents")
+async def add_document(file: UploadFile = File(...), conversation_id: int | None = Form(None)):
+    name = Path(file.filename or "belge").name
+    data = await file.read()
+    if len(data) > documents.MAX_BYTES:
+        raise HTTPException(400, "Dosya çok büyük (en çok 30 MB).")
+    suffix = Path(name).suffix.lower()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp.write(data)
+        path = tmp.name
+    try:
+        text, pages = await run_in_threadpool(documents.extract, path, name)
+    except documents.DocumentError as e:
+        raise HTTPException(400, str(e))
+    except ImportError:
+        raise HTTPException(500, "Belge okuma paketi kurulu değil. baslat.bat'ı kapatıp yeniden aç (kendiliğinden kurar).")
+    finally:
+        os.remove(path)
+    who = identity.owner()
+    if conversation_id:
+        _own_conversation(conversation_id)
+    else:
+        conversation_id = db.create_conversation(f"📄 {name}"[:50], None if who == db.ALL else who)
+    lang = documents.language(text)
+    doc_id = db.add_document(conversation_id, name, text, pages, lang)
+    doc = db.get_document(doc_id)
+    long = len(text) > documents.FULL_CHARS or not documents.fits_whole(db.list_documents(conversation_id))
+    note = (" Belge uzun olduğu için her soruda ilgili bölümlerine bakacağım; \"özetle\" dersen bölüm bölüm okuyup "
+            "özetlerim (ilk seferde biraz sürer)." if long else "")
+    db.add_message(conversation_id, "assistant",
+                   f"📄 **{name}** belgesini okudum ({documents.describe(doc)}).{note} Şimdi soru sorabilirsin, örneğin: "
+                   "\"Bu belgeyi özetle\", \"Önemli tarihler neler?\", \"Bana ne gibi yükümlülükler getiriyor?\"")
+    log.info("Belge eklendi: %s (%s)", name, documents.describe(doc))
+    return {"conversation_id": conversation_id, "document": _document_view(doc)}
+
+
+@app.delete("/api/documents/{document_id}")
+def remove_document(document_id: int):
+    doc = db.get_document(document_id)
+    if not doc:
+        raise HTTPException(404, "Belge bulunamadı")
+    _own_conversation(doc["conversation_id"])
+    db.delete_document(document_id)
+    return {"ok": True}
+
+
 class ChatIn(BaseModel):
     message: str
     conversation_id: int | None = None
@@ -220,9 +279,12 @@ async def chat(body: ChatIn):
     db.add_message(conversation_id, "user", text, speaker)
 
     settings = config.load()
-    messages = [{"role": "system", "content": memory.system_prompt_for(conversation_id, settings, who)}]
+    docs = db.list_documents(conversation_id) if conv is not None else []
+    system = memory.system_prompt_for(conversation_id, settings, who) + documents.prompt_block(docs)
+    messages = [{"role": "system", "content": system}]
     messages += [{"role": m["role"], "content": m["content"]} for m in history]
     messages.append({"role": "user", "content": text + memory.clock_note()})  # the note is not saved
+    num_ctx = documents.DOC_CTX if docs else llm.NUM_CTX
     # "saat kaç?" comes from the clock, "20 dakikalık sayaç kur" is set by rules: not by the model
     instant = quick.answer(text) or reminders.handle(text, who) or notes.handle(text, who)
     if not instant and pc.is_command(text):  # Excel, music, Spotify on this computer
@@ -238,7 +300,27 @@ async def chat(body: ChatIn):
                      "identity": identity.state()})
         parts = []
         try:
-            source = from_clock() if instant else llm.chat_stream(settings["model"], messages)
+            if not instant and docs and not documents.fits_whole(docs):
+                # a long document: add what the model needs for this question to the (unsaved) last message
+                if documents.wants_summary(text):
+                    extra = []
+                    for doc in docs:
+                        async for kind, value in documents.section_summaries(settings["model"], doc):
+                            if kind == "progress":
+                                yield _line({"type": "progress", "text": value})
+                            else:
+                                summaries, covered = value
+                                note = "" if covered else " (belge çok uzun: yalnızca baş kısmı)"
+                                extra.append(f"--- {doc['name']}{note} ---\n" + "\n\n".join(
+                                    f"Bölüm {n}: {s}" for n, s in enumerate(summaries, 1)))
+                    messages[-1]["content"] += ("\n\n[Belgenin bölüm bölüm özetleri; cevabını bunlardan kur:]\n"
+                                                + "\n\n".join(extra))
+                else:
+                    yield _line({"type": "progress", "text": "📄 Belgede ilgili bölümler aranıyor…"})
+                    query = await documents.search_words(settings["model"], docs, text)
+                    messages[-1]["content"] += ("\n\n[Belgeden ilgili bölümler; yalnızca bunlara dayan, burada yoksa "
+                                                "\"belgede bulamadım\" de:]\n" + documents.passages(docs, query))
+            source = from_clock() if instant else llm.chat_stream(settings["model"], messages, num_ctx)
             async for piece in source:
                 parts.append(piece)
                 yield _line({"type": "token", "text": piece})

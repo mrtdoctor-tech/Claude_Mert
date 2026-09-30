@@ -129,6 +129,7 @@ function newConversation() {
   state.conversationId = null;
   els.title.textContent = "Yeni sohbet";
   clearMessages();
+  loadDocs();
   setStatus("");
   loadConversations();
   els.sidebar.classList.remove("open");
@@ -142,6 +143,7 @@ async function openConversation(id, title) {
   clearMessages();
   setStatus("");
   for (const m of await api(`/api/conversations/${id}/messages`)) addMessage(m.role, m.content);
+  loadDocs();
   loadConversations();
   els.sidebar.classList.remove("open");
 }
@@ -224,6 +226,8 @@ async function send(text, fromVoice = false, sttMs = null, sttDevice = null) {
             state.conversationId = event.conversation_id;
             els.title.textContent = text.length > 50 ? text.slice(0, 47) + "..." : text;
           }
+        } else if (event.type === "progress") { // a long document is being read part by part
+          if (!reply) bubble.textContent = event.text;
         } else if (event.type === "token") {
           timer.firstToken();
           reply += event.text;
@@ -1738,3 +1742,75 @@ const wakeListener = (() => {
   }
   return { update };
 })();
+
+// Documents (3.23): PDF / Word / text files added to the current conversation.
+async function loadDocs() {
+  const bar = $("#doc-bar");
+  const id = state.conversationId;
+  if (!id) { bar.hidden = true; bar.innerHTML = ""; return; }
+  let docs = [];
+  try { docs = await api(`/api/conversations/${id}/documents`); } catch {}
+  if (id !== state.conversationId) return;
+  bar.innerHTML = "";
+  bar.hidden = !docs.length;
+  for (const doc of docs) {
+    const chip = document.createElement("span");
+    chip.className = "doc-chip";
+    chip.title = doc.long ? "Uzun belge: her soruda ilgili bölümlerine bakılır." : "Belgenin tamamı her soruda okunur.";
+    chip.innerHTML = `📄 <span></span> <small></small><button type="button" title="Belgeyi bu sohbetten çıkar">✕</button>`;
+    chip.querySelector("span").textContent = doc.name;
+    chip.querySelector("small").textContent = doc.about;
+    chip.querySelector("button").onclick = async () => {
+      if (!confirm(`"${doc.name}" bu sohbetten çıkarılsın mı?`)) return;
+      await api(`/api/documents/${doc.id}`, { method: "DELETE" }).catch(() => {});
+      loadDocs();
+    };
+    bar.appendChild(chip);
+  }
+}
+
+async function uploadDocs(files) {
+  if (state.busy || !files.length) return;
+  setBusy(true);
+  let added = null;
+  for (const file of files) {
+    setStatus(`📄 "${file.name}" okunuyor…`);
+    try {
+      const form = new FormData();
+      form.append("file", file, file.name);
+      if (state.conversationId) form.append("conversation_id", state.conversationId);
+      const result = await api("/api/documents", { method: "POST", body: form });
+      state.conversationId = result.conversation_id;
+      added = result;
+      setStatus("");
+    } catch (err) {
+      setStatus(`"${file.name}": ${err.message}`, true);
+    }
+  }
+  setBusy(false);
+  if (added) {
+    const title = state.conversationId && els.title.textContent !== "Yeni sohbet" ? els.title.textContent : `📄 ${added.document.name}`;
+    await openConversation(state.conversationId, title);
+    els.input.focus();
+  }
+}
+
+$("#attach").onclick = () => $("#attach-file").click();
+$("#attach-file").onchange = (e) => {
+  uploadDocs([...e.target.files]);
+  e.target.value = "";
+};
+
+// Drag a file from Explorer onto the chat.
+let dragDepth = 0;
+const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes("Files");
+document.addEventListener("dragenter", (e) => { if (hasFiles(e)) { dragDepth++; document.body.classList.add("dropping"); } });
+document.addEventListener("dragleave", (e) => { if (hasFiles(e) && --dragDepth <= 0) { dragDepth = 0; document.body.classList.remove("dropping"); } });
+document.addEventListener("dragover", (e) => { if (hasFiles(e)) e.preventDefault(); });
+document.addEventListener("drop", (e) => {
+  if (!hasFiles(e)) return;
+  e.preventDefault();
+  dragDepth = 0;
+  document.body.classList.remove("dropping");
+  uploadDocs([...e.dataTransfer.files]);
+});

@@ -222,6 +222,19 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   başta); susmayan ses 6 sn pencereler, 2 sn örtüşme (`OVERLAP_MS`), bu parçalar `noisy=true` → ses kimliği atlanır
   (kimlik değişmez); kontrol sürerken biten parça `waiting`'de bekler (eskiden atılıyordu); uyanınca 3 sn `restUntil`.
   Yabancı dil kontrolü artık sözden SONRAKİ metne: şarkı ise uyanır ama komut boş ("dıt dıt" + dinle), kimlik atlanır.
+- **Belgeler (3.23):** `app/documents.py` + `db.documents` (conversation_id CASCADE, name, pages, language, text, summary).
+  `POST /api/documents` (dosya + isteğe bağlı conversation_id; yoksa "📄 ad" sohbeti) → `extract`: PDF `pypdf` ("[Sayfa N]"
+  işaretli; yazısız → taranmış uyarısı; şifreli → uyarı), .docx `python-docx` (paragraflar + tablolar), .txt/.md/.csv
+  (utf-8 → cp1254 → latin-1). `language` (tr/en sözcük sayımı). Sohbete "📄 … belgesini okudum" asistan mesajı eklenir.
+  Sohbette belge varsa `num_ctx = DOC_CTX` (16384; normal 8192 — değişince Ollama modeli yeniden yükler, GPU'da ~1-2 sn).
+  Toplam ≤ `FULL_CHARS` (28 000) ise belgeler **sistem istemine** tam girer (sohbet boyunca sabit → Ollama önbelleği korunur).
+  Daha uzunsa: soru `wants_summary` ise `section_summaries` (18 000 karakterlik bölümler, en çok 24, `llm.chat_text`,
+  `progress` olayları, sonuç `documents.summary`'de saklanır) → özetler son mesaja; değilse `search_words` (soru dili ≠ belge
+  dili ise modelden anahtar kelime çevirisi) + `passages` (1 500 karakterlik parçalar, 5 harflik kök eşleşmesi, IDF, 18 000
+  bütçe) son mesaja (kaydedilmez). `quick._DATE` artık "teslim tarihi ne?"yi saat/tarih sorusu saymaz. Arayüz: 📎 `#attach`,
+  sürükle-bırak (`body.dropping`), `#doc-bar` çipleri (`loadDocs`), `progress` balonda gösterilir. Misafire açık (yerel).
+  Sahte Ollama + Chromium'un yazdığı PDF, python-docx ile yapılan .docx ve uzun .txt ile test edildi; **gerçek modelle
+  denenmedi** (cevap kalitesi, 16k bağlamın 8 GB VRAM'e sığması kullanıcıda görülecek).
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -420,6 +433,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   3.21 gerçekte: müzikte yanlış uyanma olmadı ama müzik çalarken "Merhaba Asiye" de yakalanmadı → 3.22.
   3.22 gerçekte **doğrulandı**: telefonda müzik çalarken "Merhaba Asiye saat kaç" cevaplandı; Spotify yüksek seste
   "müziği durdur" yakalanmadı, ses kısılınca çalıştı. Kullanıcı: "normal, bu kadar tepki yeterli" → uyandırma tamam.
+- **2026-09-30 (3.23):** Kullanıcı "3 (belge yükleme) ile devam, hem Türkçe hem İngilizce belgeleri algılasın" dedi →
+  belgeler eklendi. Kullanıcının gerçek PDF/Word ile denemesi bekleniyor (özet kalitesi, hız, `ollama ps` ile 16k bağlamda
+  %100 GPU kalıp kalmadığı).
 
 ## Sıradaki fikirler
 
@@ -429,7 +445,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   "aile" yok; tarayıcı kapalıyken Windows bildirimi, asistan kapalıyken sonraki açılışta "kaçırılanlar"; yalnızca ev
   bilgisayarı) + **takvim kaydı oluşturma** (telefona bildirim gelsin diye; hangi takvim olduğu sorulacak — bulut servisi,
   kullanıcı onayı gerekir). 2) Yapabildiklerini komut örnekleriyle anlatan belge. Sonra listeden: notlar/alışveriş
-  listesi (✅ 3.16), fotoğraf anlama (gemma3:4b görebilir), belge yükleme, sabah özeti, ✅ uyandırma sözcüğü (3.19), eski
+  listesi (✅ 3.16), fotoğraf anlama (gemma3:4b görebilir), ✅ belge yükleme (3.23), sabah özeti, ✅ uyandırma sözcüğü (3.19), eski
   sohbetlerde arama, ✅ hava durumu/haber (3.11). Kullanıcı "hepsi çok güzel" dedi.
 
 - Spotify: kullanıcı ücretsiz hesapta → otomatik çalma yok. Premium'a geçerse Spotify Web API (PKCE) ile "X çal".
@@ -441,5 +457,4 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Türkçe destekli) eklenebilir; kullanıcı bir kadın sesi örneği verir.
 - Hafıza büyüdükçe: tüm bilgileri isteme koymak yerine anlamsal arama (Ollama embedding modeli).
 - Eski sohbetlerde arama.
-- Dosya/belge yükleyip onun hakkında konuşma.
 - Tek tıkla çalışan masaüstü uygulaması (Python kurulumu gerektirmeyen paket).

@@ -8,4 +8,6 @@ edge-tts>=6.1
 watchfiles>=0.21
 sherpa-onnx>=1.10  # speaker identification (voiceprints), offline
 numpy
+pypdf>=4.0  # reading PDF documents (3.23)
+python-docx>=1.1  # reading Word documents (3.23)
 pywin32; sys_platform == "win32"  # Excel and Outlook automation (3.6)

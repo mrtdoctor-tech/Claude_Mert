@@ -129,6 +129,13 @@ button:disabled { opacity: .5; cursor: default; }
   padding: 10px 6px; max-height: 200px; line-height: 1.4;
 }
 .mic.recording { background: var(--danger); animation: pulse 1.2s infinite; }
+.doc-bar { display: flex; flex-wrap: wrap; gap: 6px; max-width: 800px; width: calc(100% - 40px); margin: 0 auto 8px; }
+.doc-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 10px; border-radius: 999px;
+  background: var(--panel); border: 1px solid var(--border); font-size: .85em; }
+.doc-chip small { color: var(--muted); }
+.doc-chip button { background: none; border: none; color: var(--muted); cursor: pointer; padding: 0 4px; }
+.doc-chip button:hover { color: var(--danger); }
+.dropping #messages { outline: 2px dashed var(--accent); outline-offset: -12px; }
 .wake { opacity: .45; font-size: 1.05em; }
 .wake.on { opacity: 1; }
 .wake.heard { background: var(--accent); animation: pulse 1.2s infinite; }

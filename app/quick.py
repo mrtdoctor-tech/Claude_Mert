@@ -19,7 +19,7 @@ _TIME = re.compile(
 )
 _DATE = re.compile(
     r"\bbug[üu]n\s+(?:ay[ıi]n\s+ka[çc][ıi]|g[üu]nlerden\s+ne|hangi\s+g[üu]n|ne\s+g[üu]n[üu]?)" + _END
-    + r"|\b(?:bug[üu]n[üu]n\s+)?tarih(?:i)?\s+ne" + _END
+    + r"|(?:^\W*|\bbug[üu]n[üu]n\s+)tarih(?:i)?\s+ne" + _END  # not "teslim tarihi ne?" (3.23: documents)
     + r"|\bay[ıi]n\s+ka[çc][ıi]" + _END
     + r"|\bhangi\s+g[üu]ndeyiz\b"
     + r"|\bwhat(?:'s|\s+is)\s+the\s+date\b|\bwhat\s+day\s+is\s+it\b"

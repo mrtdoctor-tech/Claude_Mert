@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.22
+Sürüm: 3.23
 
 ---
 
@@ -195,6 +195,30 @@ Bunlar da anında cevaplanır, yapay zekâ kullanılmaz; o yüzden hiçbir şey 
 - Aynı şeyi iki kez eklersen "Zaten listede" der.
 - Rica ederek de söyleyebilirsin: "Listeye peynir ekler misin?", "Süt ekleyebilir misin", "Elma ekle lütfen".
 
+## 📄 Belgeler (3.23)
+
+PDF, Word (.docx), .txt, .md ve .csv dosyalarını okuyup onlar hakkında konuşabilirim. Türkçe ve İngilizce belgeler olur;
+İngilizce bir belgeye Türkçe soru sorabilirsin (ya da tersi). Belge bilgisayarından çıkmaz.
+
+- Eklemek için: mesaj kutusundaki **📎** düğmesine bas ya da dosyayı Gezgin'den sohbet ekranına **sürükle-bırak**.
+- Belge o anki sohbete eklenir (sohbet yoksa belgenin adıyla yeni sohbet açılır). Mesaj kutusunun üstünde görünür; ✕ ile
+  sohbetten çıkarılır. Aynı sohbete birden fazla belge ekleyebilirsin ("iki belgeyi karşılaştır").
+
+| Sor | Ne olur |
+|---|---|
+| "Bu belgeyi özetle" / "Summarize this" | Özet çıkarır |
+| "Teslim tarihi ne?" / "Kira bedeli ne kadar?" | Belgeden bulup söyler, sayfa numarasıyla |
+| "Bana ne gibi yükümlülükler getiriyor?" | Maddeleri listeler |
+| "3. maddeyi Türkçeye çevir" | Çevirir |
+| "İki belge arasındaki farklar neler?" | Karşılaştırır |
+
+- Belgede olmayan bir şeyi uydurmaz, "belgede bu bilgi yok" der. Yine de önemli kararlarda belgenin kendisine bak:
+  küçük model hata yapabilir.
+- Uzun belgelerde (yaklaşık 15 sayfadan uzun) her soruda belgenin ilgili bölümlerine bakar. "Özetle" dersen belgeyi bölüm
+  bölüm okur (ilk seferde biraz sürer, ekranda "bölüm 3/8 okunuyor" yazar); ikinci seferde hızlıdır.
+- Taranmış (fotoğraf gibi) PDF'lerde seçilebilir yazı olmadığı için okuyamaz. Eski Word (.doc) dosyasını Word'de açıp
+  ".docx" olarak kaydet.
+
 ## 🧠 Hafıza
 
 Asistan sohbetlerden senin hakkındaki önemli bilgileri kendiliğinden öğrenir ve yeni sohbetlerde de hatırlar.
@@ -232,6 +256,5 @@ Herkesin hafızası ayrıdır.
 ## 🔜 Planlananlar
 
 - 🖼️ Fotoğraf anlama ("Bu fişte ne yazıyor?")
-- 📄 Belge yükleme ("Bu PDF'i özetle")
 - ☀️ Sabah özeti ("Günaydın" deyince günün hatırlatmaları)
 - 🔎 Eski sohbetlerde arama

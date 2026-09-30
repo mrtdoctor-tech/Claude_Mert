@@ -39,14 +39,14 @@ async def list_models() -> list[str]:
     return sorted(m["name"] for m in resp.json().get("models", []))
 
 
-async def chat_stream(model: str, messages: list[dict]):
+async def chat_stream(model: str, messages: list[dict], num_ctx: int = NUM_CTX):
     """Yield the reply text piece by piece as Ollama generates it."""
     payload = {
         "model": model,
         "messages": messages,
         "stream": True,
         "keep_alive": KEEP_ALIVE,
-        "options": {"num_ctx": NUM_CTX},
+        "options": {"num_ctx": num_ctx},
     }
     try:
         async with httpx.AsyncClient(timeout=TIMEOUT) as client:
@@ -87,3 +87,22 @@ async def chat_json(model: str, messages: list[dict], keep_alive: str = KEEP_ALI
     if resp.status_code != 200:
         raise _error_for(resp.status_code, resp.text, model)
     return json.loads(resp.json()["message"]["content"])
+
+
+async def chat_text(model: str, messages: list[dict], num_ctx: int = NUM_CTX, num_predict: int = 600) -> str:
+    """The whole answer at once (used to summarize a long document part by part)."""
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": False,
+        "keep_alive": KEEP_ALIVE,
+        "options": {"num_ctx": num_ctx, "num_predict": num_predict, "temperature": 0.2},
+    }
+    try:
+        async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+            resp = await client.post(f"{OLLAMA_URL}/api/chat", json=payload)
+    except httpx.ConnectError as e:
+        raise OllamaError(_CONNECT_ERROR) from e
+    if resp.status_code != 200:
+        raise _error_for(resp.status_code, resp.text, model)
+    return resp.json().get("message", {}).get("content", "").strip()
