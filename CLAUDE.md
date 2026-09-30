@@ -192,6 +192,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Türkçe ekleri tolere eder (sütü = süt, ekmeği = ekmek) ve tekrar eklemeyi engeller. İsmin -i hali ("Peyniri listeye
   ekle") olduğu gibi kaydedilir: ek kesmek "zeytinyağı", "çamaşır suyu" gibi adları bozardı. `/api/notes` (GET/POST,
   PUT/DELETE `{id}`), arayüzde `#notes-dialog` (sekmeler, işaretleme, silme, virgüllü ekleme).
+  3.17: `_clean` baştaki/sondaki "lütfen" ve noktalamayı atar; fiil `ekle\w*` + `_ASK` (ekler misin, ekleyebilir misin,
+  yazar mısın), `(?!n)` "eklenir/eklendi mi"yi dışlar; `_QUESTION` (nasıl/neden/nedir) → komut değil. Sistem istemi:
+  model listelere/hatırlatıcılara kendisi ekleyemez, "ekledim" demesin, kısa komut önersin.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -373,6 +376,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-30 (3.16):** Kullanıcı "kaldığımız işlerden devam" dedi (Sezin'i sonra yeniden tanıtacak) → listedeki ilk fikir:
   notlar ve alışveriş listesi. Sahte sunucu + Chromium ile test edildi. Sıradaki fikirler: fotoğraf anlama, belge yükleme,
   sabah özeti (hava + ajanda + listeler), uyandırma sözcüğü, eski sohbet arama.
+- **2026-09-30 (3.17):** 3.16 gerçekte çalıştı ("…yoğurt ekle.", "Listelerimi göster."), ama "Alışveriş listesine peynir
+  ekler misin?" modele gitti ve model "ekledim" diye uydurdu → rica biçimleri + sistem istemine dürüstlük satırı.
 
 ## Sıradaki fikirler
 

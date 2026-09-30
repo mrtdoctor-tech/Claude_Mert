@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.16
+Sürüm: 3.17
 
 ---
 
@@ -172,6 +172,7 @@ Bunlar da anında cevaplanır, yapay zekâ kullanılmaz; o yüzden hiçbir şey 
 - Sol menüdeki **📝 Notlar ve listeler** penceresinde listeleri sekmelerle görürsün: alınanları işaretleyebilir (üstü
   çizilir), ✕ ile silebilir, üstteki kutudan yeni şey ekleyebilirsin (virgülle birden fazla).
 - Aynı şeyi iki kez eklersen "Zaten listede" der.
+- Rica ederek de söyleyebilirsin: "Listeye peynir ekler misin?", "Süt ekleyebilir misin", "Elma ekle lütfen".
 
 ## 🧠 Hafıza
 

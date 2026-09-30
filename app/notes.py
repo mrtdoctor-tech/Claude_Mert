@@ -46,10 +46,12 @@ _W = r"[\wçğıöşü]+"
 # A list's name is one word, and only before "listesi…" ("tatil listesine"); bare "listeye/listeden" is the default list,
 # so in "süt ve ekmeği listeden sil" the word "ekmeği" is not taken for a list name.
 _LIST_TO = rf"(?:(?:({_W})\s+)?listes\w*?(?:e|ne)|listeye|listeme)"
-_ADD = re.compile(rf"^{_LIST_TO}\s+(.+?)\s+(?:ekle|yaz|koy)(?:r\s*mısın|\s*lütfen)?[.!]?$")
-_ADD_AFTER = re.compile(rf"^(.+?)\s+{_LIST_TO}\s+(?:ekle|yaz|koy)")
-_NOTE = re.compile(r"^(?:bunu\s+|şunu\s+)?not\s+(?:al|et|tut)\s*[:,-]?\s*(.+)$|^(.+?)\s+diye\s+not\s+(?:al|et|tut)")
-_SHOW = re.compile(rf"^(?:(?:({_W})\s+)?listes\w*|listem\w*|listede)\s.*\b(ne|neler|var|göster|oku|söyle)\b"
+# "ekle", "ekler misin", "ekleyebilir misin", "eklesene", "yazar mısın", "koyar mısın"
+_ASK = r"(?:\s+m[ıiuü]s[ıiuü]n(?:[ıi]z)?)?"
+_ADD = re.compile(rf"^{_LIST_TO}\s+(.+?)\s+(?:ekle|yaz|koy)(?!n)\w*{_ASK}$")  # not "eklenir"
+_ADD_AFTER = re.compile(rf"^(.+?)\s+{_LIST_TO}\s+(?:ekle|yaz|koy)(?!n)")  # not "eklendi mi?"
+_NOTE = re.compile(rf"^(?:bunu\s+|şunu\s+)?not\s+(?:al|et|tut)(?:ır|ar|er)?{_ASK}(?:\s*[:,-]\s*|\s+)(.+)$|^(.+?)\s+diye\s+not\s+(?:al|et|tut)")
+_SHOW = re.compile(rf"^(?:(?:({_W})\s+)?listes\w*|listem\w*|listede)\s.*\b(ne|neler|var|göster\w*|oku\w*|söyle\w*)\b"
                    r"|\b(listelerim|listeleri(?:mi)?)\s+(göster|neler|oku)|^notlar(?:ım|ımı)?\s*(ne|neler|göster|oku)?\s*\??$")
 _REMOVE = re.compile(rf"^(.+?)\s+(?:(?:({_W})\s+)?listes\w*?(?:den|nden)|listeden|listemden)\s+(?:sil|çıkar|kaldır|at)")
 _CLEAR = re.compile(rf"^(?:(?:({_W})\s+)?listes\w*?(?:i|ni)|listemi|listeyi)\s+(?:temizle|boşalt|sil)")
@@ -62,9 +64,23 @@ def _format_list(name: str, items: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def is_command(text: str) -> bool:
+_POLITE = re.compile(r"^lütfen[\s,]+|[\s,]+lütfen(?=[\s.!?]*$)|[\s.!?]+$")
+
+
+def _clean(text: str) -> str:
+    """Lowercase, without "lütfen" and the final dot the speech recognition adds."""
     low = _lower(text.strip())
-    return len(low) <= MAX_LENGTH and bool(_ADD.search(low) or _ADD_AFTER.search(low)
+    for _ in range(3):
+        low = _POLITE.sub("", low)
+    return low
+
+
+_QUESTION = re.compile(r"\b(nasıl|neden|niye|nedir|ne demek|ne işe)\b")  # "Python listesine nasıl eleman eklenir?"
+
+
+def is_command(text: str) -> bool:
+    low = _clean(text)
+    return len(low) <= MAX_LENGTH and not _QUESTION.search(low) and bool(_ADD.search(low) or _ADD_AFTER.search(low)
                                            or _NOTE.search(low) or _SHOW.search(low) or _REMOVE.search(low)
                                            or _CLEAR.search(low))
 
@@ -72,7 +88,7 @@ def is_command(text: str) -> bool:
 def handle(text: str, owner: str) -> str | None:
     """A reply for a notes/list command in the chat, or None if the message is something else."""
     raw = text.strip()
-    low = _lower(raw)
+    low = _clean(raw)
     if not is_command(raw):
         return None
     if owner == identity.GUEST:
@@ -81,7 +97,7 @@ def handle(text: str, owner: str) -> str | None:
 
     def original(part: str) -> str:
         """The same words as typed, with the person's own capitals."""
-        start = low.find(part)
+        start = _lower(raw).find(part)
         return raw[start:start + len(part)] if start >= 0 else part
 
     m = _NOTE.search(low)
