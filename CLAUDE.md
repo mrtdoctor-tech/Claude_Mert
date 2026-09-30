@@ -361,6 +361,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   (tepe sınırı yüzünden; hedef için +22 gerekirdi), gürültü (kazanç sonrası) **−68 dB** (çok temiz). Kazanç sonrası konuşma
   ≈ −28 dB: kullanılabilir. İyileştirme fikri: GainNode'dan sonra DynamicsCompressor (limiter, eşik −6 dB) koyup tepe
   sınırını kaldırmak → tam +22 dB. Kullanıcıya sesini yeniden tanıtması önerildi.
+  Mert kalibrasyondan sonra sesini yeniden tanıttı: tutarlılık **0,886** (ilk kayıt 0,906; benzer). Sezin'in profili eski
+  ayarla (Chrome AGC açık, kazanç yok) kaydedildi → onun da yeniden tanıtması önerildi. Yeni benzerlik puanları bekleniyor.
 
 ## Sıradaki fikirler
 
