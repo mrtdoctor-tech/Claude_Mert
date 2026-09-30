@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.21
+Sürüm: 3.22
 
 ---
 
@@ -38,8 +38,9 @@ Açmak için ⚙️ Ayarlar → 🔊 Ses ve konuşma → **"Adımla seslenince d
 - Mikrofon sürekli açıktır, ama duyulan ses bilgisayardan çıkmaz. Adınla başlamayan konuşmalar hiçbir yere yazılmadan
   silinir.
 - Yanlışlıkla uyanıyorsa Ayarlar'daki **Uyandırma sözü**'nü "Merhaba Asiye" yap: iki kelimelik söz daha güvenlidir.
-- Müzik açıkken de çalışır; mikrofona basmadan duyulan yabancı dilde şarkı sözlerini mesaj saymaz. Yine de yanlışlıkla
-  uyanırsa 👂'a basıp duraklatabilirsin.
+- Müzik açıkken de çalışır; mikrofona basmadan duyulan yabancı dilde şarkı sözlerini mesaj saymaz. Müzik çalarken
+  isteğini tek nefeste söyle: **"Merhaba Asiye, müziği durdur"**. Müzik mikrofona çok yakın ve yüksekse sesini
+  duyamayabilir: müziği mikrofondan uzaklaştır ya da kıs. Yanlışlıkla uyanırsa 👂'a basıp duraklatabilirsin.
 - Misafir modunda da çalışır; seslenen kişiyi sesinden tanırsa onun oturumuna geçer.
 - Sayfa açık olmalı (sekme arkada olabilir). Tarayıcıyı yeni açtıysan sayfaya bir kez tıklaman gerekebilir.
 

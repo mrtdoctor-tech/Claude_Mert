@@ -217,6 +217,11 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `wake.sounds_foreign` (dil tr iken İngilizce sözcük oranı ≥%25, Türkçe harf yok) `wake_check` ve `hands_free`
   (otomatik yeniden açılan mikrofon + uyandırma sonrası dinleme; `startListening(auto, handsFree)`) isteklerinde metni
   atar, kimlik kontrolüne gitmeden `music: true` döner. Misafir modunda uyandırma açık kalır (kullanıcı kararı).
+  3.22: telefonda müzik (mikrofondan 30 cm) çalarken "Merhaba Asiye" yakalanmadı: ses hiç susmadığından tek parça 8 sn'ye
+  kadar uzuyor, söz ortada kalıyor, `match` başta arıyordu. → çok kelimeli söz her konumda aranır (tek kelimelik yalnızca
+  başta); susmayan ses 6 sn pencereler, 2 sn örtüşme (`OVERLAP_MS`), bu parçalar `noisy=true` → ses kimliği atlanır
+  (kimlik değişmez); kontrol sürerken biten parça `waiting`'de bekler (eskiden atılıyordu); uyanınca 3 sn `restUntil`.
+  Yabancı dil kontrolü artık sözden SONRAKİ metne: şarkı ise uyanır ama komut boş ("dıt dıt" + dinle), kimlik atlanır.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -412,6 +417,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   3.20 gerçekte **çalıştı** (👂 görünüyor, seslenince cevap verdi). Kullanıcı misafir modunu sordu: uyandırma misafirde de
   açık (kodda misafir kısıtı yok); ses kimliği her seslenmede çalışır, tanınan ses profiline geçer. Kullanıcı: "misafir
   modunda çalışsın". Konuşurken kendiliğinden uyanmadı; müzik açınca uyandı → 3.21.
+  3.21 gerçekte: müzikte yanlış uyanma olmadı ama müzik çalarken "Merhaba Asiye" de yakalanmadı → 3.22.
 
 ## Sıradaki fikirler
 

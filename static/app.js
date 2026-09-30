@@ -371,7 +371,8 @@ async function startListening(auto, handsFree = auto) {
       setBusy(false);
       if (echo) return setStatus("🔇 Hoparlörden kendi okuduğum cevabı duydum; mesaj olarak almadım.");
       if (music) return setStatus("🎵 Müzik ya da yabancı dilde şarkı sözü duydum; mesaj olarak almadım. Sesli sohbet bitti.");
-      if (!text) return setStatus("Bir şey duyamadım, tekrar dener misin?", true);
+      if (!text) return handsFree ? setStatus("Sesli sohbet bitti. Devam etmek için 🎤'a bas ya da adımla seslen.")
+        : setStatus("Bir şey duyamadım, tekrar dener misin?", true);
       send(text, true, sttMs, device);
     } catch (err) {
       setBusy(false);
@@ -1580,15 +1581,17 @@ const wakeListener = (() => {
   const PRE_ROLL_MS = 500;   // keep a little sound from before the voice got loud, so the first syllable is not cut
   const END_SILENCE_MS = 700;
   const MIN_SPEECH_MS = 250;
-  const MAX_BURST_MS = 8000;
+  const MAX_BURST_MS = 6000;
+  const OVERLAP_MS = 2000;   // music never goes quiet: long sound is checked in 6 s windows that overlap by 2 s,
+                             // so a wake phrase cut by one window is whole in the next
   const button = $("#wake-toggle");
-  let mic = null, processor = null, starting = false, sending = false;
+  let mic = null, processor = null, starting = false, sending = false, waiting = null, restUntil = 0;
   let paused = false;
   try { paused = localStorage.getItem("wakePaused") === "1"; } catch {}
 
   const wanted = () => !!state.settings.wake_word && !paused;
   const speaking = () => !!stopCurrentAudio || ("speechSynthesis" in window && speechSynthesis.speaking);
-  const deaf = () => sending || state.busy || (recorder && recorder.state === "recording") || speaking()
+  const deaf = () => Date.now() < restUntil || state.busy || (recorder && recorder.state === "recording") || speaking()
     || document.querySelector("dialog[open]");
 
   function show() {
@@ -1640,10 +1643,15 @@ const wakeListener = (() => {
       burst.push(input);
       if (loud) { loudMs += chunkMs; quietMs = 0; } else quietMs += chunkMs;
       const length = burst.length * chunkMs;
-      if (quietMs >= END_SILENCE_MS || length >= MAX_BURST_MS) {
+      if (quietMs >= END_SILENCE_MS) {
         const done = burst;
         burst = null;
-        if (loudMs >= MIN_SPEECH_MS) check(done, rate);
+        if (loudMs >= MIN_SPEECH_MS) check(done, rate, false);
+      } else if (length >= MAX_BURST_MS) { // still loud: music, TV or a long sentence
+        const done = burst;
+        burst = burst.slice(-Math.round(OVERLAP_MS / chunkMs));
+        loudMs = OVERLAP_MS;
+        check(done, rate, true);
       }
     };
     mic.node.connect(processor);
@@ -1657,12 +1665,14 @@ const wakeListener = (() => {
     show();
   }
 
-  async function check(chunks, rate) {
+  async function check(chunks, rate, noisy) {
+    if (sending) { waiting = [chunks, rate, noisy]; return; } // keep only the newest while one is being checked
     sending = true;
     try {
       const form = new FormData();
       form.append("audio", toWav(chunks, rate), "uyandirma.wav");
       form.append("wake_check", "true");
+      if (noisy) form.append("noisy", "true");
       const started = performance.now();
       const result = await api("/api/transcribe", { method: "POST", body: form });
       if (!result.wake || result.echo) return;
@@ -1670,6 +1680,7 @@ const wakeListener = (() => {
       showSttDevice(result.device);
       applyIdentity(result.identity);
       state.voiceTooShort = !!result.voice_too_short;
+      restUntil = Date.now() + 3000; // the overlapping window still holds the same phrase
       button.classList.add("heard");
       setTimeout(() => button.classList.remove("heard"), 1500);
       state.voiceRound++;
@@ -1679,10 +1690,13 @@ const wakeListener = (() => {
         await sleep(600); // the chime is not recorded as speech
         startListening(false, true);
       }
+      waiting = null; // woken: sound heard meanwhile belonged to this
     } catch {
       // a failed check is not worth a message; the next burst is checked again
     } finally {
       sending = false;
+      if (waiting && !deaf()) check(...waiting.splice(0));
+      waiting = null;
     }
   }
 

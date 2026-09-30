@@ -71,13 +71,19 @@ def hotwords(settings: dict) -> str:
 
 
 def match(text: str, phrase: str) -> tuple[bool, str]:
-    """(woken?, the rest of the sentence after the wake phrase)."""
+    """(woken?, the rest of the sentence after the wake phrase).
+
+    A one-word phrase ("Asiye") must open the sentence, so talk that only mentions the name does not wake. A longer
+    phrase ("Merhaba Asiye") may come anywhere (3.22): with music playing, the burst never goes quiet and the phrase
+    lands in the middle of several seconds of song.
+    """
     heard, wanted = _words(text), _words(phrase)
     if not heard or not wanted:
         return False, ""
     similar = SIMILAR_ONE if len(wanted) == 1 else SIMILAR_MORE
-    for skip in (0, 1):  # the phrase itself, or one greeting word before it
-        if skip and heard[0] not in GREETINGS:
+    starts = range(len(heard)) if len(wanted) > 1 else (0, 1)
+    for skip in starts:
+        if skip and len(wanted) == 1 and heard[0] not in GREETINGS:
             continue
         part = heard[skip:skip + len(wanted)]
         if len(part) == len(wanted) and all(_alike(h, w, similar) for h, w in zip(part, wanted)):

@@ -489,7 +489,8 @@ async def transcribe_warmup():
 
 
 @app.post("/api/transcribe")
-async def transcribe(audio: UploadFile = File(...), wake_check: bool = Form(False), hands_free: bool = Form(False)):
+async def transcribe(audio: UploadFile = File(...), wake_check: bool = Form(False), hands_free: bool = Form(False),
+                     noisy: bool = Form(False)):
     """Speech → text (+ who is speaking). With wake_check (3.19) the audio is a burst of room sound heard while waiting
     for the wake phrase: unless it starts with the phrase it is dropped quietly (not logged, identity unchanged)."""
     settings = config.load()
@@ -508,23 +509,26 @@ async def transcribe(audio: UploadFile = File(...), wake_check: bool = Form(Fals
         score = None
         too_short = False
         woken = None
-        if (wake_check or hands_free) and wake.sounds_foreign(text, settings["language"]):
-            # song lyrics while nobody pressed the button: not a message, and not a reason to switch to guest
-            if wake_check:
-                return {"text": "", "device": device, "wake": False}
-            return {"text": "", "device": device, "identity": identity.state(), "voice_score": None,
-                    "voice_too_short": False, "music": True}
+        check_voice = not noisy  # a voice over music cannot be told apart; the identity stays as it is
         if wake_check:
             woken, text = wake.match(text, wake.phrase_for(settings))
             if not woken:
                 return {"text": "", "device": device, "wake": False}
             memory.schedule(settings)
             log.info("Uyandırma sözü duyuldu")
+            if wake.sounds_foreign(text, settings["language"]):
+                # the phrase came over music: the rest is song, and the voice is mixed with the singer's, so who is
+                # speaking is decided by the next recording (the question), not this one
+                text, check_voice = "", False
+        elif hands_free and wake.sounds_foreign(text, settings["language"]):
+            # song lyrics while nobody pressed the button: not a message, and not a reason to switch to guest
+            return {"text": "", "device": device, "identity": identity.state(), "voice_score": None,
+                    "voice_too_short": False, "music": True}
         if text and _is_echo(text):
             log.info("Asistanın kendi sesi duyuldu, yok sayıldı: %s", text)
             return {"text": "", "device": device, "identity": identity.state(), "voice_score": None,
                     "voice_too_short": False, "echo": True}
-        if identity.active():
+        if identity.active() and check_voice:
             result = await run_in_threadpool(voiceid.identify, path)
             score, scores = result["score"], voiceid.describe(result["scores"])
             if result["name"]:

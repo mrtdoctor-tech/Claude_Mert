@@ -114,6 +114,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.22** — Müzik çalarken adla seslenme: müzik hiç susmadığı için ses 6 saniyelik, üst üste binen parçalar halinde kontrol ediliyor; "Merhaba Asiye" gibi iki kelimelik söz cümlenin ortasında da yakalanıyor ("Merhaba Asiye, müziği durdur"). Müzik üstünden gelen seste kimlik değiştirilmiyor (misafire düşmez).
 - **3.21** — Müzik açıkken yanlışlıkla uyanma ve şarkı sözlerini mesaj sanma düzeltildi: adla seslenme kontrolünde ses tanımaya ad ipucu verilmiyor (müzikte adı "duyuyordu"), düğmeye basılmadan duyulan yabancı dilde şarkı sözleri ve ses tanımanın uydurduğu "İzlediğiniz için teşekkür ederim" gibi cümleler atılıyor; bu yüzden müzik seni misafire de düşürmüyor.
 - **3.20** — Ses tanıma artık asistanın adını ve uyandırma sözünü bekliyor: hızlı söylenen "Merhaba Asiye" "Merhaba size" diye yazılıyordu.
 - **3.19** — Adınla seslenme: mikrofona basmadan "Asiye, saat kaç?" ya da sadece "Asiye" deyince dinlemeye başlar (Ayarlar → Ses ve konuşma → "Adımla seslenince dinle"; istersen "Merhaba Asiye" gibi daha uzun bir söz). Mesaj kutusundaki 👂 ile duraklatılır. Duyulan ses bilgisayardan çıkmaz; adla başlamayan konuşmalar kaydedilmeden silinir.
