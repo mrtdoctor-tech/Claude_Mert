@@ -624,6 +624,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   İlk çalıştırma 205 sn (base ilk adım 72 sn/adım: modeller USB P:'den yükleniyor; refiner 1,92 it/s). Şablon filtresi
   "ComfyUI" (yerel) seçiliyken bile "MiniMax H3" (bulut) listede → kullanıcıya bulut şablonlarını kullanmaması söylendi.
   İkinci çalıştırma (modeller yüklü): 1024×1024, base 20 + refiner 5 adım → **17,4 sn**. Sırada: resimden video (LTX-2.3 şablonu).
+  Video: LTX-2.3 i2v şablonu 40 GB istedi (ltx-2.3-22b-dev-fp8 27 GB + gemma_3_12B fp4 8,8 GB + LoRA'lar) → 8 GB VRAM/32 GB RAM'e
+  uygun değil, indirilmedi. **Wan 2.2 TI2V 5B** şablonu: wan2.2_ti2v_5B_fp16 9,31 GB + umt5_xxl_fp8_e4m3fn_scaled 6,27 GB +
+  wan2.2_vae 1,31 GB = 16,9 GB → önerildi (ComfyUI_yeni\ComfyUI\models'e iner). İlk deneme kısa (length ~49 kare) önerildi.
 
 ## Sıradaki fikirler
 
