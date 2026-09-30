@@ -547,6 +547,12 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `araclar/whisper_muzige_ekle.bat`: muzik ortamına `pip install openai-whisper --dry-run`; "Would install" satırında
   numpy/torch/torchaudio/numba/llvmlite/scipy/librosa varsa durur, yoksa kurar; `import whisper, torch` + `muzik_doctor.py`
   (Google Drive'dan bulunur) çıktısı. Kullanıcıdan pencere çıktısı bekleniyor; sonra `Calistir.bat`'ta ai_assistant → muzik.
+  Gerçek sonuç: dry-run yalnızca more-itertools, openai-whisper, tiktoken → kuruldu; torch 2.8.0+cu126, CUDA True (RTX 4060).
+  `muzik` ortamı: numpy **2.4.6**, demucs 4.1.0, whisperx 3.8.6, natten 0.21.7, madmom 0.17.dev0 → **allin1 import
+  edilemiyor** (`natten1dav` yeni natten'de yok; madmom/allin1 numpy<2 istiyor). Bu, whisper'dan ÖNCE de böyleydi (numpy
+  değişmedi); muzik_analiz'de bölüm etiketleri "yapılamadı" der, BPM/ton/söz/stem çalışır. Düzeltmesi (eski natten +
+  numpy<2) riskli → ayrı iş, önce ortamın kopyasında denenmeli. Sıradaki: kullanıcı `Calistir.bat`'ta ai_assistant → muzik
+  (Not Defteri Ctrl+H), fvts.py ve analiz.py'yi muzik'te dener; birkaç gün sorunsuzsa `conda env remove -n ai_assistant`.
 
 ## Sıradaki fikirler
 
