@@ -619,6 +619,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   gömülü python'da torch **2.14.0+cu130**, GPU RTX 4060 görüldü. Masaüstü = `C:\Users\mertbilgin\OneDrive\Desktop`.
   Kayıt dosyası Tee-Object yüzünden UTF-16. Sırada: ComfyUI (yeni)'yi açıp modellerin göründüğünü doğrulamak, sonra
   şablonlardan (Workflow → Browse Templates) resim ve resimden video iş akışı.
+  Yeni ComfyUI'de ilk resim **çalıştı**: şablon "SDXL Simple" (base+refiner), Fooocus modelleri listede göründü (base
+  juggernautXL_v8Rundiffusion, refiner `Refiner\sd_xl_refiner_1.0` — şablon klasörsüz adı arıyordu, elle seçildi).
+  İlk çalıştırma 205 sn (base ilk adım 72 sn/adım: modeller USB P:'den yükleniyor; refiner 1,92 it/s). Şablon filtresi
+  "ComfyUI" (yerel) seçiliyken bile "MiniMax H3" (bulut) listede → kullanıcıya bulut şablonlarını kullanmaması söylendi.
 
 ## Sıradaki fikirler
 
