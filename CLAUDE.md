@@ -653,6 +653,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Beşinci (81 kare, sakin prompt + İngilizce negatif ekleri, 481 sn): **kum düzgün aktı**, ama ~2. saniyeden sonra arka planda
   bloklu mavi lekeler. Teşhis: VAE Decode (Tiled) `temporal_size` 64 kare → 81 karede zaman parçası sınırı ~2,5 sn'de
   (49 karede sorun yoktu). Öneri: temporal_size ≥ length (ör. 128), uzamsal tile_size aynı kalsın.
+  Altıncı (temporal_size 128): **479,7 sn, "recovered" yok, mavi bloklar gitti** → teşhis doğru. Kalan: "candle light"
+  kum düştüğü yerde alev gibi yanıyor (kaynak resimde de orada turuncu parıltı var) → mum sözcüğü çıkarılıp ışık
+  yönü tarif edildi, negatife flame/fire eklendi. Önerilen kalıcı ayarlar: Wan 2.2 5B, 81 kare, VAE Decode (Tiled)
+  temporal_size 128; iş akışı "HourGlow video" olarak kaydedilsin.
 - **2026-09-30 (3.42):** `baslat.bat` `:run`'da `tasklist | findstr ollama.exe` (find değil: conda PATH'inde GNU find.exe var);
   yoksa `%LOCALAPPDATA%\Programs\Ollama\ollama app.exe` (yoksa `start /min ollama serve`). Ollama yolu gerçekte doğrulanmadı.
 
