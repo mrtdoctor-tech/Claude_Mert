@@ -48,13 +48,13 @@ _W = r"[\wçğıöşü]+"
 _LIST_TO = rf"(?:(?:({_W})\s+)?listes\w*?(?:e|ne)|listeye|listeme)"
 # "ekle", "ekler misin", "ekleyebilir misin", "eklesene", "yazar mısın", "koyar mısın"
 _ASK = r"(?:\s+m[ıiuü]s[ıiuü]n(?:[ıi]z)?)?"
-_ADD = re.compile(rf"^{_LIST_TO}\s+(.+?)\s+(?:ekle|yaz|koy)(?!n)\w*{_ASK}$")  # not "eklenir"
+_ADD = re.compile(rf"^(?:(?:({_W})\s+)?liste[sm]\w*?(?:e|ne)|listeye)\s+(.+?)\s+(?:ekle|yaz|koy)(?!n)\w*{_ASK}$")  # not "eklenir"
 _ADD_AFTER = re.compile(rf"^(.+?)\s+{_LIST_TO}\s+(?:ekle|yaz|koy)(?!n)")  # not "eklendi mi?"
 _NOTE = re.compile(rf"^(?:bunu\s+|şunu\s+)?not\s+(?:al|et|tut)(?:ır|ar|er)?{_ASK}(?:\s*[:,-]\s*|\s+)(.+)$|^(.+?)\s+diye\s+not\s+(?:al|et|tut)")
-_SHOW = re.compile(rf"^(?:(?:({_W})\s+)?listes\w*|listem\w*|listede)\s.*\b(ne|neler|var|göster\w*|oku\w*|söyle\w*)\b"
+_SHOW = re.compile(rf"^(?:(?:({_W})\s+)?liste[sm]\w*|listede)\s.*\b(ne|neler|var|göster\w*|oku\w*|söyle\w*)\b"
                    r"|\b(listelerim|listeleri(?:mi)?)\s+(göster|neler|oku)|^notlar(?:ım|ımı)?\s*(ne|neler|göster|oku)?\s*\??$")
 _REMOVE = re.compile(rf"^(.+?)\s+(?:(?:({_W})\s+)?listes\w*?(?:den|nden)|listeden|listemden)\s+(?:sil|çıkar|kaldır|at)")
-_CLEAR = re.compile(rf"^(?:(?:({_W})\s+)?listes\w*?(?:i|ni)|listemi|listeyi)\s+(?:temizle|boşalt|sil)")
+_CLEAR = re.compile(rf"^(?:(?:({_W})\s+)?liste[sm]\w*?(?:i|ni)|listeyi)\s+(?:temizle|boşalt|sil)")
 
 def _format_list(name: str, items: list[dict]) -> str:
     title = "Notların" if name == NOTES_LIST else f"{name.capitalize()} listesi"
@@ -67,12 +67,19 @@ def _format_list(name: str, items: list[dict]) -> str:
 _POLITE = re.compile(r"^lütfen[\s,]+|[\s,]+lütfen(?=[\s.!?]*$)|[\s.!?]+$")
 
 
+_KNOWN_MY = re.compile(r"\b(alışveriş|market|yapılacaklar|yapılacak|notlar|not)\s+listem(\w*)")
+
+
 def _clean(text: str) -> str:
-    """Lowercase, without "lütfen" and the final dot the speech recognition adds."""
+    """Lowercase, without "lütfen" and the final dot the speech recognition adds.
+
+    "alışveriş listemi" is read as "alışveriş listesini" (only for known list names: in "süt ve ekmeği listeme ekle"
+    the word before "listeme" is an item, not a list name).
+    """
     low = _lower(text.strip())
     for _ in range(3):
         low = _POLITE.sub("", low)
-    return low
+    return _KNOWN_MY.sub(lambda m: f"{m[1]} listesi" + (f"n{m[2]}" if m[2] else ""), low)
 
 
 _QUESTION = re.compile(r"\b(nasıl|neden|niye|nedir|ne demek|ne işe)\b")  # "Python listesine nasıl eleman eklenir?"

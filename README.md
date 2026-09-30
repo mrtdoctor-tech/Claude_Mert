@@ -114,6 +114,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.18** — "Alışveriş listemi göster", "Listeme süt ekle", "Peyniri alışveriş listemden çıkar" gibi "listem" ile kurulan cümleler de anlaşılıyor. Yapay zekâ listelerin içini göremediği için artık "listen boş" diye tahmin etmiyor, doğru komutu öneriyor.
 - **3.17** — Listeler rica cümlelerini de anlıyor: "Listeye peynir ekler misin?", "ekleyebilir misin", "yazar mısın", "…ekle lütfen", "Not alır mısın: …". Yapay zekâ artık listeye/hatırlatıcıya kendisi bir şey eklemiş gibi davranmıyor ("ekledim" diye uydurmuyor), doğru komutu öneriyor.
 - **3.16** — Notlar ve listeler: "Listeye süt ekle", "Listemde ne var?", "Sütü listeden çıkar", "Not al: kombiyi ara". Sol menüde yeni "📝 Notlar ve listeler" penceresi (işaretleme, silme, ekleme). Kişiye özel, misafire kapalı.
 - **3.15** — Ayarlar iki kolonlu ve kategorili (Yapay zekâ, Ses ve konuşma, Mikrofon, Bağlantılar, Ses profilleri). Yeni "🎙️ Mikrofonu ayarla": 5 saniyelik test kaydıyla sesinin seviyesini ölçer, gereken yükseltmeyi kendisi ayarlar (elle de değiştirilebilir, test kaydı dinlenebilir); sohbet, sesli komutlar ve ses tanıtma bu ayarla kaydeder.

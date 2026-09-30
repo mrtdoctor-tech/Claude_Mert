@@ -195,6 +195,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   3.17: `_clean` baştaki/sondaki "lütfen" ve noktalamayı atar; fiil `ekle\w*` + `_ASK` (ekler misin, ekleyebilir misin,
   yazar mısın), `(?!n)` "eklenir/eklendi mi"yi dışlar; `_QUESTION` (nasıl/neden/nedir) → komut değil. Sistem istemi:
   model listelere/hatırlatıcılara kendisi ekleyemez, "ekledim" demesin, kısa komut önersin.
+  3.18: "listem…" biçimleri: baştan başlayan kalıplar (ADD/SHOW/CLEAR) `liste[sm]`; ortadakiler (ADD_AFTER/REMOVE)
+  için `_KNOWN_MY` yalnızca bilinen adlarda "alışveriş listemi" → "alışveriş listesini" çevirir ("ekmeği listeme"de
+  "ekmeği" liste adı sanılmasın). Sistem istemi: model listelerin içini göremez, "listen boş" diye tahmin etmesin.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -378,6 +381,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   sabah özeti (hava + ajanda + listeler), uyandırma sözcüğü, eski sohbet arama.
 - **2026-09-30 (3.17):** 3.16 gerçekte çalıştı ("…yoğurt ekle.", "Listelerimi göster."), ama "Alışveriş listesine peynir
   ekler misin?" modele gitti ve model "ekledim" diye uydurdu → rica biçimleri + sistem istemine dürüstlük satırı.
+- **2026-09-30 (3.18):** 3.17 gerçekte çalıştı ("gösterir misin", "ekler misin" hazır cevap). "Alışveriş listemi göster."
+  modele gitti, model "listende yok" dedi → "listem" biçimleri + istemde "içini tahmin etme".
 
 ## Sıradaki fikirler
 

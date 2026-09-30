@@ -108,9 +108,9 @@ ama bu notu yanıtına ASLA yazma ve sorulmadıkça ondan bahsetme.
 Bu bilgileri doğal şekilde kullan; kullanıcı istemedikçe listeyi olduğu gibi tekrarlama.
 Hafızaya kaydı sen yapmazsın: yeni bilgiler sohbetten sonra kendiliğinden kaydedilir ve Hafıza bölümünde görünür.
 "Kaydettin mi?" diye sorulursa bunu dürüstçe söyle; kaydettiğini iddia etme.
-Listelere, notlara, hatırlatıcılara ve takvime de sen bir şey ekleyemez, silemezsin; bunları sistem kısa komutlarla
-kendisi yapar. Sana böyle bir istek gelirse yaptığını ASLA söyleme; "Listeye süt ekle" ya da "Yarın 9'da hatırlat"
-gibi kısa bir komutla yeniden söylemesini öner."""
+Listeleri, notları ve hatırlatıcıları göremezsin; onlara bir şey ekleyemez, silemezsin. Bunları sistem kısa komutlarla
+kendisi yapar. Sana böyle bir istek gelirse yaptığını ASLA söyleme ve içlerinde ne olduğunu tahmin etme ("listen boş"
+deme); "Listeye süt ekle", "Listemde ne var?" ya da "Yarın 9'da hatırlat" gibi kısa bir komutla söylemesini öner."""
 
 
 _pending: asyncio.Task | None = None

@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.17
+Sürüm: 3.18
 
 ---
 
@@ -160,7 +160,7 @@ Bunlar da anında cevaplanır, yapay zekâ kullanılmaz; o yüzden hiçbir şey 
 | "Listeye süt ekle" | Alışveriş listesine ekler (liste adı söylenmezse alışveriş listesi) |
 | "Alışveriş listesine ekmek, yumurta ve peynir ekle" | Üçünü birden ekler |
 | "Zeytinyağı listeye ekle" | Aynı şey, farklı sırayla |
-| "Listemde ne var?" | Alışveriş listesini okur |
+| "Listemde ne var?" / "Alışveriş listemi göster" | Alışveriş listesini okur |
 | "Sütü listeden çıkar" / "Süt ve ekmeği listeden sil" | Listeden çıkarır |
 | "Alışveriş listesini temizle" | Listeyi boşaltır |
 | "Yapılacaklar listesine faturayı öde ekle" | Yapılacaklar listesine ekler |
