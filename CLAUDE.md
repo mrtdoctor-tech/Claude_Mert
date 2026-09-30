@@ -604,6 +604,16 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Disk: P: 1204 GB boş, C: 222 GB boş. Öneri: yerinde güncelleme yok (numpy/torch değişir → hg_olcum riski + çakışma);
   **ayrı yeni ComfyUI Windows portable** (gömülü python, conda yok) + `extra_model_paths.yaml` ile Fooocus modelleri; eski
   kurulum/ortam dokunulmadan kalır. Kullanıcının onayı bekleniyor.
+- **2026-09-30 (3.41):** Kullanıcı: yeni kurulum, hedef hem resim hem resimden video. Sordu: "Comfy'nin 2 env'i silinebilir mi?"
+  → tek ortam var (ComfyUI = comfyui); silinebilir ama önce `hg_olcum.py` (+ hg_dikis, cv2 4.11) başka ortama
+  (ai_assistant'a opencv-python==4.11.0.86, dry-run denetimiyle) taşınmalı; eski `P:\Comfy\ComfyUI` klasörü de silinebilir.
+  `araclar/comfyui_yeni_kur.bat` → `comfyui_yeni_kur.py` (python-yolu.txt'teki python; çıktı Tee ile
+  `%LOCALAPPDATA%\YerelAsistan\comfyui_kurulum.txt`): GitHub API `releases/latest` → `ComfyUI_windows_portable_nvidia(_cuNNN)?.7z`
+  (düz ad önce), urllib indirme (%5 adımlı ilerleme, .part), 7-Zip varsa o, yoksa Windows tar ile açma, yeni oluşan
+  python_embeded'li klasör → `P:\Comfy\ComfyUI_yeni`; `extra_model_paths.yaml` (Fooocus modelsM'in var olan alt klasörleri →
+  ComfyUI türleri); Manager: `manager_requirements.txt` + cli_args'ta `--enable-manager` varsa yerleşik, yoksa git clone;
+  `P:\Comfy\ComfyUI_yeni.bat` + masaüstü "ComfyUI (yeni).bat". Tekrar çalıştırmak güvenli. Sahte ağ/açma ile test edildi;
+  **gerçek indirme, tar'ın .7z açması ve Manager bayrağı Windows'ta denenmedi**. Sonra: 8 GB'a uygun video modeli seçimi.
 
 ## Sıradaki fikirler
 
