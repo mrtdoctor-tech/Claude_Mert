@@ -937,6 +937,7 @@ $("#open-settings").onclick = async () => {
   form.wake_phrase.value = state.settings.wake_phrase || "";
   form.outlook_sync.checked = !!state.settings.outlook_sync;
   form.weather_city.value = state.settings.weather_city || "";
+  form.analysis_folder.value = state.settings.analysis_folder || "";
   form.mic_gain.value = Number(state.settings.mic_gain) || 0;
   $("#mic-gain-label").textContent = `+${form.mic_gain.value} dB`;
   $("#mic-result").textContent = state.settings.mic_calibrated ? "" : "Henüz ayarlanmadı.";

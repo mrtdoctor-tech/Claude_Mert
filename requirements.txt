@@ -10,4 +10,7 @@ sherpa-onnx>=1.10  # speaker identification (voiceprints), offline
 numpy
 pypdf>=4.0  # reading PDF documents (3.23)
 python-docx>=1.1  # reading Word documents (3.23)
+librosa>=0.10  # music analysis: tempo, key (3.26)
+pyloudnorm>=0.1  # music loudness in LUFS (3.26)
+pillow>=10  # picture analysis (3.26)
 pywin32; sys_platform == "win32"  # Excel and Outlook automation (3.6)

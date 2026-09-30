@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.25
+Sürüm: 3.26
 
 ---
 
@@ -224,6 +224,29 @@ PDF, Word (.docx), .txt, .md ve .csv dosyalarını okuyup onlar hakkında konuş
 - Yeni sohbetin adı başladığı tarih-saat ve ilk kelimesidir: **202609301324 Merhaba** (2026-09-30, 13:24).
 - Adını değiştirmek için sol listede sohbetin üstüne gel ve **✏️**'ye bas ya da üstteki sohbet başlığına tıkla.
 - 🗑 sohbeti siler.
+
+## 🎵 Klasör analizi — HourGlow Music (3.26)
+
+Google Drive'daki **HourGlowMusic\Scripts\Asiye** klasörüne attığın müzik ve resim dosyalarını analiz ederim ve her
+dosyanın yanına aynı adla bir **"….analiz.txt"** raporu yazarım (ör. `sarki.mp3` → `sarki.mp3.analiz.txt`).
+
+| Söyle / yaz | Ne olur |
+|---|---|
+| "Klasördeki dosyaları analiz et" / "Asiye klasörünü analiz et" | Henüz raporu olmayan (ya da sonradan değişen) dosyaları analiz eder |
+| "Hepsini yeniden analiz et" (klasördeki dosyaları) | Raporu olanlar dahil hepsini baştan yapar |
+| "Analiz klasörünü aç" | Klasörü Dosya Gezgini'nde açar |
+
+- **Müzik** (mp3, wav, flac, m4a, ogg, aac, aiff): süre ve biçim, etiketler (parça adı, sanatçı…), ses yüksekliği (LUFS —
+  Spotify/YouTube için uygun mu), tepe ve ortalama seviye, dinamik aralık, kırpılma, baştaki/sondaki sessizlik, stereo
+  genişliği ve faz, tempo (BPM), ton (ör. La minör / Am), parlaklık, 10 saniyelik bölümlerin yüksekliği ve yapay zekânın bu
+  ölçümlere göre kısa yorumu (parçayı dinlemez; tür/ruh hali tahmindir).
+- **Resim** (jpg, png, webp, bmp, gif, tiff): çözünürlük ve en-boy oranı (albüm kapağına uygun mu), çekim bilgileri (EXIF;
+  konum bilgisi varsa uyarır), parlaklık, kontrast, doygunluk, keskinlik, renk sıcaklığı, baskın renkler (renk kodlarıyla) ve
+  yapay zekânın resimde gördükleri (ne var, atmosfer, resimdeki yazılar, hangi tarz müziğe kapak olur).
+- Analiz ekranda "🔎 2/5: … analiz ediliyor" diye ilerler. Asistan açıldıktan sonraki ilk müzik dosyası biraz uzun sürer
+  (yaklaşık yarım dakika, bir kerelik hazırlık); sonrakiler birkaç saniye.
+- Her şey bilgisayarında yapılır. Yalnızca sesinden ya da şifresinden tanıdığım kişiler kullanabilir.
+- Başka bir klasör için: ⚙️ Ayarlar → 🌐 Bağlantılar → **Analiz klasörü**.
 
 ## 🧠 Hafıza
 

@@ -244,6 +244,16 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   (kullanıcı isteği, ör. "202609301324 Merhaba"; belge sohbeti "… 📄 ad"); `meta` olayı `title` taşır. `PUT
   /api/conversations/{id}` (yeniden adlandırma; listede ✏️, başlığa tıklama, `prompt`). `DELETE /api/security-log`
   (yönetici; ardından "Güvenlik kaydı temizlendi" satırı yazılır), güvenlik penceresinde 🧹.
+- **Klasör analizi (3.26):** `app/analysis.py`. Klasör: ayar `analysis_folder` ya da `~/My Drive*/HourGlowMusic/Scripts/Asiye`
+  (Google Drive yansıtma; yol kodda e-postasız). Komut `is_command` (analiz + klasör/dosya/şarkı/resim + et/yap/eder),
+  "analiz klasörünü aç" → `os.startfile`. Chat'te notes'tan sonra, pc'den önce; `job` → `analysis.run` akışı `progress`
+  olayları, sonunda özet. Misafire kapalı (`refusal`). Rapor yoksa / dosyadan eskiyse analiz; "hepsini yeniden" → hepsi.
+  Rapor `<ad>.analiz.txt` (utf-8-sig). Müzik: PyAV ile çözme (faster-whisper'la gelir, mp3/m4a), pyloudnorm LUFS, tepe/RMS,
+  dinamik (0,5 sn blokların %95-%10'u), kırpılma, kenar sessizliği, stereo korelasyon/genişlik, librosa `beat_track`, ton
+  (chroma_stft + Krumhansl), spektral merkez/düzlük, olay yoğunluğu, 10 sn bölüm çubukları, modelden yorum. Resim: Pillow
+  (EXIF + GPS uyarısı, parlaklık/kontrast/doygunluk/kenar varyansı, MEDIANCUT 6 renk + Türkçe ad) + modele 896 px JPEG
+  (`images`, gemma3 görür). İlk müzik dosyası numba derlemesi yüzünden ~30 sn. Sentetik mp3/wav/jpg/png + sahte Ollama ile
+  test edildi; **gerçek dosyalar ve gerçek model yorumları denenmedi**.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -453,7 +463,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   (müzik/resim analizi) `C:\Users\mertbilgin\My Drive (hourglowmusic@gmail.com)\HourGlowMusic\Scripts\` altında; kullanıcı
   `Scripts\Asiye` klasörü açtı, "oraya attığım dosyaları analiz etsin, basit, çok parametre gerektirmeyen analizler" dedi.
   Klasördekiler medya dosyası mı betik mi, hangi analizler ve hangi conda ortamı (not: Hourglow betikleri `ai_assistant`
-  ortamını kullanıyor) kullanıcıya soruldu.
+  ortamını kullanıyor) kullanıcıya soruldu. Kullanıcı: önerilen (asistan kendi analizini yapsın, istenince), "yapabildiği
+  bütün analizleri yapsın, tek tek bir txt dosyasına yazsın, aynı klasörde" → 3.26.
 
 ## Sıradaki fikirler
 

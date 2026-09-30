@@ -16,7 +16,7 @@ from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, db, documents, identity, llm, memory, notes, online, outlook, pc, presence, quick, reminders, stt, tts, voiceid, wake
+from . import analysis, config, db, documents, identity, llm, memory, notes, online, outlook, pc, presence, quick, reminders, stt, tts, voiceid, wake
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("asistan")
@@ -132,6 +132,7 @@ class SettingsIn(BaseModel):
     weather_city: str | None = None
     mic_gain: float | None = None
     mic_calibrated: bool | None = None
+    analysis_folder: str | None = None
     wake_word: bool | None = None
     wake_phrase: str | None = None
 
@@ -307,19 +308,30 @@ async def chat(body: ChatIn):
     num_ctx = documents.DOC_CTX if docs else llm.NUM_CTX
     # "saat kaç?" comes from the clock, "20 dakikalık sayaç kur" is set by rules: not by the model
     instant = quick.answer(text) or reminders.handle(text, who) or notes.handle(text, who)
-    if not instant and pc.is_command(text):  # Excel, music, Spotify on this computer
+    job = False  # analyzing the files of the HourGlow "Asiye" folder (3.26): takes a while, so it streams progress
+    if not instant and analysis.is_command(text):
+        instant = analysis.refusal(who) or analysis.open_reply(text)
+        job = not instant
+    if not instant and not job and pc.is_command(text):  # Excel, music, Spotify on this computer
         instant = await run_in_threadpool(pc.handle, text, who)
-    if not instant and online.is_command(text):  # weather and news from the internet (never for guests)
+    if not instant and not job and online.is_command(text):  # weather and news from the internet (never for guests)
         instant = await run_in_threadpool(online.handle, text, who)
 
     async def from_clock():
         yield instant
 
     async def stream():
-        yield _line({"type": "meta", "conversation_id": conversation_id, "instant": bool(instant),
+        nonlocal instant  # a folder analysis fills it in when it is done
+        yield _line({"type": "meta", "conversation_id": conversation_id, "instant": bool(instant or job),
                      "identity": identity.state(), "title": db.get_conversation(conversation_id)["title"]})
         parts = []
         try:
+            if job:
+                async for kind, value in analysis.run(text, settings["model"]):
+                    if kind == "progress":
+                        yield _line({"type": "progress", "text": value})
+                    else:
+                        instant = value
             if not instant and docs and not documents.fits_whole(docs):
                 # a long document: add what the model needs for this question to the (unsaved) last message
                 if documents.wants_summary(text):
