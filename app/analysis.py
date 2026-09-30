@@ -152,6 +152,55 @@ def _decode(path: Path):
     return samples, rate, info
 
 
+def true_peak(samples, oversample: int = 4) -> float:
+    """3.44: inter-sample peak (ITU-R BS.1770 true peak): each channel upsampled 4x with a polyphase low-pass filter,
+    in 10-second pieces with overlap so memory stays small. Returns the linear peak (dBTP = 20·log10)."""
+    import numpy as np
+    from scipy.signal import resample_poly
+
+    piece, pad = 441_000, 256
+    peak = 0.0
+    for channel in samples:
+        for start in range(0, channel.size, piece):
+            lo, hi = max(0, start - pad), min(channel.size, start + piece + pad)
+            up = resample_poly(channel[lo:hi].astype("float64"), oversample, 1)
+            keep = up[(start - lo) * oversample:(start - lo + min(piece, channel.size - start)) * oversample]
+            if keep.size:
+                peak = max(peak, float(np.max(np.abs(keep))))
+    return peak
+
+
+def loudness_range(samples, rate: int) -> float | None:
+    """3.44: EBU R128 loudness range (EBU Tech 3342): K-weighted short-term loudness (3 s windows every 0.1 s),
+    absolute gate -70 LUFS, relative gate 20 LU below their power mean, LRA = 95th − 10th percentile, in LU.
+    None when the piece is shorter than one window."""
+    import numpy as np
+    import pyloudnorm
+
+    meter = pyloudnorm.Meter(rate)
+    power = np.zeros(samples.shape[1], dtype="float64")
+    for channel in samples:  # stereo/mono: every channel weight is 1.0
+        z = channel.astype("float64")
+        for stage in meter._filters.values():  # K-weighting (high shelf + high pass), as pyloudnorm's integrated LUFS
+            z = stage.apply_filter(z)
+        power += z * z
+    window, hop = int(3 * rate), int(0.1 * rate)
+    if power.size < window:
+        return None
+    total = np.concatenate(([0.0], np.cumsum(power)))
+    starts = np.arange(0, power.size - window + 1, hop)
+    mean = (total[starts + window] - total[starts]) / window
+    loud = -0.691 + 10 * np.log10(np.maximum(mean, 1e-20))
+    gated = loud[loud > -70]
+    if gated.size < 2:
+        return None
+    relative = -0.691 + 10 * np.log10(np.mean(10 ** ((gated + 0.691) / 10))) - 20
+    gated = gated[gated > relative]
+    if gated.size < 2:
+        return None
+    return float(np.percentile(gated, 95) - np.percentile(gated, 10))
+
+
 def music_report(path: Path) -> tuple[list[str], dict]:
     import librosa
     import numpy as np
@@ -193,11 +242,29 @@ def music_report(path: Path) -> tuple[list[str], dict]:
                   "yayın platformları için kısık; mastering'de yükseltilebilir")
         lines.append(f"  Algılanan yükseklik: {_num(lufs)} LUFS ({advice})")
         facts["lufs"] = round(lufs, 1)
-    lines += [f"  Tepe: {_num(_db(peak))} dBFS" + (" — kırpılma sınırında" if peak >= 0.999 else ""),
-              f"  Ortalama (RMS): {_num(_db(rms))} dBFS"]
-    if dynamics is not None:
-        lines.append(f"  Dinamik aralık (sessiz-yüksek bölümler farkı): {_num(dynamics)} dB"
-                     + (" — çok sıkıştırılmış" if dynamics < 5 else " — geniş" if dynamics > 14 else ""))
+    try:
+        tp = true_peak(samples)
+    except Exception as e:
+        log.debug("True peak ölçülemedi: %s", e)
+        tp = None
+    try:
+        lra = loudness_range(samples, rate)
+    except Exception as e:
+        log.debug("LRA ölçülemedi: %s", e)
+        lra = None
+    # 3.44: sample peak and true peak are different measurements; both are shown, each with its own unit
+    lines.append(f"  Örnek tepesi (sample peak): {_num(_db(peak))} dBFS" + (" — kırpılma sınırında" if peak >= 0.999 else ""))
+    if tp is not None:
+        lines.append(f"  Gerçek tepe (true peak, 4× örnekleme): {_num(_db(tp))} dBTP"
+                     + (" — 0 dBTP üstü: dönüştürmede (mp3/AAC) bozulma olabilir" if tp > 1.0
+                        else " — yayın platformlarının önerdiği -1 dBTP'nin üstünde" if _db(tp) > -1 else ""))
+        facts["true_peak"] = round(_db(tp), 1)
+    lines.append(f"  Ortalama (RMS): {_num(_db(rms))} dBFS")
+    if lra is not None:
+        lines.append(f"  Yükseklik aralığı (LRA, EBU R128): {_num(lra)} LU")
+        facts["lra"] = round(lra, 1)
+    if dynamics is not None:  # not a dynamics measure: kept only as information, without any verdict
+        lines.append(f"  Bölüm yükseklik farkı (0,5 sn blokların %95−%10 RMS farkı; LRA değildir): {_num(dynamics)} dB")
     lines.append(f"  Kırpılan örnek: {clipped}" + (" (bozulma duyulabilir)" if clipped > rate // 100 else ""))
 
     # Silence at the edges
@@ -378,10 +445,12 @@ async def analyze(path: Path, model: str) -> str:
         lines, facts = await run_in_threadpool(music_report, path)
         summary = (f"🎵 {path.name}: {_time(facts.get('duration', 0))}, {facts.get('tempo')} BPM, {facts.get('key')}"
                    + (f", {_num(facts['lufs'])} LUFS" if "lufs" in facts else ""))
-        comment = await _ask(model, "Bir müzik parçasının ölçümleri aşağıda. Müzik yapımcısına Türkçe, kısa maddelerle yorum "
-                             "yap: olası tür/tarz ve ruh hali (tahmin olduğunu belirt), mix/mastering için dikkat edilecek "
-                             "noktalar (ses yüksekliği, dinamik, stereo, kırpılma, baştaki/sondaki sessizlik). Ölçümlerde "
-                             "olmayan bir şeyi uydurma.\n\n" + "\n".join(lines))
+        # 3.44: no genre guess (rock was called "Future House / lo-fi"); dynamics only from LRA
+        comment = await _ask(model, "Bir müzik parçasının ölçümleri aşağıda. Müzik yapımcısına Türkçe, en çok 7 kısa "
+                             "maddeyle yorum yap: mix/mastering için dikkat edilecek noktalar (ses yüksekliği, gerçek tepe, "
+                             "dinamik, stereo, kırpılma, baştaki/sondaki sessizlik). Tür ya da tarz tahmini YAPMA. Dinamik "
+                             "hakkında yalnızca LRA değerine dayan; 'bölüm yükseklik farkı' bir dinamik ölçüsü değildir, "
+                             "ona bakarak 'sıkıştırılmış' deme. Ölçümlerde olmayan bir şeyi uydurma.\n\n" + "\n".join(lines))
         if comment:
             lines += ["", "YORUM (yapay zekâ, ölçümlere göre; parçayı dinlemedi)"] + ["  " + c for c in comment.splitlines()]
     else:
@@ -405,10 +474,15 @@ async def _ask(model: str, prompt: str, image: str | None = None) -> str:
     if image:
         message["images"] = [image]
     try:
-        return await llm.chat_text(model, [message], num_predict=500)
+        text, reason = await llm.chat_text_full(model, [message], num_predict=1500)
     except llm.OllamaError as e:
         log.warning("Analiz yorumu alınamadı: %s", e)
         return ""
+    if reason == "length":  # 3.44: still cut off: end at the last complete sentence instead of mid-word
+        log.warning("Analiz yorumu uzunluk sınırında kesildi")
+        cut = max(text.rfind(". "), text.rfind(".\n"), text.rfind("\n"))
+        text = (text[:cut + 1].rstrip() if cut > len(text) // 2 else text.rstrip()) + "\n(yorum burada kısaltıldı)"
+    return text
 
 
 # Chat

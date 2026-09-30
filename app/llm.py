@@ -91,6 +91,12 @@ async def chat_json(model: str, messages: list[dict], keep_alive: str = KEEP_ALI
 
 async def chat_text(model: str, messages: list[dict], num_ctx: int = NUM_CTX, num_predict: int = 600) -> str:
     """The whole answer at once (used to summarize a long document part by part)."""
+    return (await chat_text_full(model, messages, num_ctx, num_predict))[0]
+
+
+async def chat_text_full(model: str, messages: list[dict], num_ctx: int = NUM_CTX,
+                         num_predict: int = 600) -> tuple[str, str]:
+    """(answer, done_reason): done_reason "length" means the answer hit num_predict and was cut off."""
     payload = {
         "model": model,
         "messages": messages,
@@ -105,4 +111,5 @@ async def chat_text(model: str, messages: list[dict], num_ctx: int = NUM_CTX, nu
         raise OllamaError(_CONNECT_ERROR) from e
     if resp.status_code != 200:
         raise _error_for(resp.status_code, resp.text, model)
-    return resp.json().get("message", {}).get("content", "").strip()
+    data = resp.json()
+    return data.get("message", {}).get("content", "").strip(), data.get("done_reason", "")

@@ -256,6 +256,16 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   test edildi; **gerçek dosyalar ve gerçek model yorumları denenmedi**.
   3.27: yalnızca "hepsini/yeniden/tekrar + analiz et" (başka nesne kelimesi yok, `_BARE_WORDS`) da komut. Sistem
   istemine: model klasör analizi yapamaz, sonuç uydurmasın.
+  3.44: `true_peak` (scipy `resample_poly` 4×, 10 sn parçalar + 256 örnek örtüşme; "Örnek tepesi dBFS" ve "Gerçek tepe dBTP"
+  ayrı satır), `loudness_range` (EBU Tech 3342: pyloudnorm'un K-ağırlık filtreleri `meter._filters`, 3 sn pencere / 0,1 sn
+  adım, −70 LUFS mutlak + −20 LU bağıl kapı, P95−P10). Eski "dinamik aralık" (0,5 sn blokların %95−%10 RMS farkı) →
+  "Bölüm yükseklik farkı … LRA değildir", yargı yok. Yorum istemi: tür tahmini YOK, dinamik yalnızca LRA'dan, en çok 7 madde;
+  `llm.chat_text_full` (done_reason) + `num_predict=1500`; hâlâ "length" ise son tam cümlede kesilip "(yorum burada
+  kısaltıldı)". ffmpeg 7.0.2 `ebur128=peak=true+sample` ile sentetik wav/mp3 (44,1/48 kHz) karşılaştırması: sample peak ve
+  LRA birebir (bir kez 17,649 → 17,6 / ffmpeg 17,7: yuvarlama sınırı); I ±0,1 (mp3'te bizimki −13,39, ffmpeg ebur128 −13,3,
+  loudnorm −13,48: ffmpeg'in iki ölçeri bile 0,18 LU ayrışıyor; kod çözme aynı — PyAV ve ffmpeg aynı örnekleri verdi);
+  true peak mp3'te 2,67 / ffmpeg 2,6 (ebur128 192 kHz'e swr ile çıkıyor, 8× bizde de 2,67 → farkı ffmpeg'in ara değerleme
+  filtresi). Sabit düzeltme payı EKLENMEDİ (kullanıcı kuralı). 4 dk stereo: TP 2,8 sn + LRA 2,1 sn.
 - **Özel kelimeler (3.28):** `app/vocab.py`, ayar `vocabulary` (virgüllü, varsayılan "HourGlow"). Whisper `hotwords`'e eklenir
   (wake_check hariç) ve `/api/transcribe` her metinde `vocab.fix`: 1-3 kelimelik gruplar, sadeleştirme (Türkçe harf
   katlama, ğ→h, ou→a, ow→o) + ünsüz iskeleti (a e i o u h w v y atılır) eşit ve benzerlik ≥0,6 → terim (kesme işaretli ek
@@ -291,6 +301,13 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   yardımcı dosyaları ve standart kütüphane çıkarılır) ve .bat/.cmd/.ps1 (conda ortamı, başlattığı .py) — hiçbiri
   çalıştırılmaz. `COVERED`: asistanın analizinin karşılığı olan paketler (librosa, pyloudnorm, PIL, mutagen…). Rapor
   `Asiye\betik_envanteri.txt`, sohbette özet. Amaç: kullanıcı conda ortamlarını sadeleştirmek istiyor; kararı bu raporla ver.
+  3.44: `KNOWN_ENVS` (kullanıcının bildirdiği; kopya ekleri "-1", " (2)", " - Copy" atılır): muzik = hg_olcum, hg_dikis,
+  hg_bpm, hg_ses_kalite, hg_qc, muzik_analiz, fvts, analiz, suno_katalog_cek, suno_koken_zinciri(_v2), test_qc; tts =
+  txt2speech_tr (Scripts dışında, W:\Derlemeler). `_bare_conda`: yorum dışı satırda "anaconda3" geçmeyen `conda activate` →
+  ⚠️ (bu bilgisayarda PATH'teki conda Pinokio'nun).
+- **Betik/ortam çalıştırma kuralı (3.44, kullanıcı):** PATH'teki `conda` = Pinokio (`P:\pinokio\bin\miniconda`); Anaconda
+  ortamları `C:\Apps\anaconda3\envs\`. Asiye ileride bir betik çalıştıracaksa ortamı **`call C:\Apps\anaconda3\Scripts\activate.bat
+  <ortam>`** ile açmalı (ya da doğrudan `C:\Apps\anaconda3\envs\<ortam>\python.exe`), asla düz `conda activate` değil.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -672,6 +689,16 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   sesi) hayır — hızı bozmasın; D (anlamsal hafıza) şimdilik gerek yok. Sezin'in ses kaydı acele değil.
   3.43 gerçekte: kalibrasyon sınırlayıcıyla **+22 dB** önerdi ve kaydetti (3.15'te +14). Mert'in sesini yeni kazançla yeniden
   tanıtması önerildi; tanıma puanları bekleniyor. Haber komutunun gerçek denemesi henüz bildirilmedi.
+- **2026-09-30 (3.44):** Kullanıcı (HourGlow tarafında ffmpeg ebur128 ile karşılaştırarak) 6 madde getirdi: (1) "Tepe" sample
+  peak'ti (One More Card: Asiye −1,6, true peak −1,5) → true peak ayrı satır; (2) "Dinamik aralık" LRA değildi (Run Again:
+  8,3 dB, LRA 4,6 LU) → LRA eklendi, eskisi yeniden adlandırıldı, yorum ona bakıp "sıkıştırılmış" demesin; (3) 5 raporun
+  5'inde yorum cümle ortasında bitiyordu (`num_predict=500`) → 1500 + kesilme koruması; (4) rock parçalara "Future House /
+  lo-fi" → tür tahmini kaldırıldı; (5) `Scripts\analiz\find_vocal_timestamps\Suno\Calistir.bat`'taki "call conda activate
+  muzik" Pinokio conda'sına gidiyor → kullanıcı elle `call C:\Apps\anaconda3\Scripts\activate.bat muzik` yapacak (Drive'daki
+  dosya depoda değil), envanter artık böyle dosyaları uyarıyor; (6) .py → ortam eşleşmesi envantere eklendi. Kullanıcı
+  **muzik'e opencv-python-headless==4.11.0.86** kurdu; hg_olcum/hg_dikis çıktıları ComfyUI ortamındakiyle birebir → eski
+  ComfyUI conda ortamını silmenin önündeki engel kalktı (hg_bpm de artık muzik'te; eski "ai_assistant" notu geçersiz).
+  Gerçek şarkılarla (One More Card, Run Again) yeni rapor değerleri kullanıcıdan bekleniyor.
 
 ## Sıradaki fikirler
 
@@ -686,7 +713,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 
 - Spotify: kullanıcı ücretsiz hesapta → otomatik çalma yok. Premium'a geçerse Spotify Web API (PKCE) ile "X çal".
 - Conda ortamları: asistan 3.39'da ai_assistant'a taşındı; birkaç gün sorunsuzsa eski `asistan` ortamı silinebilir. allin1 düzeltmesi
-  (`all-in-one-infer`, muzik'in kopyasında) ayrı iş.
+  (`all-in-one-infer`, muzik'in kopyasında) ayrı iş. 3.44: HourGlow betikleri muzik'te (OpenCV dahil) → eski ComfyUI conda
+  ortamı + `P:\Comfy\ComfyUI` klasörü silinebilir (yeni ComfyUI_yeni portable kendi python'unu kullanıyor).
 - Ses tanıma: Sezin'in 3.3 puanlarını gör (özellikle Mert profiline benzerliği); gerekirse eşik/MARGIN ayarı.
 - 1b yetersiz kalırsa zayıf bilgisayar için başka küçük model dene (ör. `gemma3n:e2b`, `qwen3:1.7b`); sonucu kullanıcıdan öğren.
 - Ana bilgisayara kurulum (henüz yapılmadı).

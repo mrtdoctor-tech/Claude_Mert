@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.43
+Sürüm: 3.44
 
 ---
 
@@ -269,12 +269,13 @@ dosyanın yanına aynı adla bir **"….analiz.txt"** raporu yazarım (ör. `sar
 | "Klasördeki dosyaları analiz et" / "Asiye klasörünü analiz et" | Henüz raporu olmayan (ya da sonradan değişen) dosyaları analiz eder |
 | "Hepsini yeniden analiz et" / "Tekrar analiz et" | Raporu olanlar dahil hepsini baştan yapar |
 | "Analiz klasörünü aç" | Klasörü Dosya Gezgini'nde açar |
-| "Betiklerimi incele" / "Scriptleri tara" | Scripts klasöründeki betikleri çalıştırmadan okur, Asiye klasörüne "betik_envanteri.txt" yazar (ne yaptıkları, kullandıkları paketler, hangi conda ortamı) |
+| "Betiklerimi incele" / "Scriptleri tara" | Scripts klasöründeki betikleri çalıştırmadan okur, Asiye klasörüne "betik_envanteri.txt" yazar (ne yaptıkları, kullandıkları paketler, hangi conda ortamında çalıştıkları; düz "conda activate" kullanan başlatma dosyaları için uyarı) |
 
 - **Müzik** (mp3, wav, flac, m4a, ogg, aac, aiff): süre ve biçim, etiketler (parça adı, sanatçı…), ses yüksekliği (LUFS —
-  Spotify/YouTube için uygun mu), tepe ve ortalama seviye, dinamik aralık, kırpılma, baştaki/sondaki sessizlik, stereo
-  genişliği ve faz, tempo (BPM), ton (ör. La minör / Am), parlaklık, 10 saniyelik bölümlerin yüksekliği ve yapay zekânın bu
-  ölçümlere göre kısa yorumu (parçayı dinlemez; tür/ruh hali tahmindir).
+  Spotify/YouTube için uygun mu), örnek tepesi (dBFS) ve gerçek tepe (true peak, dBTP), ortalama seviye, yükseklik aralığı
+  (LRA, EBU R128), kırpılma, baştaki/sondaki sessizlik, stereo genişliği ve faz, tempo (BPM), ton (ör. La minör / Am),
+  parlaklık, 10 saniyelik bölümlerin yüksekliği ve yapay zekânın bu ölçümlere göre mix/mastering yorumu (parçayı dinlemez;
+  tür tahmini yapmaz). LUFS, gerçek tepe ve LRA, ffmpeg'in `ebur128` ölçümüyle karşılaştırıldı (en çok ~0,1 fark).
 - **Resim** (jpg, png, webp, bmp, gif, tiff): çözünürlük ve en-boy oranı (albüm kapağına uygun mu), çekim bilgileri (EXIF;
   konum bilgisi varsa uyarır), parlaklık, kontrast, doygunluk, keskinlik, renk sıcaklığı, baskın renkler (renk kodlarıyla) ve
   yapay zekânın resimde gördükleri (ne var, atmosfer, resimdeki yazılar, hangi tarz müziğe kapak olur).
