@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.32
+Sürüm: 3.33
 
 ---
 
@@ -268,6 +268,7 @@ dosyanın yanına aynı adla bir **"….analiz.txt"** raporu yazarım (ör. `sar
 | "Klasördeki dosyaları analiz et" / "Asiye klasörünü analiz et" | Henüz raporu olmayan (ya da sonradan değişen) dosyaları analiz eder |
 | "Hepsini yeniden analiz et" / "Tekrar analiz et" | Raporu olanlar dahil hepsini baştan yapar |
 | "Analiz klasörünü aç" | Klasörü Dosya Gezgini'nde açar |
+| "Betiklerimi incele" / "Scriptleri tara" | Scripts klasöründeki betikleri çalıştırmadan okur, Asiye klasörüne "betik_envanteri.txt" yazar (ne yaptıkları, kullandıkları paketler, hangi conda ortamı) |
 
 - **Müzik** (mp3, wav, flac, m4a, ogg, aac, aiff): süre ve biçim, etiketler (parça adı, sanatçı…), ses yüksekliği (LUFS —
   Spotify/YouTube için uygun mu), tepe ve ortalama seviye, dinamik aralık, kırpılma, baştaki/sondaki sessizlik, stereo

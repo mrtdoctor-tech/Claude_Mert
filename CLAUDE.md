@@ -286,6 +286,11 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   en çok 20 sayfa, ~150-180 dpi JPEG, her sayfa `llm.chat_text` + `READ_PAGE`) → normal belge (not: "yapay zekâ gözüyle
   okudum"). Sistem istemi: klasör dosyalarını göremez ama sohbete eklenen resimleri görebilir. Sahte Ollama + Chromium ile
   test edildi (yükleme, yapıştırma, geçmişte images, taranmış PDF); **gerçek modelin okuma kalitesi denenmedi**.
+- **Betik envanteri (3.33):** `app/scripts_inventory.py`, komut "betik/script … incele/tara/listele/envanter". Kök =
+  `analysis.folder().parent` (HourGlowMusic\Scripts); .py/.ipynb (`ast` ile importlar + docstring/ilk yorum; kendi
+  yardımcı dosyaları ve standart kütüphane çıkarılır) ve .bat/.cmd/.ps1 (conda ortamı, başlattığı .py) — hiçbiri
+  çalıştırılmaz. `COVERED`: asistanın analizinin karşılığı olan paketler (librosa, pyloudnorm, PIL, mutagen…). Rapor
+  `Asiye\betik_envanteri.txt`, sohbette özet. Amaç: kullanıcı conda ortamlarını sadeleştirmek istiyor; kararı bu raporla ver.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -512,6 +517,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-30 (3.31):** Kullanıcı "Günaydın Asiye ile devam" dedi → sabah özeti. Kalan: fotoğraf anlama.
 - **2026-09-30 (3.32):** Son fikir: fotoğraf anlama (+ Ctrl+V, taranmış PDF). Kullanıcının seçtiği listedeki tüm fikirler
   tamamlandı; sıradaki iş kullanıcıdan gelecek (bkz. Sıradaki fikirler'deki diğer maddeler).
+- **2026-09-30 (3.33):** Kullanıcı: "müzik/resim analizlerinin Scripts'tekilerin hepsini yaptığını varsayıyorum; öyleyse
+  env sadeleştirmesi kolay". Betikler hiç görülmedi → varsayım doğrulanamaz; "Betiklerimi incele" envanteri eklendi.
+  Kullanıcının `betik_envanteri.txt` içeriğini göndermesi bekleniyor; sonra ortam planı (ComfyUI kendi ortamında kalmalı).
 
 ## Sıradaki fikirler
 

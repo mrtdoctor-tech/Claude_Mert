@@ -16,7 +16,7 @@ from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import analysis, config, db, documents, identity, llm, memory, morning, pictures, notes, online, outlook, pc, presence, quick, reminders, stt, tts, vocab, voiceid, wake
+from . import analysis, config, db, documents, identity, llm, memory, morning, pictures, scripts_inventory, notes, online, outlook, pc, presence, quick, reminders, stt, tts, vocab, voiceid, wake
 from . import history as past  # chat() has its own `history` (the conversation's messages)
 
 logging.basicConfig(level=logging.INFO)
@@ -360,6 +360,8 @@ async def chat(body: ChatIn):
     # "saat kaç?" comes from the clock, "20 dakikalık sayaç kur" is set by rules: not by the model
     instant = quick.answer(text) or reminders.handle(text, who) or notes.handle(text, who)
     job = False  # analyzing the files of the HourGlow "Asiye" folder (3.26): takes a while, so it streams progress
+    if not instant and scripts_inventory.is_command(text):  # "Betiklerimi incele" (3.33)
+        instant = analysis.refusal(who) or (await run_in_threadpool(scripts_inventory.build))[0]
     if not instant and analysis.is_command(text):
         instant = analysis.refusal(who) or analysis.open_reply(text)
         job = not instant
