@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.18
+Sürüm: 3.19
 
 ---
 
@@ -22,6 +22,23 @@ Aklına gelen her şeyi sorabilirsin. Asistan senin bilgisayarında çalışır,
 - Sağ üstteki **🔊 Sesli yanıt** açıksa cevaplar sesli okunur.
 - Ayarlar'da "Sesli sohbet" açıksa, cevap okunduktan sonra mikrofon kendiliğinden yeniden açılır. Böylece eller serbest
   konuşmaya devam edebilirsin.
+
+**Adınla seslenmek (3.19), mikrofona basmadan:**
+Açmak için ⚙️ Ayarlar → 🔊 Ses ve konuşma → **"Adımla seslenince dinle"**. Sonra:
+
+| Söyle | Ne olur |
+|---|---|
+| "Asiye, saat kaç?" | Sorunu hemen alır ve cevaplar |
+| "Merhaba Asiye, listemde ne var?" | Başındaki "merhaba", "hey", "selam" da olur |
+| "Asiye." (sadece adı) | "Dıt dıt" sesi çıkarır ve seni dinlemeye başlar; sonra sorunu söyle |
+
+- Adın cümlenin **başında** olmalı. "Dün Asiye ile konuştum" gibi cümleler asistanı uyandırmaz.
+- Mesaj kutusunun yanındaki **👂** işareti dinlediğini gösterir; basınca duraklar, tekrar basınca devam eder.
+- Asistan konuşurken, sen mikrofonla konuşurken ya da bir pencere açıkken dinlemez.
+- Mikrofon sürekli açıktır, ama duyulan ses bilgisayardan çıkmaz. Adınla başlamayan konuşmalar hiçbir yere yazılmadan
+  silinir.
+- Yanlışlıkla uyanıyorsa Ayarlar'daki **Uyandırma sözü**'nü "Merhaba Asiye" yap: iki kelimelik söz daha güvenlidir.
+- Sayfa açık olmalı (sekme arkada olabilir). Tarayıcıyı yeni açtıysan sayfaya bir kez tıklaman gerekebilir.
 
 **Mikrofon sesi kısıksa:** ⚙️ Ayarlar → 🎙️ Mikrofon → **"Mikrofonu ayarla (5 sn test)"**. Her zamanki yerinden normal
 sesinle konuş; asistan sesinin seviyesini ölçer ve gereken yükseltmeyi kendisi ayarlar. "Test kaydını dinle" ile sonucu
@@ -213,5 +230,4 @@ Herkesin hafızası ayrıdır.
 - 🖼️ Fotoğraf anlama ("Bu fişte ne yazıyor?")
 - 📄 Belge yükleme ("Bu PDF'i özetle")
 - ☀️ Sabah özeti ("Günaydın" deyince günün hatırlatmaları)
-- 👂 Uyandırma sözcüğü (mikrofona basmadan "Asiye" diye seslenmek)
 - 🔎 Eski sohbetlerde arama

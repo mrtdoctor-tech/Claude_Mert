@@ -129,6 +129,9 @@ button:disabled { opacity: .5; cursor: default; }
   padding: 10px 6px; max-height: 200px; line-height: 1.4;
 }
 .mic.recording { background: var(--danger); animation: pulse 1.2s infinite; }
+.wake { opacity: .45; font-size: 1.05em; }
+.wake.on { opacity: 1; }
+.wake.heard { background: var(--accent); animation: pulse 1.2s infinite; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(255, 107, 107, .15); } }
 
 /* Dialogs */

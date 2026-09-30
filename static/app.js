@@ -323,6 +323,7 @@ async function openMic({ gainDb = Number(state.settings.mic_gain) || 0, agc = !s
       for (const v of samples) { sum += v * v; peak = Math.max(peak, Math.abs(v)); }
       return { rms: Math.sqrt(sum / samples.length), peak };
     },
+    ctx, node: gain, // the wake listener reads the raw samples from here
     close() { raw.getTracks().forEach((t) => t.stop()); ctx.close(); },
   };
 }
@@ -875,6 +876,7 @@ async function loadSettings() {
     span.textContent = line;
     summary.appendChild(span);
   }
+  wakeListener.update();
 }
 
 // "gpu" / "cpu": where speech recognition actually runs; shown in the sidebar summary.
@@ -892,6 +894,8 @@ $("#open-settings").onclick = async () => {
   form.language.value = state.settings.language;
   form.tts_voice.value = state.settings.tts_voice;
   form.auto_listen.checked = !!state.settings.auto_listen;
+  form.wake_word.checked = !!state.settings.wake_word;
+  form.wake_phrase.value = state.settings.wake_phrase || "";
   form.outlook_sync.checked = !!state.settings.outlook_sync;
   form.weather_city.value = state.settings.weather_city || "";
   form.mic_gain.value = Number(state.settings.mic_gain) || 0;
@@ -929,6 +933,7 @@ els.settingsForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(els.settingsForm));
   data.auto_listen = els.settingsForm.auto_listen.checked;
+  data.wake_word = els.settingsForm.wake_word.checked;
   data.outlook_sync = els.settingsForm.outlook_sync.checked;
   data.mic_gain = Number(data.mic_gain) || 0;
   data.mic_calibrated = data.mic_gain > 0 || !!state.settings.mic_calibrated;
@@ -1563,3 +1568,155 @@ $("#note-form").addEventListener("submit", async (e) => {
   loadNotes();
 });
 
+
+// Wake word (3.19): the microphone stays open; every burst of speech is checked by the local Whisper for the wake
+// phrase ("Asiye, saat kaç?"). Bursts without it are dropped by the server without being saved or logged.
+const wakeListener = (() => {
+  const TARGET_RATE = 16000;
+  const PRE_ROLL_MS = 500;   // keep a little sound from before the voice got loud, so the first syllable is not cut
+  const END_SILENCE_MS = 700;
+  const MIN_SPEECH_MS = 250;
+  const MAX_BURST_MS = 8000;
+  const button = $("#wake-toggle");
+  let mic = null, processor = null, starting = false, sending = false;
+  let paused = false;
+  try { paused = localStorage.getItem("wakePaused") === "1"; } catch {}
+
+  const wanted = () => !!state.settings.wake_word && !paused;
+  const speaking = () => !!stopCurrentAudio || ("speechSynthesis" in window && speechSynthesis.speaking);
+  const deaf = () => sending || state.busy || (recorder && recorder.state === "recording") || speaking()
+    || document.querySelector("dialog[open]");
+
+  function show() {
+    button.hidden = !state.settings.wake_word;
+    button.classList.toggle("on", !!mic && !paused);
+    const phrase = state.settings.wake_phrase || state.settings.assistant_name;
+    button.title = paused ? `Duraklatıldı. "${phrase}" diye seslenmeyi yeniden dinlemek için bas.`
+      : `"${phrase}" diye seslenmeni bekliyorum (mikrofona basmadan). Duraklatmak için bas.`;
+  }
+
+  async function start() {
+    if (mic || starting) return;
+    starting = true;
+    try {
+      mic = await openMic();
+    } catch {
+      starting = false;
+      setStatus("Adınla seslenme için mikrofona erişilemedi. Tarayıcının mikrofon iznini kontrol et.", true);
+      return;
+    }
+    starting = false;
+    if (!wanted()) return stop();
+    const { ctx } = mic;
+    // A page that was not clicked yet may not be allowed to process sound; start on the first click or key.
+    if (ctx.state === "suspended") {
+      const resume = () => ctx.resume();
+      document.addEventListener("click", resume, { once: true });
+      document.addEventListener("keydown", resume, { once: true });
+      ctx.resume().catch(() => {});
+    }
+    const rate = ctx.sampleRate;
+    processor = ctx.createScriptProcessor(4096, 1, 1);
+    const chunkMs = 4096 / rate * 1000;
+    let preRoll = [], burst = null, loudMs = 0, quietMs = 0, floor = 0.004;
+    processor.onaudioprocess = (e) => {
+      const input = new Float32Array(e.inputBuffer.getChannelData(0));
+      let sum = 0;
+      for (const v of input) sum += v * v;
+      const rms = Math.sqrt(sum / input.length);
+      if (deaf()) { burst = null; preRoll = []; return; }
+      const loud = rms > Math.max(0.015, floor * 3);
+      if (!burst) {
+        if (!loud) floor = floor * 0.95 + rms * 0.05; // follows the room's background noise
+        preRoll.push(input);
+        if (preRoll.length * chunkMs > PRE_ROLL_MS) preRoll.shift();
+        if (loud) { burst = preRoll; preRoll = []; loudMs = chunkMs; quietMs = 0; }
+        return;
+      }
+      burst.push(input);
+      if (loud) { loudMs += chunkMs; quietMs = 0; } else quietMs += chunkMs;
+      const length = burst.length * chunkMs;
+      if (quietMs >= END_SILENCE_MS || length >= MAX_BURST_MS) {
+        const done = burst;
+        burst = null;
+        if (loudMs >= MIN_SPEECH_MS) check(done, rate);
+      }
+    };
+    mic.node.connect(processor);
+    processor.connect(ctx.destination); // outputs silence; needed so the processor runs
+    show();
+  }
+
+  function stop() {
+    if (processor) { processor.disconnect(); processor.onaudioprocess = null; processor = null; }
+    if (mic) { mic.close(); mic = null; }
+    show();
+  }
+
+  async function check(chunks, rate) {
+    sending = true;
+    try {
+      const form = new FormData();
+      form.append("audio", toWav(chunks, rate), "uyandirma.wav");
+      form.append("wake_check", "true");
+      const started = performance.now();
+      const result = await api("/api/transcribe", { method: "POST", body: form });
+      if (!result.wake || result.echo) return;
+      const sttMs = performance.now() - started;
+      showSttDevice(result.device);
+      applyIdentity(result.identity);
+      state.voiceTooShort = !!result.voice_too_short;
+      button.classList.add("heard");
+      setTimeout(() => button.classList.remove("heard"), 1500);
+      state.voiceRound++;
+      if (result.text) send(result.text, true, sttMs, result.device);
+      else {
+        chime();
+        await sleep(600); // the chime is not recorded as speech
+        startListening(false);
+      }
+    } catch {
+      // a failed check is not worth a message; the next burst is checked again
+    } finally {
+      sending = false;
+    }
+  }
+
+  // 16 kHz mono 16-bit WAV: small to send, and exactly what Whisper uses.
+  function toWav(chunks, rate) {
+    const total = chunks.reduce((n, c) => n + c.length, 0);
+    const ratio = rate / TARGET_RATE;
+    const count = Math.floor(total / ratio);
+    const all = new Float32Array(total);
+    let offset = 0;
+    for (const c of chunks) { all.set(c, offset); offset += c.length; }
+    const buffer = new ArrayBuffer(44 + count * 2);
+    const view = new DataView(buffer);
+    const text = (at, s) => [...s].forEach((ch, i) => view.setUint8(at + i, ch.charCodeAt(0)));
+    text(0, "RIFF"); view.setUint32(4, 36 + count * 2, true); text(8, "WAVE"); text(12, "fmt ");
+    view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+    view.setUint32(24, TARGET_RATE, true); view.setUint32(28, TARGET_RATE * 2, true);
+    view.setUint16(32, 2, true); view.setUint16(34, 16, true); text(36, "data"); view.setUint32(40, count * 2, true);
+    for (let i = 0; i < count; i++) {
+      const from = Math.floor(i * ratio), to = Math.max(from + 1, Math.floor((i + 1) * ratio));
+      let sum = 0;
+      for (let j = from; j < to && j < total; j++) sum += all[j];
+      const v = Math.max(-1, Math.min(1, sum / (to - from)));
+      view.setInt16(44 + i * 2, v < 0 ? v * 0x8000 : v * 0x7fff, true);
+    }
+    return new Blob([buffer], { type: "audio/wav" });
+  }
+
+  button.onclick = () => {
+    paused = !paused;
+    try { localStorage.setItem("wakePaused", paused ? "1" : "0"); } catch {}
+    update();
+    if (paused) setStatus("👂 Adınla seslenme duraklatıldı. Yeniden açmak için 👂'a bas.");
+  };
+
+  function update() {
+    if (wanted()) start(); else stop();
+    show();
+  }
+  return { update };
+})();

@@ -114,6 +114,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.19** — Adınla seslenme: mikrofona basmadan "Asiye, saat kaç?" ya da sadece "Asiye" deyince dinlemeye başlar (Ayarlar → Ses ve konuşma → "Adımla seslenince dinle"; istersen "Merhaba Asiye" gibi daha uzun bir söz). Mesaj kutusundaki 👂 ile duraklatılır. Duyulan ses bilgisayardan çıkmaz; adla başlamayan konuşmalar kaydedilmeden silinir.
 - **3.18** — "Alışveriş listemi göster", "Listeme süt ekle", "Peyniri alışveriş listemden çıkar" gibi "listem" ile kurulan cümleler de anlaşılıyor. Yapay zekâ listelerin içini göremediği için artık "listen boş" diye tahmin etmiyor, doğru komutu öneriyor.
 - **3.17** — Listeler rica cümlelerini de anlıyor: "Listeye peynir ekler misin?", "ekleyebilir misin", "yazar mısın", "…ekle lütfen", "Not alır mısın: …". Yapay zekâ artık listeye/hatırlatıcıya kendisi bir şey eklemiş gibi davranmıyor ("ekledim" diye uydurmuyor), doğru komutu öneriyor.
 - **3.16** — Notlar ve listeler: "Listeye süt ekle", "Listemde ne var?", "Sütü listeden çıkar", "Not al: kombiyi ara". Sol menüde yeni "📝 Notlar ve listeler" penceresi (işaretleme, silme, ekleme). Kişiye özel, misafire kapalı.

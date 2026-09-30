@@ -33,6 +33,8 @@ DEFAULTS = {
     "weather_city": "",  # city for "hava nasıl?" and the agenda's weather line (3.11)
     "mic_gain": 0,  # dB added to the microphone in the browser (3.15, set by "Mikrofonu ayarla")
     "mic_calibrated": False,  # after calibration the browser's own automatic gain is switched off
+    "wake_word": False,  # keep the microphone open and wake up on the wake phrase (3.19)
+    "wake_phrase": "",  # "" = the assistant's name
 }
 
 

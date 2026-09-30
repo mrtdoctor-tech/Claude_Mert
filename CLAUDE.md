@@ -198,6 +198,17 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   3.18: "listem…" biçimleri: baştan başlayan kalıplar (ADD/SHOW/CLEAR) `liste[sm]`; ortadakiler (ADD_AFTER/REMOVE)
   için `_KNOWN_MY` yalnızca bilinen adlarda "alışveriş listemi" → "alışveriş listesini" çevirir ("ekmeği listeme"de
   "ekmeği" liste adı sanılmasın). Sistem istemi: model listelerin içini göremez, "listen boş" diye tahmin etmesin.
+- **Adınla seslenme / uyandırma sözü (3.19):** Ayar `wake_word` (bool) + `wake_phrase` ("" = `assistant_name`). Türkçe için
+  hazır bir anahtar kelime modeli yok (openWakeWord/sherpa KWS eğitim ister), bu yüzden aynı yerel Whisper kullanılıyor:
+  `static/app.js` `wakeListener` kendi `openMic()`'i + ScriptProcessor ile ham ses alır, 500 ms ön kayıt, gürültü tabanı
+  (EMA, eşik max(0,015, taban×3)), ≥250 ms konuşma + 700 ms sessizlik (en çok 8 sn) → 16 kHz WAV → `POST /api/transcribe`
+  `wake_check=true`. Sunucu önce yalnızca yazıya çevirir; `app/wake.py` `match` (sözün başta olması, önünde en çok bir selam
+  kelimesi `GREETINGS`; tek kelimelik sözde benzerlik ≥0,75 — "Ayşe"/"Asya" 0,67 geçmez —, iki kelimede ≥0,6; "Asiyeciğim"
+  gibi ekler) tutmazsa `{"wake": false}`: log yok, kimlik/hafıza sayacı değişmez. Tutarsa normal yol (yankı, ses kimliği)
+  ve kalan metin döner: metin varsa doğrudan `send`, yoksa `chime()` + `startListening`. Asistan konuşurken, kayıt/cevap
+  sürerken, istek yoldayken veya bir `dialog` açıkken dinlemez (`deaf`). `#wake-toggle` 👂 duraklatır (`localStorage`
+  `wakePaused`). AudioContext askıdaysa ilk tıklama/tuşta `resume`. Sahte mikrofon (ses patlamalı WAV) + sahte STT ile
+  test edildi; **gerçek Whisper/gerçek mikrofonla denenmedi** (TV/müzik açıkken GPU'ya sürekli iş düşebilir).
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -385,6 +396,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   modele gitti, model "listende yok" dedi → "listem" biçimleri + istemde "içini tahmin etme".
   3.18 gerçekte doğrulandı (temizle, ekle, "Alışveriş listemi göster" hepsi hazır cevap). Kullanıcı sayaçtaki "hazır cevap"
   ifadesini anlamadı → anlamı açıklandı (etiketi değiştirmek istenirse ör. "yapay zekâsız, anında").
+- **2026-09-30 (3.19):** Kullanıcı sıradaki olarak "Asiye diye seslenmek"i seçti; kısa olduğu için yanlış anlaşılmasından
+  endişeli, "Merhaba Asiye" gibi daha uzun söz önerdi → söz ayarlanabilir, öneri olarak iki kelimelik söz yazıldı.
+  Kullanıcının gerçek denemesi bekleniyor: yanlış uyanma / uyanmama, GPU yükü.
 
 ## Sıradaki fikirler
 
@@ -394,7 +408,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   "aile" yok; tarayıcı kapalıyken Windows bildirimi, asistan kapalıyken sonraki açılışta "kaçırılanlar"; yalnızca ev
   bilgisayarı) + **takvim kaydı oluşturma** (telefona bildirim gelsin diye; hangi takvim olduğu sorulacak — bulut servisi,
   kullanıcı onayı gerekir). 2) Yapabildiklerini komut örnekleriyle anlatan belge. Sonra listeden: notlar/alışveriş
-  listesi (✅ 3.16), fotoğraf anlama (gemma3:4b görebilir), belge yükleme, sabah özeti, uyandırma sözcüğü ("Asiye"), eski
+  listesi (✅ 3.16), fotoğraf anlama (gemma3:4b görebilir), belge yükleme, sabah özeti, ✅ uyandırma sözcüğü (3.19), eski
   sohbetlerde arama, ✅ hava durumu/haber (3.11). Kullanıcı "hepsi çok güzel" dedi.
 
 - Spotify: kullanıcı ücretsiz hesapta → otomatik çalma yok. Premium'a geçerse Spotify Web API (PKCE) ile "X çal".

@@ -16,7 +16,7 @@ from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, db, identity, llm, memory, notes, online, outlook, pc, presence, quick, reminders, stt, tts, voiceid
+from . import config, db, identity, llm, memory, notes, online, outlook, pc, presence, quick, reminders, stt, tts, voiceid, wake
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("asistan")
@@ -132,6 +132,8 @@ class SettingsIn(BaseModel):
     weather_city: str | None = None
     mic_gain: float | None = None
     mic_calibrated: bool | None = None
+    wake_word: bool | None = None
+    wake_phrase: str | None = None
 
 
 @app.get("/api/settings")
@@ -487,9 +489,12 @@ async def transcribe_warmup():
 
 
 @app.post("/api/transcribe")
-async def transcribe(audio: UploadFile = File(...)):
+async def transcribe(audio: UploadFile = File(...), wake_check: bool = Form(False)):
+    """Speech → text (+ who is speaking). With wake_check (3.19) the audio is a burst of room sound heard while waiting
+    for the wake phrase: unless it starts with the phrase it is dropped quietly (not logged, identity unchanged)."""
     settings = config.load()
-    memory.schedule(settings)
+    if not wake_check:
+        memory.schedule(settings)
     suffix = Path(audio.filename or "").suffix or ".webm"
     # delete=False + manual cleanup: Windows cannot reopen a file that is still open.
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
@@ -501,6 +506,13 @@ async def transcribe(audio: UploadFile = File(...)):
         )
         score = None
         too_short = False
+        woken = None
+        if wake_check:
+            woken, text = wake.match(text, wake.phrase_for(settings))
+            if not woken:
+                return {"text": "", "device": device, "wake": False}
+            memory.schedule(settings)
+            log.info("Uyandırma sözü duyuldu")
         if text and _is_echo(text):
             log.info("Asistanın kendi sesi duyuldu, yok sayıldı: %s", text)
             return {"text": "", "device": device, "identity": identity.state(), "voice_score": None,
@@ -522,7 +534,7 @@ async def transcribe(audio: UploadFile = File(...)):
     finally:
         os.remove(path)
     return {"text": text, "device": device, "identity": identity.state(), "voice_score": score,
-            "voice_too_short": too_short}
+            "voice_too_short": too_short, "wake": woken}
 
 
 # Voice profiles and security log

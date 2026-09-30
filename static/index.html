@@ -47,6 +47,7 @@
 
       <form id="composer" class="composer">
         <button type="button" id="mic" class="icon mic" title="Konuşmak için bas, bitirince tekrar bas">🎤</button>
+        <button type="button" id="wake-toggle" class="icon wake" hidden title="Adınla seslenmeyi bekliyor. Duraklatmak için bas.">👂</button>
         <textarea id="input" rows="1" placeholder="Mesajını yaz..." autofocus></textarea>
         <button type="submit" id="send" class="primary">Gönder</button>
       </form>
@@ -218,6 +219,16 @@
           <label class="check">
             <input type="checkbox" name="auto_listen">
             Sesli sohbet: yanıt okununca mikrofonu kendiliğinden tekrar aç
+          </label>
+          <label class="check">
+            <input type="checkbox" name="wake_word">
+            Adımla seslenince dinle (mikrofona basmadan)
+          </label>
+          <label>Uyandırma sözü
+            <input name="wake_phrase" placeholder="Boş bırakılırsa asistanın adı">
+            <small>Örnek: "Asiye, saat kaç?" ya da "Merhaba Asiye". İki kelimelik söz ("Merhaba Asiye") yanlışlıkla uyanmayı
+              azaltır. Mikrofon sürekli açık kalır ama duyulan ses bilgisayardan çıkmaz; uyandırma sözüyle başlamayan
+              konuşmalar hiçbir yere yazılmadan silinir.</small>
           </label>
           <label>Ses tanıma kalitesi
             <select name="whisper_model">
