@@ -623,6 +623,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   juggernautXL_v8Rundiffusion, refiner `Refiner\sd_xl_refiner_1.0` — şablon klasörsüz adı arıyordu, elle seçildi).
   İlk çalıştırma 205 sn (base ilk adım 72 sn/adım: modeller USB P:'den yükleniyor; refiner 1,92 it/s). Şablon filtresi
   "ComfyUI" (yerel) seçiliyken bile "MiniMax H3" (bulut) listede → kullanıcıya bulut şablonlarını kullanmaması söylendi.
+  İkinci çalıştırma (modeller yüklü): 1024×1024, base 20 + refiner 5 adım → **17,4 sn**. Sırada: resimden video (LTX-2.3 şablonu).
 
 ## Sıradaki fikirler
 
