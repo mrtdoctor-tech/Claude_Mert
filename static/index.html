@@ -185,9 +185,16 @@
       <h2>⚙️ Ayarlar</h2>
       <button class="icon close" data-close>✕</button>
     </div>
+    <nav id="settings-tabs" class="note-tabs settings-tabs">
+      <button type="button" data-tab="ai">🤖 Yapay zekâ</button>
+      <button type="button" data-tab="voice">🔊 Ses ve konuşma</button>
+      <button type="button" data-tab="mic">🎙️ Mikrofon</button>
+      <button type="button" data-tab="links">🌐 Bağlantılar</button>
+      <button type="button" data-tab="profiles">👥 Ses profilleri</button>
+    </nav>
     <div class="settings-body">
       <form id="settings-form" class="settings settings-grid">
-        <section class="card">
+        <section class="card" data-tab="ai">
           <h3>🤖 Yapay zekâ</h3>
           <label>Asistanın adı
             <input name="assistant_name">
@@ -209,7 +216,7 @@
           </label>
         </section>
 
-        <section class="card">
+        <section class="card" data-tab="voice">
           <h3>🔊 Ses ve konuşma</h3>
           <label>Yanıt sesi
             <select name="tts_voice">
@@ -250,7 +257,7 @@
           </label>
         </section>
 
-        <section class="card">
+        <section class="card" data-tab="mic">
           <h3>🎙️ Mikrofon</h3>
           <small>Konuştuğun yerden 5 saniyelik bir test kaydı alır, sesinin ne kadar yüksek geldiğini ölçer ve gereken yükseltmeyi kendisi ayarlar.</small>
           <button type="button" id="mic-test" class="primary">🎙️ Mikrofonu ayarla (5 sn test)</button>
@@ -263,7 +270,7 @@
           </label>
         </section>
 
-        <section class="card">
+        <section class="card" data-tab="links">
           <h3>🌐 Bağlantılar</h3>
           <label class="check">
             <input type="checkbox" name="outlook_sync">
@@ -280,7 +287,7 @@
         </section>
       </form>
 
-      <section class="card profiles" id="profiles">
+      <section class="card profiles" id="profiles" data-tab="profiles">
         <div class="profiles-head">
           <h3>👥 Ses profilleri</h3>
           <button type="button" id="enroll-open" class="ghost">+ Ses tanıt</button>

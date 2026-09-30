@@ -711,6 +711,7 @@ async function loadProfiles() {
   const id = state.identity || {};
   $("#enroll-open").hidden = !!(id.active && !id.admin);
   $("#profiles").hidden = !!(id.active && !id.admin);
+  $("#settings-tabs [data-tab=\"profiles\"]").hidden = $("#profiles").hidden;
   if (!id.active) {
     hint.textContent = "Henüz ses tanıtılmadı. İlk tanıtılan kişi yönetici olur; o andan itibaren asistan konuşanı sesinden tanır, tanımadıklarını misafir sayar.";
     return;
@@ -935,8 +936,25 @@ $("#open-settings").onclick = async () => {
   memSelect.value = state.settings.memory_model || "";
   loadProfiles();
 
+  showSettingsTab(settingsTab());
   els.settingsDialog.showModal();
 };
+
+// Settings tabs (3.24), remembered for the next time the window opens.
+function settingsTab() {
+  try { return localStorage.getItem("settingsTab") || "ai"; } catch { return "ai"; }
+}
+
+function showSettingsTab(name) {
+  const tabs = [...document.querySelectorAll("#settings-tabs button")];
+  const visible = tabs.filter((b) => !b.hidden);
+  if (!visible.some((b) => b.dataset.tab === name)) name = visible[0]?.dataset.tab || "ai";
+  tabs.forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll(".settings-dialog .card[data-tab]").forEach((c) => c.classList.toggle("shown", c.dataset.tab === name));
+  try { localStorage.setItem("settingsTab", name); } catch {}
+}
+
+document.querySelectorAll("#settings-tabs button").forEach((b) => { b.onclick = () => showSettingsTab(b.dataset.tab); });
 
 els.settingsForm.addEventListener("submit", async (e) => {
   e.preventDefault();

@@ -185,6 +185,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `.settings-dialog`: `.settings-grid` 2 kolon kart (≤820 px tek kolon), profiller formun dışında (içinde iç içe şifre
   formları var), Kaydet altta `form="settings-form"`. Sahte kısık mikrofonla (Chromium `--use-file-for-fake-audio-capture`)
   test edildi: −53 dB konuşma → +30 dB, uyarı.
+  3.24: kullanıcı isteğiyle **sekmeli** (`#settings-tabs`, `.note-tabs` görünümü; kartlarda `data-tab` ai/voice/mic/links/
+  profiles, yalnızca `.shown` görünür, tek kolon, 760 px, sabit yükseklik). Tek form: Kaydet tüm sekmeleri kaydeder.
+  Son sekme `localStorage["settingsTab"]`; profiller gizliyse (yönetici değil) o sekme de gizli.
 - **Notlar ve listeler (3.16):** `app/notes.py`, chat'te reminders'tan sonra (`quick → reminders → notes → pc → online`),
   kurallarla (model değil), misafire kapalı, kişiye özel (`notes` tablosu: owner, list_name, text, done). Liste adı tek kelime
   ve yalnızca "X listesine/listesinden/listesini" biçiminde; çıplak "listeye/listeden" = `alışveriş` (`DEFAULT_LIST`),
@@ -436,6 +439,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-30 (3.23):** Kullanıcı "3 (belge yükleme) ile devam, hem Türkçe hem İngilizce belgeleri algılasın" dedi →
   belgeler eklendi. Kullanıcının gerçek PDF/Word ile denemesi bekleniyor (özet kalitesi, hız, `ollama ps` ile 16k bağlamda
   %100 GPU kalıp kalmadığı).
+- **2026-09-30 (3.24):** 3.23 PDF ile gerçekte çalıştı (.txt/.docx henüz denenmedi; bulutta test edildi). Kullanıcı Ayarlar'ı
+  Notlar penceresi gibi sekmeli istedi → yapıldı.
 
 ## Sıradaki fikirler
 

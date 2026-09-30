@@ -114,6 +114,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.24** — Ayarlar sekmeli: Yapay zekâ, Ses ve konuşma, Mikrofon, Bağlantılar, Ses profilleri (Notlar ve listeler penceresindeki gibi). Son açılan sekme hatırlanır; Kaydet tüm sekmeleri birlikte kaydeder.
 - **3.23** — Belge yükleme: 📎 düğmesiyle ya da dosyayı sohbete sürükleyerek PDF, Word (.docx), .txt, .md, .csv ekle; "Bu belgeyi özetle", "Teslim tarihi ne?" diye sor. Türkçe ve İngilizce belgeler (İngilizce belgeye Türkçe soru da olur). Belge bilgisayardan çıkmaz. Uzun belgelerde her soruda ilgili bölümler bulunur, özet bölüm bölüm çıkarılır. Güncellemeden sonra baslat.bat yeni paketleri (pypdf, python-docx) kendisi kurar.
 - **3.22** — Müzik çalarken adla seslenme: müzik hiç susmadığı için ses 6 saniyelik, üst üste binen parçalar halinde kontrol ediliyor; "Merhaba Asiye" gibi iki kelimelik söz cümlenin ortasında da yakalanıyor ("Merhaba Asiye, müziği durdur"). Müzik üstünden gelen seste kimlik değiştirilmiyor (misafire düşmez).
 - **3.21** — Müzik açıkken yanlışlıkla uyanma ve şarkı sözlerini mesaj sanma düzeltildi: adla seslenme kontrolünde ses tanımaya ad ipucu verilmiyor (müzikte adı "duyuyordu"), düğmeye basılmadan duyulan yabancı dilde şarkı sözleri ve ses tanımanın uydurduğu "İzlediğiniz için teşekkür ederim" gibi cümleler atılıyor; bu yüzden müzik seni misafire de düşürmüyor.

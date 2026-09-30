@@ -305,6 +305,13 @@ table.grid td.nowrap { white-space: nowrap; font-variant-numeric: tabular-nums; 
 #mic-result { margin: 0; white-space: pre-line; }
 .card input[type=range] { padding: 0; accent-color: var(--accent); background: none; border: none; }
 @media (max-width: 820px) { .settings-grid { grid-template-columns: 1fr; } }
+/* 3.24: one group at a time, chosen with tabs like the notes window */
+.settings-dialog { width: min(760px, 96vw); }
+.settings-tabs { padding: 0 22px; margin: 12px 0 0; }
+.settings-dialog .settings-body { height: min(600px, 68vh); gap: 0; }
+.settings-dialog .settings-grid { grid-template-columns: 1fr; }
+.settings-dialog .card[data-tab] { display: none; }
+.settings-dialog .card[data-tab].shown { display: flex; }
 
 /* Notes and lists (3.16) */
 .note-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
