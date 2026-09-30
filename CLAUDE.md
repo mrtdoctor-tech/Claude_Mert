@@ -650,6 +650,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Kamera yine yaklaşmadı; fizik bozuldu (kum hızlanıyor, camın dışından akıp içine doluyor, camda kum taneleri beliriyor).
   Öneri: sakin/sabit akışı tarif eden prompt + İngilizce negatif ekleri; kamera hareketini video düzenleyicide (zoom/Ken
   Burns) yapmak; daha iyisi için Wan 2.2 14B (GGUF, high+low noise) — çok daha yavaş.
+  Beşinci (81 kare, sakin prompt + İngilizce negatif ekleri, 481 sn): **kum düzgün aktı**, ama ~2. saniyeden sonra arka planda
+  bloklu mavi lekeler. Teşhis: VAE Decode (Tiled) `temporal_size` 64 kare → 81 karede zaman parçası sınırı ~2,5 sn'de
+  (49 karede sorun yoktu). Öneri: temporal_size ≥ length (ör. 128), uzamsal tile_size aynı kalsın.
 - **2026-09-30 (3.42):** `baslat.bat` `:run`'da `tasklist | findstr ollama.exe` (find değil: conda PATH'inde GNU find.exe var);
   yoksa `%LOCALAPPDATA%\Programs\Ollama\ollama app.exe` (yoksa `start /min ollama serve`). Ollama yolu gerçekte doğrulanmadı.
 
