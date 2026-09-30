@@ -19,6 +19,14 @@ if errorlevel 1 goto run
 echo Ekran karti paketleri kontrol ediliyor, ilk seferde yaklasik 1 GB indirilir...
 "%PYEXE%" -m pip install -q --disable-pip-version-check -r requirements-gpu.txt
 :run
+rem 3.42: Ollama may have been quit (e.g. to free the graphics card for ComfyUI); start it again if it is not running.
+rem findstr, not find: the conda folders put on PATH above carry a GNU find.exe.
+tasklist /fi "imagename eq ollama.exe" 2>nul | findstr /i "ollama.exe" >nul
+if not errorlevel 1 goto ollamaok
+echo Ollama kapaliydi, baslatiliyor...
+if exist "%LOCALAPPDATA%\Programs\Ollama\ollama app.exe" start "" "%LOCALAPPDATA%\Programs\Ollama\ollama app.exe"
+if not exist "%LOCALAPPDATA%\Programs\Ollama\ollama app.exe" start "Ollama" /min ollama serve
+:ollamaok
 "%PYEXE%" run.py
 pause
 exit /b 0

@@ -637,6 +637,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Sonuç: Chrome ile doğrudan HF de ~10 Mbps (tek bağlantı). Kullanıcı kendi bulduğu **Free Download Manager** (çok bağlantı)
   ile indirdi: **11,6 MB/s (~93 Mbps)**, 9,3 GB ~15 dk → sorun tek bağlantılı indirme. Büyük modeller için FDM kullanılsın.
   Üç Wan dosyası models\diffusion_models / text_encoders / vae'ye taşındı → Wan 2.2 5B şablonunda **hata yok**. Sırada ilk video.
+  Video öncesi VRAM boşaltmak için asistan + Ollama kapatıldı (tepsi → Quit Ollama; gemma3:4b ~3 GB VRAM tutuyordu).
+- **2026-09-30 (3.42):** `baslat.bat` `:run`'da `tasklist | findstr ollama.exe` (find değil: conda PATH'inde GNU find.exe var);
+  yoksa `%LOCALAPPDATA%\Programs\Ollama\ollama app.exe` (yoksa `start /min ollama serve`). Ollama yolu gerçekte doğrulanmadı.
 
 ## Sıradaki fikirler
 
