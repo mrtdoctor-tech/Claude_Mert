@@ -582,6 +582,11 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-30 (3.39):** `araclar/tasima_plan_kontrol.py` (ai_assistant python'uyla çalışır): "Would install" paketlerini
   `importlib.metadata` ile karşılaştırır; yalnızca ZATEN KURULU hassas paket (listeye protobuf ve `nvidia-*` eklendi) değişecekse
   çıkış 1 → DURDURULDU. Yeni eklenen paketler zararsız sayılır. Çıktıda "Yeni eklenecek" / "Sürümü değişecek" listeleri.
+  3.39 gerçekte: **taşıma tamamlandı.** ai_assistant = Python 3.10 (cp310), torch 2.13.0+cu126, numpy 2.2.6, librosa 0.11,
+  numba 0.62.1, huggingface-hub 1.26 (hiçbiri değişmedi). Değişen tek şey pydantic 2.6.4 → 2.13.5 (+ pydantic-core,
+  typing-inspection); gerisi yeni paket (tokenizers, protobuf, onnxruntime, av, nvidia-cublas/cudnn/nvrtc cu12…).
+  `import whisper, torch` çalıştı. Bekleyen: baslat.bat'ta sol altta GPU/sürüm kontrolü, HourGlow betiği ilk çalışınca
+  sorun var mı; birkaç gün sonra `conda env remove -n asistan`. Artık requirements'e paket eklerken ai_assistant'ı düşün.
 
 ## Sıradaki fikirler
 
@@ -595,7 +600,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   sohbetlerde arama (3.30), ✅ hava durumu/haber (3.11). Kullanıcı "hepsi çok güzel" dedi.
 
 - Spotify: kullanıcı ücretsiz hesapta → otomatik çalma yok. Premium'a geçerse Spotify Web API (PKCE) ile "X çal".
-- Conda ortamları: yedek alındı, plan hazır; ai_assistant silme ertelendi (doğrulama testi gerekir). allin1 düzeltmesi
+- Conda ortamları: asistan 3.39'da ai_assistant'a taşındı; birkaç gün sorunsuzsa eski `asistan` ortamı silinebilir. allin1 düzeltmesi
   (`all-in-one-infer`, muzik'in kopyasında) ayrı iş.
 - Ses tanıma: Sezin'in 3.3 puanlarını gör (özellikle Mert profiline benzerliği); gerekirse eşik/MARGIN ayarı.
 - 1b yetersiz kalırsa zayıf bilgisayar için başka küçük model dene (ör. `gemma3n:e2b`, `qwen3:1.7b`); sonucu kullanıcıdan öğren.
