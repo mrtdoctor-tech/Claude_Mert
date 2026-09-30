@@ -161,78 +161,107 @@
     <p id="enroll-status" class="hint"></p>
   </dialog>
 
-  <dialog id="settings-dialog">
+  <dialog id="settings-dialog" class="settings-dialog">
     <div class="dialog-head">
       <h2>⚙️ Ayarlar</h2>
       <button class="icon close" data-close>✕</button>
     </div>
-    <form id="settings-form" class="settings">
-      <label>Asistanın adı
-        <input name="assistant_name">
-      </label>
-      <label>Yapay zekâ modeli (Ollama)
-        <select name="model"></select>
-        <small id="models-hint"></small>
-      </label>
-      <label>Hafıza modeli
-        <select name="memory_model"></select>
-        <small>Senin hakkındaki bilgileri arka planda, sen beklemezken çıkarır. Sohbet modelinden daha akıllı (daha yavaş) bir model seçmek hafızanın kalitesini artırır.</small>
-      </label>
-      <label>Ses tanıma kalitesi
-        <select name="whisper_model">
-          <option value="tiny">En hızlı (tiny) — daha az doğru</option>
-          <option value="base">Hızlı (base)</option>
-          <option value="small">Dengeli (small) — önerilen</option>
-          <option value="medium">İyi (medium) — işlemcide yavaş</option>
-          <option value="large-v3-turbo">En iyi (large-v3-turbo) — ekran kartı önerilir</option>
-        </select>
-      </label>
-      <label>Ses tanıma donanımı
-        <select name="whisper_device">
-          <option value="auto">Otomatik — NVIDIA ekran kartı varsa onu kullanır</option>
-          <option value="cpu">Sadece işlemci</option>
-        </select>
-      </label>
-      <label>Yanıt sesi
-        <select name="tts_voice">
-          <option value="tr-TR-EmelNeural">Emel — kadın, çok doğal (çevrimiçi)</option>
-          <option value="tr-TR-AhmetNeural">Ahmet — erkek, çok doğal (çevrimiçi)</option>
-          <option value="windows">Windows sesi — internetsiz</option>
-        </select>
-        <small>Çevrimiçi seslerde yalnızca okunacak yanıt Microsoft'a gönderilir; mesajların ve hafızan bilgisayarında kalır.</small>
-      </label>
-      <label class="check">
-        <input type="checkbox" name="auto_listen">
-        Sesli sohbet: yanıt okununca mikrofonu kendiliğinden tekrar aç
-      </label>
-      <label class="check">
-        <input type="checkbox" name="outlook_sync">
-        📅 Outlook takvimimle bağlan: hatırlatmalarım Outlook'a da eklensin (telefonda bildirim) ve Outlook kayıtlarım ajandada görünsün
-      </label>
-      <div class="outlook-test">
-        <button type="button" id="outlook-test" class="ghost">Outlook bağlantısını dene</button>
-        <small id="outlook-status">Bilgisayarda klasik Outlook programı kurulu ve hesabın ekli olmalı. Yalnızca senin (yöneticinin) hatırlatmaları eklenir; sayaçlar eklenmez.</small>
-      </div>
-      <label>Hava durumu için şehir
-        <input name="weather_city" placeholder="Örn: Bursa">
-        <small>"Hava nasıl?" diye sorunca ve sağdaki ajandada bu şehir kullanılır. Hava durumu ve haberler internetten gelir (şehir adı Open-Meteo'ya gider); misafir modunda kapalıdır.</small>
-      </label>
-      <label>Konuşma dili
-        <select name="language">
-          <option value="tr">Türkçe</option>
-          <option value="en">English</option>
-          <option value="">Otomatik algıla</option>
-        </select>
-      </label>
-      <button class="primary">Kaydet</button>
-    </form>
-    <div class="profiles" id="profiles">
-      <div class="profiles-head">
-        <span>🎙️ Ses profilleri</span>
-        <button type="button" id="enroll-open" class="ghost">+ Ses tanıt</button>
-      </div>
-      <small id="profiles-hint"></small>
-      <ul id="profile-list" class="memory-list"></ul>
+    <div class="settings-body">
+      <form id="settings-form" class="settings settings-grid">
+        <section class="card">
+          <h3>🤖 Yapay zekâ</h3>
+          <label>Asistanın adı
+            <input name="assistant_name">
+          </label>
+          <label>Yapay zekâ modeli (Ollama)
+            <select name="model"></select>
+            <small id="models-hint"></small>
+          </label>
+          <label>Hafıza modeli
+            <select name="memory_model"></select>
+            <small>Senin hakkındaki bilgileri arka planda, sen beklemezken çıkarır. Sohbet modelinden daha akıllı (daha yavaş) bir model seçmek hafızanın kalitesini artırır.</small>
+          </label>
+          <label>Konuşma dili
+            <select name="language">
+              <option value="tr">Türkçe</option>
+              <option value="en">English</option>
+              <option value="">Otomatik algıla</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="card">
+          <h3>🔊 Ses ve konuşma</h3>
+          <label>Yanıt sesi
+            <select name="tts_voice">
+              <option value="tr-TR-EmelNeural">Emel — kadın, çok doğal (çevrimiçi)</option>
+              <option value="tr-TR-AhmetNeural">Ahmet — erkek, çok doğal (çevrimiçi)</option>
+              <option value="windows">Windows sesi — internetsiz</option>
+            </select>
+            <small>Çevrimiçi seslerde yalnızca okunacak yanıt Microsoft'a gönderilir; mesajların ve hafızan bilgisayarında kalır.</small>
+          </label>
+          <label class="check">
+            <input type="checkbox" name="auto_listen">
+            Sesli sohbet: yanıt okununca mikrofonu kendiliğinden tekrar aç
+          </label>
+          <label>Ses tanıma kalitesi
+            <select name="whisper_model">
+              <option value="tiny">En hızlı (tiny) — daha az doğru</option>
+              <option value="base">Hızlı (base)</option>
+              <option value="small">Dengeli (small) — önerilen</option>
+              <option value="medium">İyi (medium) — işlemcide yavaş</option>
+              <option value="large-v3-turbo">En iyi (large-v3-turbo) — ekran kartı önerilir</option>
+            </select>
+          </label>
+          <label>Ses tanıma donanımı
+            <select name="whisper_device">
+              <option value="auto">Otomatik — NVIDIA ekran kartı varsa onu kullanır</option>
+              <option value="cpu">Sadece işlemci</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="card">
+          <h3>🎙️ Mikrofon</h3>
+          <small>Konuştuğun yerden 5 saniyelik bir test kaydı alır, sesinin ne kadar yüksek geldiğini ölçer ve gereken yükseltmeyi kendisi ayarlar.</small>
+          <button type="button" id="mic-test" class="primary">🎙️ Mikrofonu ayarla (5 sn test)</button>
+          <div class="mic-meter"><div id="mic-meter-bar"></div></div>
+          <p id="mic-result" class="hint"></p>
+          <button type="button" id="mic-play" class="ghost" hidden>▶ Test kaydını yükseltilmiş hâliyle dinle</button>
+          <label>Mikrofon yükseltme: <b id="mic-gain-label">0 dB</b>
+            <input type="range" name="mic_gain" id="mic-gain" min="0" max="30" step="1" value="0">
+            <small>Elle de ayarlayabilirsin. 0 = yükseltme yok. Çok yüksek değerler arka plan gürültüsünü de büyütür.</small>
+          </label>
+        </section>
+
+        <section class="card">
+          <h3>🌐 Bağlantılar</h3>
+          <label class="check">
+            <input type="checkbox" name="outlook_sync">
+            📅 Outlook takvimimle bağlan: hatırlatmalarım Outlook'a da eklensin (telefonda bildirim) ve Outlook kayıtlarım ajandada görünsün
+          </label>
+          <div class="outlook-test">
+            <button type="button" id="outlook-test" class="ghost">Outlook bağlantısını dene</button>
+            <small id="outlook-status">Bilgisayarda klasik Outlook programı kurulu ve hesabın ekli olmalı. Yalnızca senin (yöneticinin) hatırlatmaları eklenir; sayaçlar eklenmez.</small>
+          </div>
+          <label>Hava durumu için şehir
+            <input name="weather_city" placeholder="Örn: Bursa">
+            <small>"Hava nasıl?" diye sorunca ve sağdaki ajandada bu şehir kullanılır. Hava durumu ve haberler internetten gelir (şehir adı Open-Meteo'ya gider); misafir modunda kapalıdır.</small>
+          </label>
+        </section>
+      </form>
+
+      <section class="card profiles" id="profiles">
+        <div class="profiles-head">
+          <h3>👥 Ses profilleri</h3>
+          <button type="button" id="enroll-open" class="ghost">+ Ses tanıt</button>
+        </div>
+        <small id="profiles-hint"></small>
+        <ul id="profile-list" class="memory-list"></ul>
+      </section>
+    </div>
+    <div class="settings-footer">
+      <button type="submit" form="settings-form" class="primary">Kaydet</button>
     </div>
   </dialog>
 

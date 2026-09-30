@@ -297,39 +297,55 @@ els.mic.addEventListener("click", () => {
   startListening(false);
 });
 
+// The microphone, through the calibrated gain (Ayarlar > Mikrofon). Everything records from here:
+// chat, voice commands, voice enrollment. The analyser measures the level after the gain.
+async function openMic({ gainDb = Number(state.settings.mic_gain) || 0, agc = !state.settings.mic_calibrated } = {}) {
+  const raw = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: agc },
+  });
+  const ctx = new AudioContext();
+  const source = ctx.createMediaStreamSource(raw);
+  const gain = ctx.createGain();
+  gain.gain.value = Math.pow(10, gainDb / 20);
+  const out = ctx.createMediaStreamDestination();
+  const analyser = ctx.createAnalyser();
+  analyser.fftSize = 2048;
+  source.connect(gain);
+  gain.connect(out);
+  gain.connect(analyser);
+  const samples = new Float32Array(analyser.fftSize);
+  return {
+    stream: out.stream,
+    level() { // RMS and peak of the last ~40 ms, after the gain
+      analyser.getFloatTimeDomainData(samples);
+      let sum = 0, peak = 0;
+      for (const v of samples) { sum += v * v; peak = Math.max(peak, Math.abs(v)); }
+      return { rms: Math.sqrt(sum / samples.length), peak };
+    },
+    close() { raw.getTracks().forEach((t) => t.stop()); ctx.close(); },
+  };
+}
+
 async function startListening(auto) {
   if (state.busy || (recorder && recorder.state === "recording")) return;
   fetch("/api/transcribe/warmup", { method: "POST" }).catch(() => {}); // load the speech model while the user talks
-  let stream;
+  let mic;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    mic = await openMic();
   } catch {
     setStatus("Mikrofona erişilemedi. Tarayıcının mikrofon iznini kontrol et.", true);
     return;
   }
-
-  // Loudness meter used to notice the end of speech.
-  const audioCtx = new AudioContext();
-  const analyser = audioCtx.createAnalyser();
-  analyser.fftSize = 2048;
-  audioCtx.createMediaStreamSource(stream).connect(analyser);
-  const samples = new Float32Array(analyser.fftSize);
-  const loudness = () => {
-    analyser.getFloatTimeDomainData(samples);
-    let sum = 0;
-    for (const v of samples) sum += v * v;
-    return Math.sqrt(sum / samples.length);
-  };
+  const loudness = () => mic.level().rms; // used to notice the end of speech
 
   const chunks = [];
-  const rec = new MediaRecorder(stream);
+  const rec = new MediaRecorder(mic.stream);
   recorder = rec;
   let heardSpeech = false;
   rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
   rec.onstop = async () => {
     clearInterval(meter);
-    stream.getTracks().forEach((t) => t.stop());
-    audioCtx.close();
+    mic.close();
     els.mic.classList.remove("recording");
     if (!heardSpeech) {
       setStatus(auto ? "Sesli sohbet bitti. Devam etmek için 🎤'a bas." : "Bir şey duyamadım, tekrar dener misin?", !auto);
@@ -612,8 +628,8 @@ const ENROLL_SENTENCES = [
 const ENROLL_MS = 7000;
 
 async function recordFor(ms, onTick) {
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-  const rec = new MediaRecorder(stream);
+  const mic = await openMic();
+  const rec = new MediaRecorder(mic.stream);
   const chunks = [];
   rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
   const stopped = new Promise((r) => (rec.onstop = r));
@@ -624,7 +640,7 @@ async function recordFor(ms, onTick) {
   rec.stop();
   await stopped;
   clearInterval(tick);
-  stream.getTracks().forEach((t) => t.stop());
+  mic.close();
   return new Blob(chunks, { type: rec.mimeType });
 }
 
@@ -875,6 +891,11 @@ $("#open-settings").onclick = async () => {
   form.auto_listen.checked = !!state.settings.auto_listen;
   form.outlook_sync.checked = !!state.settings.outlook_sync;
   form.weather_city.value = state.settings.weather_city || "";
+  form.mic_gain.value = Number(state.settings.mic_gain) || 0;
+  $("#mic-gain-label").textContent = `+${form.mic_gain.value} dB`;
+  $("#mic-result").textContent = state.settings.mic_calibrated ? "" : "Henüz ayarlanmadı.";
+  $("#mic-meter-bar").style.width = "0";
+  $("#mic-play").hidden = !calibrationTake;
 
   const select = form.model;
   select.innerHTML = "";
@@ -906,6 +927,8 @@ els.settingsForm.addEventListener("submit", async (e) => {
   const data = Object.fromEntries(new FormData(els.settingsForm));
   data.auto_listen = els.settingsForm.auto_listen.checked;
   data.outlook_sync = els.settingsForm.outlook_sync.checked;
+  data.mic_gain = Number(data.mic_gain) || 0;
+  data.mic_calibrated = data.mic_gain > 0 || !!state.settings.mic_calibrated;
   await api("/api/settings", { method: "PUT", body: JSON.stringify(data) });
   await loadSettings();
   loadAgendaWeather(true);
@@ -1380,4 +1403,98 @@ $("#agenda-add").onclick = () => {
 
 setInterval(() => { if (Date.now() - agenda.loadedAt > 20000) loadAgenda(); }, 5000);
 showAgenda(true);
+
+// Microphone calibration (3.15): 5 s of normal speech from where the person sits, measured without any gain
+// and without the browser's automatic gain; the gain is chosen so speech lands near -20 dBFS without clipping.
+const TARGET_DB = -20;
+const MAX_GAIN_DB = 30;
+let calibrationTake = null; // the last test recording, to listen to it with the chosen gain
+const toDb = (v) => 20 * Math.log10(Math.max(v, 1e-6));
+
+$("#mic-gain").addEventListener("input", (e) => { $("#mic-gain-label").textContent = `+${e.target.value} dB`; });
+
+$("#mic-test").onclick = async () => {
+  const button = $("#mic-test");
+  const result = $("#mic-result");
+  const bar = $("#mic-meter-bar");
+  let mic;
+  try {
+    mic = await openMic({ gainDb: 0, agc: false });
+  } catch {
+    result.textContent = "⚠️ Mikrofona erişilemedi. Tarayıcının mikrofon iznini kontrol et.";
+    return;
+  }
+  button.disabled = true;
+  for (let n = 3; n > 0; n--) { result.textContent = `${n}... Her zamanki yerinden, normal sesinle konuşmaya hazırlan.`; await sleep(700); }
+  const chunks = [];
+  const rec = new MediaRecorder(mic.stream);
+  rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+  const stopped = new Promise((r) => (rec.onstop = r));
+  rec.start();
+  const frames = [];
+  let peak = 0;
+  const started = Date.now();
+  result.textContent = "🔴 Konuş: \"Merhaba, mikrofonumu ayarlıyorum. Bugün hava çok güzel.\"";
+  while (Date.now() - started < 5000) {
+    const { rms, peak: p } = mic.level();
+    frames.push(rms);
+    peak = Math.max(peak, p);
+    bar.style.width = `${Math.min(100, Math.max(0, (toDb(rms) + 60) / 60 * 100))}%`;
+    await sleep(50);
+  }
+  rec.stop();
+  await stopped;
+  mic.close();
+  bar.style.width = "0";
+  button.disabled = false;
+  calibrationTake = new Blob(chunks, { type: rec.mimeType });
+
+  const sorted = [...frames].sort((a, b) => a - b);
+  const noise = sorted[Math.floor(sorted.length * 0.1)];
+  const speech = frames.filter((v) => v > Math.max(noise * 3, 0.0005)).sort((a, b) => a - b);
+  if (speech.length < 10) {
+    result.textContent = "⚠️ Konuşma duyamadım. Mikrofon kapalı ya da sesi çok kısık olabilir (Windows'ta doğru mikrofon seçili mi, "
+      + "mikrofonun kendi ses/kazanç ayarı açık mı?). Tekrar dene.";
+    $("#mic-play").hidden = true;
+    return;
+  }
+  const speechDb = toDb(speech[Math.floor(speech.length / 2)]);
+  const peakDb = toDb(peak);
+  let gainDb = Math.round(Math.min(MAX_GAIN_DB, Math.max(0, TARGET_DB - speechDb), -1 - peakDb));
+  gainDb = Math.max(0, gainDb);
+  const noiseAfter = toDb(noise) + gainDb;
+  const lines = [
+    `Konuşma seviyen: ${speechDb.toFixed(0)} dB ${speechDb < -40 ? "(çok kısık)" : speechDb < -28 ? "(biraz kısık)" : "(iyi)"}, en yüksek nokta ${peakDb.toFixed(0)} dB.`,
+    gainDb > 0 ? `✅ Asistan sesini +${gainDb} dB yükseltecek.` : "✅ Yükseltmeye gerek yok.",
+    `Arka plan gürültüsü (yükseltmeden sonra): ${noiseAfter.toFixed(0)} dB ${noiseAfter > -45 ? "⚠️ yüksek — fan, klima ya da uğultu var mı?" : "(iyi)"}`,
+  ];
+  if (peakDb > -1) lines.push("⚠️ Ses yer yer kırpılıyor (çok yüksek). Mikrofonun kendi kazancını biraz kıs.");
+  if (TARGET_DB - speechDb > MAX_GAIN_DB) lines.push("⚠️ Ses çok kısık: mikrofona yaklaş ya da mikrofonun kendi kazanç düğmesini aç, sonra tekrar dene.");
+  else if (gainDb >= 20) lines.push("💡 Mikrofonun kendi kazanç düğmesini açarsan daha az gürültüyle daha temiz ses alırsın.");
+  result.textContent = lines.join("\n");
+  $("#mic-gain").value = gainDb;
+  $("#mic-gain-label").textContent = `+${gainDb} dB`;
+  $("#mic-play").hidden = false;
+  try { // saved right away: the next recording already uses it
+    await api("/api/settings", { method: "PUT", body: JSON.stringify({ mic_gain: gainDb, mic_calibrated: true }) });
+    state.settings.mic_gain = gainDb;
+    state.settings.mic_calibrated = true;
+  } catch (err) {
+    result.textContent += "\n⚠️ Kaydedilemedi: " + err.message;
+  }
+};
+
+// Listen to the test recording with the gain currently on the slider.
+$("#mic-play").onclick = async () => {
+  if (!calibrationTake) return;
+  const ctx = new AudioContext();
+  const audio = await ctx.decodeAudioData(await calibrationTake.arrayBuffer());
+  const source = ctx.createBufferSource();
+  const gain = ctx.createGain();
+  gain.gain.value = Math.pow(10, (Number($("#mic-gain").value) || 0) / 20);
+  source.buffer = audio;
+  source.connect(gain).connect(ctx.destination);
+  source.onended = () => ctx.close();
+  source.start();
+};
 

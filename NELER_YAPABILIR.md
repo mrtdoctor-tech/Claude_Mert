@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.14
+Sürüm: 3.15
 
 ---
 
@@ -22,6 +22,11 @@ Aklına gelen her şeyi sorabilirsin. Asistan senin bilgisayarında çalışır,
 - Sağ üstteki **🔊 Sesli yanıt** açıksa cevaplar sesli okunur.
 - Ayarlar'da "Sesli sohbet" açıksa, cevap okunduktan sonra mikrofon kendiliğinden yeniden açılır. Böylece eller serbest
   konuşmaya devam edebilirsin.
+
+**Mikrofon sesi kısıksa:** ⚙️ Ayarlar → 🎙️ Mikrofon → **"Mikrofonu ayarla (5 sn test)"**. Her zamanki yerinden normal
+sesinle konuş; asistan sesinin seviyesini ölçer ve gereken yükseltmeyi kendisi ayarlar. "Test kaydını dinle" ile sonucu
+duyabilir, kaydırma çubuğuyla elle düzeltebilirsin. Ayar yaptıktan sonra sesini **Ses profilleri**'nden yeniden tanıtmak
+tanımayı iyileştirir.
 
 ## 🕐 Saat ve tarih
 

@@ -114,6 +114,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.15** — Ayarlar iki kolonlu ve kategorili (Yapay zekâ, Ses ve konuşma, Mikrofon, Bağlantılar, Ses profilleri). Yeni "🎙️ Mikrofonu ayarla": 5 saniyelik test kaydıyla sesinin seviyesini ölçer, gereken yükseltmeyi kendisi ayarlar (elle de değiştirilebilir, test kaydı dinlenebilir); sohbet, sesli komutlar ve ses tanıtma bu ayarla kaydeder.
 - **3.14** — Kendiliğinden misafire düşme azaltıldı: asistan yeniden başlarsa (güncelleme, OneDrive) son 15 dakikadaki oturum geri gelir; mikrofon hoparlörden asistanın kendi cevabını duyarsa bunu "yabancı ses" saymaz ve mesaj olarak göndermez.
 - **3.13** — "Müziğe devam et" düzeltildi: asistan Spotify'ın gizli yardımcı penceresine ("GDI+ Window") bakıp müziği çalıyor sanıyordu; artık yalnızca ana pencereye bakıyor.
 - **3.12** — Müzik komutları Spotify uygulamasına doğrudan gidiyor ("Müziği durdur" artık çalışmalı); Spotify çalıyor mu duruyor mu bilir, "sonraki şarkı"dan sonra çalan şarkıyı söyler. Medya tuşları "genişletilmiş tuş" olarak gönderiliyor.

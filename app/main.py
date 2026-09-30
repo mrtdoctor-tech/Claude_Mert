@@ -130,6 +130,8 @@ class SettingsIn(BaseModel):
     whisper_device: str | None = None
     outlook_sync: bool | None = None
     weather_city: str | None = None
+    mic_gain: float | None = None
+    mic_calibrated: bool | None = None
 
 
 @app.get("/api/settings")

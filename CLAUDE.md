@@ -176,6 +176,15 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `/api/weather` → ajandanın üstündeki hava satırı. `renderMarkdown` artık `[metin](https://…)` bağlantılarını açar;
   `plainText` sesli okumada bağlantı adresini atar. **Bulutta dış ağ kapalı: gerçek servislerle denenmedi**, sahte
   yanıtlarla test edildi (feed adresleri: ntv.com.tr/<kategori>.rss, feeds.bbci.co.uk/turkce/rss.xml).
+- **Mikrofon kalibrasyonu + Ayarlar düzeni (3.15):** Tüm kayıtlar `openMic()` üzerinden: getUserMedia (echoCancellation,
+  noiseSuppression, `autoGainControl: !mic_calibrated`) → WebAudio GainNode (`mic_gain` dB) → MediaStreamDestination
+  (MediaRecorder bunu kaydeder) + analyser (`level()` = kazanç sonrası RMS/tepe; sessizlik algılama da bunu kullanır).
+  "Mikrofonu ayarla": kazançsız + AGC kapalı 5 sn; kareler (50 ms RMS) → gürültü = %10'luk dilim, konuşma = gürültü×3 üstü
+  karelerin medyanı; kazanç = clamp(−20 dBFS − konuşma, 0, 30) ve tepe −1 dBFS'yi geçmeyecek kadar; sonuç hemen
+  `PUT /api/settings` (`mic_gain`, `mic_calibrated`). Test kaydı kaydırıcıdaki kazançla dinlenebilir. Ayarlar penceresi
+  `.settings-dialog`: `.settings-grid` 2 kolon kart (≤820 px tek kolon), profiller formun dışında (içinde iç içe şifre
+  formları var), Kaydet altta `form="settings-form"`. Sahte kısık mikrofonla (Chromium `--use-file-for-fake-audio-capture`)
+  test edildi: −53 dB konuşma → +30 dB, uyarı.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -344,6 +353,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   seviye göstergesi + "mikrofon yükseltme" (yazılım kazancı, Whisper/ses tanımaya gitmeden önce) eklenecek. Ayrıca 3.14'ün
   (oturum geri yükleme, yankı) ve 3.11'in (hava/haber gerçek ağda) sonuçları, güvenlik kaydındaki "Tanınmayan ses"
   satırları sorulacak. Sonra kalan fikirler: notlar/liste, fotoğraf, belge, sabah özeti, uyandırma sözcüğü, sohbet arama.
+- **2026-09-30 (3.15):** Mikrofon: **JMARY MC-PW8** USB masa mikrofonu (hiperkardioid, üzerinde +1…+25 dB kazanç ayarı
+  var; ayrı sürücüsü yok, "Generic USB Audio" doğru sürücü). Kullanıcıya kazanç düğmesi ve konuşma yönü (logolu yüz) önerildi.
+  İsteği: test kaydıyla kendi kendine ayarlayan mikrofon kalibrasyonu + Ayarlar'ın iki kolon ve kategorili olması → yapıldı.
+  Kullanıcıdan kalibrasyon sonucunu (konuşma dB'i, önerilen kazanç) ve ardından sesini yeniden tanıtmasını beklemek.
 
 ## Sıradaki fikirler
 
