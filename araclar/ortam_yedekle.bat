@@ -24,6 +24,8 @@ exit /b 0
 rem Ad olmayan satirlar (sadece klasor yolu, ornegin Pinokio'nun conda'si) ve base atlanir.
 if "%~2"=="" goto :eof
 if /i "%~1"=="base" goto :eof
+rem Windows buyuk-kucuk harf ayirmaz: "ComfyUI" ile "comfyui" ayni klasor, ayni ortamdir; ikinci kez yazilmaz.
+if exist "%OUT%\%~1.yml" goto :eof
 echo   %~1
 "%CONDA%" env export -n %~1 > "%OUT%\%~1.yml" 2>nul
 "%CONDA%" list -n %~1 > "%OUT%\%~1_paketler.txt" 2>nul

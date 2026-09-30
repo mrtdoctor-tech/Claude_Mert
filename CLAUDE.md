@@ -541,6 +541,12 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `_paketler.txt`). Beklenen: yedek alındı mı, `ComfyUI.bat` içeriği (hangi python/ortam: gömülü python mu, conda mı?).
   Sonraki adım: `muzik`'e openai-whisper ekleyip `muzik_doctor.py` ile kontrol, `Calistir.bat`'ı `muzik`'e çevirip fvts/analiz
   dene → sonra ai_assistant silinir.
+- **2026-09-30 (3.36):** Yedek alındı (`Documents\conda_yedek\20260930-1440`: ai_assistant, asistan, ComfyUI, muzik, tts).
+  "ComfyUI" ve "comfyui" Windows'ta **aynı klasör** (büyük-küçük harf duyarsız; environments.txt'de iki yazılış) → tek
+  ortam. `P:\Comfy\ComfyUI.bat` conda `ComfyUI` ortamını açıp `P:\Comfy\ComfyUI\main.py --auto-launch` çalıştırıyor.
+  `araclar/whisper_muzige_ekle.bat`: muzik ortamına `pip install openai-whisper --dry-run`; "Would install" satırında
+  numpy/torch/torchaudio/numba/llvmlite/scipy/librosa varsa durur, yoksa kurar; `import whisper, torch` + `muzik_doctor.py`
+  (Google Drive'dan bulunur) çıktısı. Kullanıcıdan pencere çıktısı bekleniyor; sonra `Calistir.bat`'ta ai_assistant → muzik.
 
 ## Sıradaki fikirler
 

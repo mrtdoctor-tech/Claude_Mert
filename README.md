@@ -114,6 +114,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.36** — Yeni araç `araclar\whisper_muzige_ekle.bat`: "muzik" ortamına OpenAI Whisper'ı ekler (önce deneme yapar; torch/numpy gibi hassas paketler değişecekse hiçbir şey kurmadan durur), sonra muzik_doctor.py ile kontrol eder. `ortam_yedekle.bat` aynı ortamın iki yazılışını ("ComfyUI"/"comfyui") tek yedekler.
 - **3.35** — Yeni araç `araclar\ortam_yedekle.bat`: tüm conda ortamlarının paket listesini Belgeler\conda_yedek klasörüne yedekler (hiçbir şeyi değiştirmez); ortam sadeleştirmesinden önce güvence için.
 - **3.34** — Betik envanteri düzeltildi: Python'un kendi parçaları (difflib, gc, importlib…) artık "paket" sayılmıyor; .bat/.ps1 dosyalarında yalnızca gerçekten açılan conda ortamları yazılıyor (açıklama satırlarındaki kelimeler değil).
 - **3.33** — "Betiklerimi incele": HourGlowMusic\Scripts altındaki betikleri (çalıştırmadan) okuyup Asiye klasörüne "betik_envanteri.txt" yazar: her betiğin ne yaptığı (ilk not), kullandığı paketler, .bat dosyalarının hangi conda ortamını açtığı; asistanın kendi analizinin kapsadığı ve kapsamadığı paketler. Ortamları sadeleştirmeden önce neyin gerçekten gerektiğini görmek için.
