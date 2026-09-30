@@ -641,6 +641,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   **İlk video (Wan 2.2 5B i2v, 1280×704, 49 kare, 20 adım): toplam 12:06.** Örnekleme 5:02 (15,1 sn/adım; WAN22 9535 MB
   dinamik VRAM), gerisi yükleme + VAE decode (VRAM 7,7/8 GB, paylaşılan 15,5/15,9 GB, cudaMallocAsync "recovered from an
   allocation failure"). İyileştirme adayları: VAE Decode (Tiled), modeller C:'ye (NVMe), daha küçük çözünürlük / fp8-GGUF model.
+  İkinci video (sıcak, yalnızca prompt değişti): **444,8 sn (7:25)**; örnekleme 3:34 (10,7 sn/adım), VAE decode ~3,5 dk ve 6×
+  "recovered from an allocation failure" → darboğaz VAE decode; VAE Decode (Tiled) önerildi.
 - **2026-09-30 (3.42):** `baslat.bat` `:run`'da `tasklist | findstr ollama.exe` (find değil: conda PATH'inde GNU find.exe var);
   yoksa `%LOCALAPPDATA%\Programs\Ollama\ollama app.exe` (yoksa `start /min ollama serve`). Ollama yolu gerçekte doğrulanmadı.
 
