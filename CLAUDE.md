@@ -634,6 +634,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   yanlıştı: ilk speedtest indirme sürerken yapılmıştı). Doğrudan modemdeyken de indirme ~10 Mbps → darboğaz ComfyUI'nin
   127.0.0.1:8188 üzerinden aktardığı indirme (tek akış). Öneri: şablondaki 🔗 ile asıl Hugging Face adresini Chrome'da açmak;
   o da yavaşsa çok bağlantılı indirme aracı yazılacak (bulut proxy'si huggingface.co'yu engelliyor, adresler buradan doğrulanamadı).
+  Sonuç: Chrome ile doğrudan HF de ~10 Mbps (tek bağlantı). Kullanıcı kendi bulduğu **Free Download Manager** (çok bağlantı)
+  ile indirdi: **11,6 MB/s (~93 Mbps)**, 9,3 GB ~15 dk → sorun tek bağlantılı indirme. Büyük modeller için FDM kullanılsın.
 
 ## Sıradaki fikirler
 
