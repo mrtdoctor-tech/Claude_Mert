@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.42
+Sürüm: 3.43
 
 ---
 
@@ -181,12 +181,13 @@ kısmına yaz.
 Sağdaki ajandanın en üstünde de şehrinin anlık hava durumu görünür.
 
 **Haberler** (NTV ve BBC Türkçe'nin herkese açık haber akışlarından):
-- "Haberler neler?" / "Son haberleri oku" / "Gündem ne?"
+- "Haberler neler?" / "Gündem haberleri nedir?" / "Son haberleri oku" / "Gündem ne?"
 - "Ekonomi haberleri" / "Spor haberleri" / "Dünya haberleri" / "Teknoloji haberleri" / "Sağlık haberleri"
 
 Başlıklara tıklayınca haberin kendisi tarayıcıda açılır. Sesli yanıt açıksa başlıklar okunur.
 
-Hava durumu ve haber cevapları yapay zekâdan değil doğrudan kaynaktan gelir; sayıları asla uydurmaz.
+Hava durumu ve haber cevapları yapay zekâdan değil doğrudan kaynaktan gelir; sayıları asla uydurmaz. Sayaçta "hazır cevap"
+yazmıyorsa cevap yapay zekâdandır: yapay zekâ internete bağlı değildir, güncel haber ve bağlantı veremez.
 
 ## 📝 Notlar ve listeler (3.16)
 

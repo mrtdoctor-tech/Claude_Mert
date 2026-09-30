@@ -277,9 +277,17 @@ _NEWS = re.compile(r"\bhaber(ler|leri)?\b|\bgündem|\bmanşet")
 _QUESTION_ABOUT = re.compile(r"\bnedir\b|\bne\s+demek|\bnasıl\s+(oluşur|olur)\b|\bneden\b")
 
 
+# 3.43: "Gündem haberleri nedir?" asks for the news, not for a definition; it went to the model, which made up news and
+# links. "nedir" only means a definition when the word is bare ("haber nedir?").
+_PLAIN_ASK = re.compile(r"\bhaberler(i|in)?\b|\bhaberleri\b|\bgündem|\bmanşet|\bhava\s*durumu")
+
+
 def kind(text: str) -> str | None:
     low = _lower(text)
-    if len(low) > MAX_LENGTH or _QUESTION_ABOUT.search(low):
+    if len(low) > MAX_LENGTH:
+        return None
+    q = _QUESTION_ABOUT.search(low)
+    if q and not (q.group().startswith("nedir") and _PLAIN_ASK.search(low)):
         return None
     if _WEATHER.search(low):
         return "weather"

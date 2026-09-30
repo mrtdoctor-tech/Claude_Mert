@@ -388,6 +388,24 @@ els.mic.addEventListener("click", () => {
   startListening(false);
 });
 
+// Peak limiter after the microphone gain: only the loudest peaks (above −10 dBFS) are pressed down, speech stays as is.
+// Web Audio's compressor adds its own "makeup" gain (0.6 × the gain it takes off at 0 dBFS); the gain node after it
+// takes that back off, so quiet sounds pass unchanged. Returns a GainNode-like chain: connect to .input, from .output.
+const LIMIT_DB = -10, LIMIT_RATIO = 20;
+function makeLimiter(ctx) {
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = LIMIT_DB;
+  comp.knee.value = 0;
+  comp.ratio.value = LIMIT_RATIO;
+  comp.attack.value = 0.001;
+  comp.release.value = 0.1;
+  const makeupDb = 0.6 * -(LIMIT_DB - LIMIT_DB / LIMIT_RATIO);
+  const back = ctx.createGain();
+  back.gain.value = Math.pow(10, -makeupDb / 20);
+  comp.connect(back);
+  return { input: comp, output: back };
+}
+
 // The microphone, through the calibrated gain (Ayarlar > Mikrofon). Everything records from here:
 // chat, voice commands, voice enrollment. The analyser measures the level after the gain.
 async function openMic({ gainDb = Number(state.settings.mic_gain) || 0, agc = !state.settings.mic_calibrated } = {}) {
@@ -398,12 +416,14 @@ async function openMic({ gainDb = Number(state.settings.mic_gain) || 0, agc = !s
   const source = ctx.createMediaStreamSource(raw);
   const gain = ctx.createGain();
   gain.gain.value = Math.pow(10, gainDb / 20);
+  const limiter = makeLimiter(ctx); // 3.43: loud peaks are squashed instead of clipped, so the gain can go higher
   const out = ctx.createMediaStreamDestination();
   const analyser = ctx.createAnalyser();
   analyser.fftSize = 2048;
   source.connect(gain);
-  gain.connect(out);
-  gain.connect(analyser);
+  gain.connect(limiter.input);
+  limiter.output.connect(out);
+  limiter.output.connect(analyser);
   const samples = new Float32Array(analyser.fftSize);
   return {
     stream: out.stream,
@@ -413,7 +433,7 @@ async function openMic({ gainDb = Number(state.settings.mic_gain) || 0, agc = !s
       for (const v of samples) { sum += v * v; peak = Math.max(peak, Math.abs(v)); }
       return { rms: Math.sqrt(sum / samples.length), peak };
     },
-    ctx, node: gain, // the wake listener reads the raw samples from here
+    ctx, node: limiter.output, // the wake listener reads the raw samples from here
     close() { raw.getTracks().forEach((t) => t.stop()); ctx.close(); },
   };
 }
@@ -1541,6 +1561,7 @@ showAgenda(true);
 // and without the browser's automatic gain; the gain is chosen so speech lands near -20 dBFS without clipping.
 const TARGET_DB = -20;
 const MAX_GAIN_DB = 30;
+const PEAK_ROOM_DB = 12; // peaks may go this far over 0 dBFS: the limiter presses them down
 let calibrationTake = null; // the last test recording, to listen to it with the chosen gain
 const toDb = (v) => 20 * Math.log10(Math.max(v, 1e-6));
 
@@ -1593,7 +1614,8 @@ $("#mic-test").onclick = async () => {
   }
   const speechDb = toDb(speech[Math.floor(speech.length / 2)]);
   const peakDb = toDb(peak);
-  let gainDb = Math.round(Math.min(MAX_GAIN_DB, Math.max(0, TARGET_DB - speechDb), -1 - peakDb));
+  // 3.43: the limiter handles peaks up to PEAK_ROOM_DB over full scale; before it, the peak capped the gain (+14 instead of +22)
+  let gainDb = Math.round(Math.min(MAX_GAIN_DB, Math.max(0, TARGET_DB - speechDb), PEAK_ROOM_DB - peakDb));
   gainDb = Math.max(0, gainDb);
   const noiseAfter = toDb(noise) + gainDb;
   const lines = [
@@ -1601,6 +1623,7 @@ $("#mic-test").onclick = async () => {
     gainDb > 0 ? `✅ Asistan sesini +${gainDb} dB yükseltecek.` : "✅ Yükseltmeye gerek yok.",
     `Arka plan gürültüsü (yükseltmeden sonra): ${noiseAfter.toFixed(0)} dB ${noiseAfter > -45 ? "⚠️ yüksek — fan, klima ya da uğultu var mı?" : "(iyi)"}`,
   ];
+  if (gainDb > 0 && peakDb + gainDb > LIMIT_DB) lines.push("🔉 En yüksek anlar sınırlayıcıyla yumuşatılacak (bozulma olmaz).");
   if (peakDb > -1) lines.push("⚠️ Ses yer yer kırpılıyor (çok yüksek). Mikrofonun kendi kazancını biraz kıs.");
   if (TARGET_DB - speechDb > MAX_GAIN_DB) lines.push("⚠️ Ses çok kısık: mikrofona yaklaş ya da mikrofonun kendi kazanç düğmesini aç, sonra tekrar dene.");
   else if (gainDb >= 20) lines.push("💡 Mikrofonun kendi kazanç düğmesini açarsan daha az gürültüyle daha temiz ses alırsın.");
@@ -1626,7 +1649,9 @@ $("#mic-play").onclick = async () => {
   const gain = ctx.createGain();
   gain.gain.value = Math.pow(10, (Number($("#mic-gain").value) || 0) / 20);
   source.buffer = audio;
-  source.connect(gain).connect(ctx.destination);
+  const limiter = makeLimiter(ctx);
+  source.connect(gain).connect(limiter.input);
+  limiter.output.connect(ctx.destination);
   source.onended = () => ctx.close();
   source.start();
 };

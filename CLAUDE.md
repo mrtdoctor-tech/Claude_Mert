@@ -660,7 +660,16 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Yedinci (mumsuz ışık istemi + negatife flame/fire): **alevler gitti, kum düzgün** → Wan 2.2 5B i2v ayarları tamam.
   Sekizinci: length **121** (5 sn), temporal_size 128 → **13:38**, sonuç başarılı (tahmin 14–16 dk'ydı).
 - **2026-09-30 (3.42):** `baslat.bat` `:run`'da `tasklist | findstr ollama.exe` (find değil: conda PATH'inde GNU find.exe var);
-  yoksa `%LOCALAPPDATA%\Programs\Ollama\ollama app.exe` (yoksa `start /min ollama serve`). Ollama yolu gerçekte doğrulanmadı.
+  yoksa `%LOCALAPPDATA%\Programs\Ollama\ollama app.exe` (yoksa `start /min ollama serve`). 3.42 gerçekte doğrulandı (Ollama açıldı).
+- **2026-09-30 (3.43):** Gerçek sonuçlar: hava durumu doğru, sabah özeti çalıştı. "Gündem haberleri nedir?" modele gitti
+  (`online._QUESTION_ABOUT` "nedir"i tanım sorusu sayıyordu) → gemma 2023 tarihli uydurma haber + 404 veren bağlantılar,
+  sonunda "Not ekledim." → `_PLAIN_ASK` (haberler/haberleri/gündem/manşet/hava durumu + "nedir" = komut; "haber nedir?" hâlâ
+  model) + sistem istemine "internete bağlı değilsin, haber/bağlantı uydurma, komut öner". Mikrofon: `makeLimiter`
+  (DynamicsCompressor −10 dBFS, 20:1, 1 ms; Web Audio'nun otomatik makeup kazancı 0,6×|curve(0 dB)| arkasındaki GainNode
+  ile geri alınır) `openMic`'te kazançtan sonra; kalibrasyonda tepe sınırı −1 → `PEAK_ROOM_DB`=+12 dBFS (MC-PW8'de +14 yerine
+  +22 çıkmalı). Chromium sahte mikrofonla: +30 dB'de 0,3'lük patlama tepe 0,49'da kaldı, sessiz ses kazançla doğru ölçeklendi.
+  Kullanıcı kararları: A (asistandan ComfyUI) şimdilik hayır — parametreleri birlikte elle ayarlamak istiyor; B (yerel XTTS
+  sesi) hayır — hızı bozmasın; D (anlamsal hafıza) şimdilik gerek yok. Sezin'in ses kaydı acele değil.
 
 ## Sıradaki fikirler
 
