@@ -614,6 +614,11 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   ComfyUI türleri); Manager: `manager_requirements.txt` + cli_args'ta `--enable-manager` varsa yerleşik, yoksa git clone;
   `P:\Comfy\ComfyUI_yeni.bat` + masaüstü "ComfyUI (yeni).bat". Tekrar çalıştırmak güvenli. Sahte ağ/açma ile test edildi;
   **gerçek indirme, tar'ın .7z açması ve Manager bayrağı Windows'ta denenmedi**. Sonra: 8 GB'a uygun video modeli seçimi.
+  3.41 gerçekte **başarılı**: ComfyUI portable **v0.38.0** (1,9 GB), Windows `tar` .7z'yi açtı (7-Zip yok), Fooocus modelsM'de
+  tüm tür klasörleri var (checkpoints…text_encoders yaml'a girdi), Manager yerleşik (`comfyui_manager` 4.2.2 pip ile),
+  gömülü python'da torch **2.14.0+cu130**, GPU RTX 4060 görüldü. Masaüstü = `C:\Users\mertbilgin\OneDrive\Desktop`.
+  Kayıt dosyası Tee-Object yüzünden UTF-16. Sırada: ComfyUI (yeni)'yi açıp modellerin göründüğünü doğrulamak, sonra
+  şablonlardan (Workflow → Browse Templates) resim ve resimden video iş akışı.
 
 ## Sıradaki fikirler
 
