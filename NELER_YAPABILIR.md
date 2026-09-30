@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.15
+Sürüm: 3.16
 
 ---
 
@@ -150,6 +150,29 @@ Başlıklara tıklayınca haberin kendisi tarayıcıda açılır. Sesli yanıt a
 
 Hava durumu ve haber cevapları yapay zekâdan değil doğrudan kaynaktan gelir; sayıları asla uydurmaz.
 
+## 📝 Notlar ve listeler (3.16)
+
+Alışveriş listesi, yapılacaklar ve kısa notlar. Her listen yalnızca sana görünür (misafir modunda kapalı).
+Bunlar da anında cevaplanır, yapay zekâ kullanılmaz; o yüzden hiçbir şey uydurulmaz ya da kaybolmaz.
+
+| Söyle / yaz | Ne olur |
+|---|---|
+| "Listeye süt ekle" | Alışveriş listesine ekler (liste adı söylenmezse alışveriş listesi) |
+| "Alışveriş listesine ekmek, yumurta ve peynir ekle" | Üçünü birden ekler |
+| "Zeytinyağı listeye ekle" | Aynı şey, farklı sırayla |
+| "Listemde ne var?" | Alışveriş listesini okur |
+| "Sütü listeden çıkar" / "Süt ve ekmeği listeden sil" | Listeden çıkarır |
+| "Alışveriş listesini temizle" | Listeyi boşaltır |
+| "Yapılacaklar listesine faturayı öde ekle" | Yapılacaklar listesine ekler |
+| "Tatil listesine pasaport ekle" | Yeni bir "tatil" listesi açar |
+| "Not al: kombiyi ara" / "Kombiyi ara diye not al" | Notlarına ekler |
+| "Notlarım neler?" | Notlarını okur |
+| "Listelerimi göster" | Tüm listelerini gösterir |
+
+- Sol menüdeki **📝 Notlar ve listeler** penceresinde listeleri sekmelerle görürsün: alınanları işaretleyebilir (üstü
+  çizilir), ✕ ile silebilir, üstteki kutudan yeni şey ekleyebilirsin (virgülle birden fazla).
+- Aynı şeyi iki kez eklersen "Zaten listede" der.
+
 ## 🧠 Hafıza
 
 Asistan sohbetlerden senin hakkındaki önemli bilgileri kendiliğinden öğrenir ve yeni sohbetlerde de hatırlar.
@@ -186,7 +209,6 @@ Herkesin hafızası ayrıdır.
 
 ## 🔜 Planlananlar
 
-- 📝 Notlar ve alışveriş listesi ("Listeye süt ekle")
 - 🖼️ Fotoğraf anlama ("Bu fişte ne yazıyor?")
 - 📄 Belge yükleme ("Bu PDF'i özetle")
 - ☀️ Sabah özeti ("Günaydın" deyince günün hatırlatmaları)

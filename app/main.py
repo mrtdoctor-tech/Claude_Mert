@@ -16,7 +16,7 @@ from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, db, identity, llm, memory, online, outlook, pc, presence, quick, reminders, stt, tts, voiceid
+from . import config, db, identity, llm, memory, notes, online, outlook, pc, presence, quick, reminders, stt, tts, voiceid
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("asistan")
@@ -222,7 +222,7 @@ async def chat(body: ChatIn):
     messages += [{"role": m["role"], "content": m["content"]} for m in history]
     messages.append({"role": "user", "content": text + memory.clock_note()})  # the note is not saved
     # "saat kaç?" comes from the clock, "20 dakikalık sayaç kur" is set by rules: not by the model
-    instant = quick.answer(text) or reminders.handle(text, who)
+    instant = quick.answer(text) or reminders.handle(text, who) or notes.handle(text, who)
     if not instant and pc.is_command(text):  # Excel, music, Spotify on this computer
         instant = await run_in_threadpool(pc.handle, text, who)
     if not instant and online.is_command(text):  # weather and news from the internet (never for guests)
@@ -366,6 +366,62 @@ def alerts():
 @app.post("/api/alerts/{alert_id}/ack")
 def ack_alert(alert_id: int):
     db.ack_alert(alert_id)
+    return {"ok": True}
+
+
+# Notes and lists
+
+class NoteIn(BaseModel):
+    list_name: str
+    text: str
+
+
+class NoteDoneIn(BaseModel):
+    done: bool
+
+
+def _note_owner() -> str | None:
+    who = identity.owner()
+    if who == identity.GUEST:
+        raise HTTPException(403, "Notlar ve listeler kişiye özel; misafir modunda kullanılamaz.")
+    return None if who == db.ALL else who
+
+
+def _own_note(note_id: int) -> dict:
+    owner, item = _note_owner(), db.get_note(note_id)
+    if not item or (identity.owner() != db.ALL and item["owner"] != owner):
+        raise HTTPException(404, "Not bulunamadı")
+    return item
+
+
+@app.get("/api/notes")
+def list_notes():
+    who = identity.owner()
+    if who == identity.GUEST:
+        return {"lists": []}
+    return {"lists": [{"name": n, "items": db.list_notes(who, n)} for n in db.list_names(who)]}
+
+
+@app.post("/api/notes")
+def add_note(body: NoteIn):
+    owner = _note_owner()
+    name, text = body.list_name.strip().lower() or notes.DEFAULT_LIST, body.text.strip()
+    if not text:
+        raise HTTPException(400, "Boş not eklenemez")
+    return {"id": db.add_note(owner, name, text)}
+
+
+@app.put("/api/notes/{note_id}")
+def mark_note(note_id: int, body: NoteDoneIn):
+    _own_note(note_id)
+    db.set_note_done(note_id, body.done)
+    return {"ok": True}
+
+
+@app.delete("/api/notes/{note_id}")
+def delete_note(note_id: int):
+    _own_note(note_id)
+    db.delete_note(note_id)
     return {"ok": True}
 
 

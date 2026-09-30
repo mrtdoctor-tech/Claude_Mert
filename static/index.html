@@ -15,6 +15,7 @@
       <div class="sidebar-footer">
         <button id="open-memory" class="ghost wide">🧠 Hafıza</button>
         <button id="open-reminders" class="ghost wide">⏰ Hatırlatıcılar</button>
+        <button id="open-notes" class="ghost wide">📝 Notlar ve listeler</button>
         <button id="open-help" class="ghost wide">❓ Neler yapabilirim?</button>
         <button id="open-settings" class="ghost wide">⚙️ Ayarlar</button>
         <button id="open-security" class="ghost wide" hidden>🛡️ Güvenlik kaydı</button>
@@ -117,6 +118,20 @@
       <button class="icon close" data-close>✕</button>
     </div>
     <div id="help-body" class="help-body"></div>
+  </dialog>
+
+  <dialog id="notes-dialog">
+    <div class="dialog-head">
+      <h2>📝 Notlar ve listeler</h2>
+      <button class="icon close" data-close>✕</button>
+    </div>
+    <p class="hint">Sohbette de yazabilir ya da söyleyebilirsin: "Listeye süt ekle", "Listemde ne var?", "Sütü listeden çıkar", "Not al: kombiyi ara". Listeler yalnızca sana görünür.</p>
+    <div id="note-tabs" class="note-tabs"></div>
+    <form id="note-form" class="row">
+      <input id="note-input" placeholder="Eklenecek şey (virgülle birden fazla: süt, ekmek)">
+      <button class="primary">Ekle</button>
+    </form>
+    <ul id="note-list" class="memory-list note-list"></ul>
   </dialog>
 
   <dialog id="alert-dialog" class="alert-dialog">

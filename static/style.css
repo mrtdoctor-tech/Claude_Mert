@@ -295,3 +295,12 @@ table.grid td.nowrap { white-space: nowrap; font-variant-numeric: tabular-nums; 
 #mic-result { margin: 0; white-space: pre-line; }
 .card input[type=range] { padding: 0; accent-color: var(--accent); background: none; border: none; }
 @media (max-width: 820px) { .settings-grid { grid-template-columns: 1fr; } }
+
+/* Notes and lists (3.16) */
+.note-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.note-tabs button { background: var(--panel-2); color: var(--muted); padding: 6px 12px; border-radius: 999px; font-size: 13px; }
+.note-tabs button.active { background: var(--accent); color: #fff; }
+.note-list li { align-items: center; }
+.note-list label { display: flex; gap: 10px; align-items: center; flex: 1; cursor: pointer; }
+.note-list input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
+.note-list li.done span { text-decoration: line-through; color: var(--muted); }

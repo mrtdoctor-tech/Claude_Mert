@@ -245,6 +245,7 @@ async function send(text, fromVoice = false, sttMs = null, sttDevice = null) {
     }
     applyIdentity(newIdentity);
     loadAgenda(); // "yarın 9'da ... hatırlat" shows up on the right at once
+    if ($("#notes-dialog").open) loadNotes();
     if (speaker) speaker.feed(reply, true);
     if (fromVoice && reply) listenAgainAfterReply(round);
     timer.finish(true);
@@ -600,6 +601,8 @@ function applyIdentity(id) {
     : `👤 ${id.name}${id.admin ? " · yönetici" : ""}`;
   $("#open-security").hidden = !(id.active && id.admin);
   $("#open-reminders").hidden = !!id.guest; // reminders are personal
+  $("#open-notes").hidden = !!id.guest;
+  if (id.guest) $("#notes-dialog").close();
   showAgenda(!id.guest);
   if (id.guest) $("#agenda-weather").hidden = true;
   else if (before !== identityKey(id)) loadAgendaWeather(true);
@@ -1497,4 +1500,66 @@ $("#mic-play").onclick = async () => {
   source.onended = () => ctx.close();
   source.start();
 };
+
+// Notes and lists (3.16): one tab per list; tick = bought/done, ✕ = delete.
+const DEFAULT_LISTS = ["alışveriş", "yapılacaklar", "notlar"];
+let notesTab = "alışveriş";
+const listTitle = (n) => (n === "notlar" ? "📝 Notlar" : n === "alışveriş" ? "🛒 Alışveriş" : n === "yapılacaklar" ? "✅ Yapılacaklar"
+  : `📋 ${n.charAt(0).toLocaleUpperCase("tr") + n.slice(1)}`);
+
+async function loadNotes() {
+  let lists = [];
+  try { lists = (await api("/api/notes")).lists; } catch {}
+  const names = [...new Set([...DEFAULT_LISTS, ...lists.map((l) => l.name)])];
+  if (!names.includes(notesTab)) notesTab = names[0];
+  const tabs = $("#note-tabs");
+  tabs.innerHTML = "";
+  for (const name of names) {
+    const count = (lists.find((l) => l.name === name)?.items || []).filter((i) => !i.done).length;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = listTitle(name) + (count ? ` (${count})` : "");
+    b.classList.toggle("active", name === notesTab);
+    b.onclick = () => { notesTab = name; loadNotes(); };
+    tabs.appendChild(b);
+  }
+  const items = lists.find((l) => l.name === notesTab)?.items || [];
+  const ul = $("#note-list");
+  ul.innerHTML = items.length ? "" : `<li class="none">Bu liste boş.</li>`;
+  for (const item of items) {
+    const li = document.createElement("li");
+    li.classList.toggle("done", !!item.done);
+    li.innerHTML = `<label><input type="checkbox"><span></span></label><button title="Sil">✕</button>`;
+    li.querySelector("span").textContent = item.text;
+    const box = li.querySelector("input");
+    box.checked = !!item.done;
+    box.onchange = async () => {
+      await api(`/api/notes/${item.id}`, { method: "PUT", body: JSON.stringify({ done: box.checked }) }).catch(() => {});
+      loadNotes();
+    };
+    li.querySelector("button").onclick = async () => {
+      await api(`/api/notes/${item.id}`, { method: "DELETE" }).catch(() => {});
+      loadNotes();
+    };
+    ul.appendChild(li);
+  }
+  $("#note-input").placeholder = notesTab === "notlar" ? "Not yaz…" : "Eklenecek şey (virgülle birden fazla: süt, ekmek)";
+}
+
+$("#open-notes").onclick = () => {
+  $("#notes-dialog").showModal();
+  loadNotes();
+  $("#note-input").focus();
+};
+
+$("#note-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const input = $("#note-input");
+  const texts = notesTab === "notlar" ? [input.value.trim()] : input.value.split(",").map((t) => t.trim());
+  for (const text of texts.filter(Boolean)) {
+    await api("/api/notes", { method: "POST", body: JSON.stringify({ list_name: notesTab, text }) }).catch(() => {});
+  }
+  input.value = "";
+  loadNotes();
+});
 

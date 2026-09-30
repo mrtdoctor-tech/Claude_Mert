@@ -185,6 +185,13 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `.settings-dialog`: `.settings-grid` 2 kolon kart (≤820 px tek kolon), profiller formun dışında (içinde iç içe şifre
   formları var), Kaydet altta `form="settings-form"`. Sahte kısık mikrofonla (Chromium `--use-file-for-fake-audio-capture`)
   test edildi: −53 dB konuşma → +30 dB, uyarı.
+- **Notlar ve listeler (3.16):** `app/notes.py`, chat'te reminders'tan sonra (`quick → reminders → notes → pc → online`),
+  kurallarla (model değil), misafire kapalı, kişiye özel (`notes` tablosu: owner, list_name, text, done). Liste adı tek kelime
+  ve yalnızca "X listesine/listesinden/listesini" biçiminde; çıplak "listeye/listeden" = `alışveriş` (`DEFAULT_LIST`),
+  "not al" = `notlar`; `ALIASES` (market → alışveriş, iş → yapılacaklar). `_split_items` virgül/ve/ile ile böler, `_same`
+  Türkçe ekleri tolere eder (sütü = süt, ekmeği = ekmek) ve tekrar eklemeyi engeller. İsmin -i hali ("Peyniri listeye
+  ekle") olduğu gibi kaydedilir: ek kesmek "zeytinyağı", "çamaşır suyu" gibi adları bozardı. `/api/notes` (GET/POST,
+  PUT/DELETE `{id}`), arayüzde `#notes-dialog` (sekmeler, işaretleme, silme, virgüllü ekleme).
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -363,6 +370,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   sınırını kaldırmak → tam +22 dB. Kullanıcıya sesini yeniden tanıtması önerildi.
   Mert kalibrasyondan sonra sesini yeniden tanıttı: tutarlılık **0,886** (ilk kayıt 0,906; benzer). Sezin'in profili eski
   ayarla (Chrome AGC açık, kazanç yok) kaydedildi → onun da yeniden tanıtması önerildi. Yeni benzerlik puanları bekleniyor.
+- **2026-09-30 (3.16):** Kullanıcı "kaldığımız işlerden devam" dedi (Sezin'i sonra yeniden tanıtacak) → listedeki ilk fikir:
+  notlar ve alışveriş listesi. Sahte sunucu + Chromium ile test edildi. Sıradaki fikirler: fotoğraf anlama, belge yükleme,
+  sabah özeti (hava + ajanda + listeler), uyandırma sözcüğü, eski sohbet arama.
 
 ## Sıradaki fikirler
 
@@ -372,7 +382,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   "aile" yok; tarayıcı kapalıyken Windows bildirimi, asistan kapalıyken sonraki açılışta "kaçırılanlar"; yalnızca ev
   bilgisayarı) + **takvim kaydı oluşturma** (telefona bildirim gelsin diye; hangi takvim olduğu sorulacak — bulut servisi,
   kullanıcı onayı gerekir). 2) Yapabildiklerini komut örnekleriyle anlatan belge. Sonra listeden: notlar/alışveriş
-  listesi, fotoğraf anlama (gemma3:4b görebilir), belge yükleme, sabah özeti, uyandırma sözcüğü ("Asiye"), eski
+  listesi (✅ 3.16), fotoğraf anlama (gemma3:4b görebilir), belge yükleme, sabah özeti, uyandırma sözcüğü ("Asiye"), eski
   sohbetlerde arama, ✅ hava durumu/haber (3.11). Kullanıcı "hepsi çok güzel" dedi.
 
 - Spotify: kullanıcı ücretsiz hesapta → otomatik çalma yok. Premium'a geçerse Spotify Web API (PKCE) ile "X çal".
@@ -385,5 +395,4 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - Hafıza büyüdükçe: tüm bilgileri isteme koymak yerine anlamsal arama (Ollama embedding modeli).
 - Eski sohbetlerde arama.
 - Dosya/belge yükleyip onun hakkında konuşma.
-- Hatırlatıcılar / notlar.
 - Tek tıkla çalışan masaüstü uygulaması (Python kurulumu gerektirmeyen paket).

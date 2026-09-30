@@ -62,6 +62,14 @@ CREATE TABLE IF NOT EXISTS alerts (
     fired_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
     acknowledged INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner TEXT,
+    list_name TEXT NOT NULL,          -- alışveriş / yapılacaklar / notlar / any name
+    text TEXT NOT NULL,
+    done INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
 CREATE TABLE IF NOT EXISTS security_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
@@ -333,4 +341,53 @@ def set_reminder_calendar(reminder_id: int, calendar_id: str | None, note: str):
     with session() as conn:
         conn.execute("UPDATE reminders SET calendar_id = ?, calendar_note = ? WHERE id = ?",
                      (calendar_id, note, reminder_id))
+
+
+# Notes and lists (3.16)
+
+def add_note(owner: str | None, list_name: str, text: str) -> int:
+    with session() as conn:
+        return conn.execute("INSERT INTO notes (owner, list_name, text) VALUES (?, ?, ?)",
+                            (owner, list_name, text)).lastrowid
+
+
+def list_notes(owner: str = ALL, list_name: str | None = None) -> list[dict]:
+    where, params = _owner_filter(owner)
+    if list_name is not None:
+        where = (where + " AND" if where else " WHERE") + " list_name = ?"
+        params = (*params, list_name)
+    with session() as conn:
+        rows = conn.execute(f"SELECT * FROM notes{where} ORDER BY done, id", params).fetchall()
+    return [dict(r) for r in rows]
+
+
+def list_names(owner: str = ALL) -> list[str]:
+    where, params = _owner_filter(owner)
+    with session() as conn:
+        rows = conn.execute(f"SELECT list_name, MIN(id) AS first FROM notes{where} GROUP BY list_name ORDER BY first",
+                            params).fetchall()
+    return [r["list_name"] for r in rows]
+
+
+def get_note(note_id: int) -> dict | None:
+    with session() as conn:
+        row = conn.execute("SELECT * FROM notes WHERE id = ?", (note_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def set_note_done(note_id: int, done: bool):
+    with session() as conn:
+        conn.execute("UPDATE notes SET done = ? WHERE id = ?", (int(done), note_id))
+
+
+def delete_note(note_id: int):
+    with session() as conn:
+        conn.execute("DELETE FROM notes WHERE id = ?", (note_id,))
+
+
+def clear_list(owner: str, list_name: str) -> int:
+    where, params = _owner_filter(owner)
+    where = (where + " AND" if where else " WHERE") + " list_name = ?"
+    with session() as conn:
+        return conn.execute(f"DELETE FROM notes{where}", (*params, list_name)).rowcount
 
