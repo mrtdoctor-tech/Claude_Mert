@@ -532,6 +532,15 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   hg_bpm, Suno, test_qc; OpenCV eklenirse hg_olcum/hg_dikis), `muzik` (ağır müzik yapay zekâsı; openai-whisper eklenirse
   ai_assistant'ın işlerini de alır), ComfyUI (tek; ComfyUI/comfyui'den kullanılanı), `tts` bilinmiyor → sor. Silmeden önce
   `conda env export`, önce .bat'leri yeni ortama çevirip dene, sonra sil.
+- **2026-09-30 (3.35):** Temiz envanter geldi (yalnızca `Calistir.bat` → `ai_assistant`). `conda env list`: base, ComfyUI,
+  ai_assistant, asistan, comfyui, muzik, tts (+ Pinokio miniconda). **tts** = Coqui TTS 0.27 (XTTS; torch 2.14+cu126,
+  transformers, Python 3.11) → yerel Türkçe kadın sesi (ses klonlama) fikri için kullanılabilir, silme. ComfyUI
+  `P:\Comfy\ComfyUI.bat` ile açılıyor (uzun süredir kullanılmıyor; güncellenecek; kullanıcı kısa video/resim→video ve
+  HourGlow görselleri için düşünüyor, şu an resimleri Pinokio/Fooocus ile yapıyor; Comfy daha iyi ve hızlıysa geçebilir).
+  `araclar/ortam_yedekle.bat` eklendi (tüm ortamlar → `%USERPROFILE%\Documents\conda_yedek\<tarih>\<ad>.yml` +
+  `_paketler.txt`). Beklenen: yedek alındı mı, `ComfyUI.bat` içeriği (hangi python/ortam: gömülü python mu, conda mı?).
+  Sonraki adım: `muzik`'e openai-whisper ekleyip `muzik_doctor.py` ile kontrol, `Calistir.bat`'ı `muzik`'e çevirip fvts/analiz
+  dene → sonra ai_assistant silinir.
 
 ## Sıradaki fikirler
 
