@@ -35,6 +35,7 @@ DEFAULTS = {
     "mic_calibrated": False,  # after calibration the browser's own automatic gain is switched off
     "wake_word": False,  # keep the microphone open and wake up on the wake phrase (3.19)
     "wake_phrase": "",  # "" = the assistant's name
+    "vocabulary": "HourGlow",  # names speech recognition should know, comma separated (3.28)
     "analysis_folder": "",  # folder whose music/pictures are analyzed (3.26); "" = HourGlowMusic\Scripts\Asiye in Google Drive
 }
 

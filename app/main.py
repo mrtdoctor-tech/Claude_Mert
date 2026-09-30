@@ -16,7 +16,7 @@ from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import analysis, config, db, documents, identity, llm, memory, notes, online, outlook, pc, presence, quick, reminders, stt, tts, voiceid, wake
+from . import analysis, config, db, documents, identity, llm, memory, notes, online, outlook, pc, presence, quick, reminders, stt, tts, vocab, voiceid, wake
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("asistan")
@@ -133,6 +133,7 @@ class SettingsIn(BaseModel):
     mic_gain: float | None = None
     mic_calibrated: bool | None = None
     analysis_folder: str | None = None
+    vocabulary: str | None = None
     wake_word: bool | None = None
     wake_phrase: str | None = None
 
@@ -620,6 +621,7 @@ async def transcribe(audio: UploadFile = File(...), wake_check: bool = Form(Fals
             stt.transcribe, path, settings["whisper_model"], settings["language"], settings["whisper_device"],
             None if wake_check else wake.hotwords(settings),  # a hint to hear the name makes Whisper "hear" it in music
         )
+        text = vocab.fix(text, settings)  # "Avır glo" → "HourGlow" (3.28)
         score = None
         too_short = False
         woken = None

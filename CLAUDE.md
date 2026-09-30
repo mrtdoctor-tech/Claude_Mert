@@ -256,6 +256,12 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   test edildi; **gerçek dosyalar ve gerçek model yorumları denenmedi**.
   3.27: yalnızca "hepsini/yeniden/tekrar + analiz et" (başka nesne kelimesi yok, `_BARE_WORDS`) da komut. Sistem
   istemine: model klasör analizi yapamaz, sonuç uydurmasın.
+- **Özel kelimeler (3.28):** `app/vocab.py`, ayar `vocabulary` (virgüllü, varsayılan "HourGlow"). Whisper `hotwords`'e eklenir
+  (wake_check hariç) ve `/api/transcribe` her metinde `vocab.fix`: 1-3 kelimelik gruplar, sadeleştirme (Türkçe harf
+  katlama, ğ→h, ou→a, ow→o) + ünsüz iskeleti (a e i o u h w v y atılır) eşit ve benzerlik ≥0,6 → terim (kesme işaretli ek
+  korunur). "Avır glo/Aurglo/Hour glow/Havır Glov/Ağır glo" → HourGlow; "Argo", "Ağır gelir", "Avrupa" değişmez.
+  `pc._search_roots` Google Drive'ı da tarar (`~/My Drive*`, `~/Google Drive*`, `G:/My Drive`), `find_file` tarama sınırı
+  yer başına; ad eşleşmesi boşluk/altçizgi yok sayarak da ("hour glow" = "HourGlow_Takip").
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -470,6 +476,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-30 (3.27):** 3.26 gerçekte: "klasörünü aç" çalıştı, gerçek .wav'ın raporu yazıldı. "Hepsini yeniden analiz et."
   klasör kelimesi olmadığı için modele gitti; model 4 olmayan şarkıyı (BPM/ton/LUFS ile) uydurdu → düzeltildi.
   3.27 gerçekte doğrulandı ("doğru çalıştı"). Tempo/ton doğruluğu gerçek şarkılarda kullanıcıdan henüz duyulmadı.
+- **2026-09-30 (3.28):** Kullanıcı: "HourGlow dediğimde Türkçe algılıyor, 'HourGlow Takip Dosyasını Excel'de aç' şaşırıyor" →
+  özel kelimeler + Google Drive araması. Whisper'ın gerçekte ne yazdığı bilinmiyor; düzelmezse sayaçtaki/sohbetteki
+  yazılışı kullanıcıdan iste ve `vocab`'a örnek ekle.
 
 ## Sıradaki fikirler
 

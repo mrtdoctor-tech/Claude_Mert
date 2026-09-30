@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.27
+Sürüm: 3.28
 
 ---
 
@@ -43,6 +43,9 @@ Açmak için ⚙️ Ayarlar → 🔊 Ses ve konuşma → **"Adımla seslenince d
   duyamayabilir: müziği mikrofondan uzaklaştır ya da kıs. Yanlışlıkla uyanırsa 👂'a basıp duraklatabilirsin.
 - Misafir modunda da çalışır; seslenen kişiyi sesinden tanırsa onun oturumuna geçer.
 - Sayfa açık olmalı (sekme arkada olabilir). Tarayıcıyı yeni açtıysan sayfaya bir kez tıklaman gerekebilir.
+
+**Yabancı adlar (ör. HourGlow):** ⚙️ Ayarlar → 🔊 Ses ve konuşma → **Özel kelimeler**'e virgülle yaz (ör. "HourGlow,
+Spotify"). Ses tanıma bunları bekler ve Türkçe harflerle yazılmış hallerini ("Avır glo", "Hour glow") düzeltir.
 
 **Mikrofon sesi kısıksa:** ⚙️ Ayarlar → 🎙️ Mikrofon → **"Mikrofonu ayarla (5 sn test)"**. Her zamanki yerinden normal
 sesinle konuş; asistan sesinin seviyesini ölçer ve gereken yükseltmeyi kendisi ayarlar. "Test kaydını dinle" ile sonucu
@@ -116,6 +119,8 @@ Hatırlatmaların Outlook takvimine de eklenir, böylece telefonunda da bildirim
   Başlat menüsünden **Outlook (klasik)**'i bir kez açıp hesabını eklemen yeterli.
 
 ## 📊 Excel ve dosyalar (3.6)
+
+Dosya aramasında Masaüstü, Belgeler, İndirilenler, OneDrive ve **Google Drive** (3.28) klasörlerine bakılır.
 
 - "Excel'i aç"
 - "Bütçe dosyasını Excel'de aç"

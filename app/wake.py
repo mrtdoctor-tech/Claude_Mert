@@ -66,7 +66,9 @@ def hotwords(settings: dict) -> str:
 
     Without this, a quickly said "Merhaba Asiye" came out as "Merhaba size".
     """
-    words = [settings.get("assistant_name") or "", (settings.get("wake_phrase") or "").strip()]
+    from . import vocab
+
+    words = [settings.get("assistant_name") or "", (settings.get("wake_phrase") or "").strip(), *vocab.words(settings)]
     return " ".join(dict.fromkeys(w for w in words if w))
 
 

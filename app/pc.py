@@ -68,6 +68,8 @@ def _excel_query(text: str) -> str:
 def _search_roots() -> list[Path]:
     home = Path(os.environ.get("USERPROFILE", Path.home()))
     roots = [home / "Desktop", home / "Documents", home / "Downloads"]
+    # Google Drive (3.28: the HourGlow files are there): "My Drive (e-mail)" in the user folder, or drive G:
+    roots += [*home.glob("My Drive*"), *home.glob("Google Drive*"), Path("G:/My Drive"), Path("G:/Drive'ım")]
     for key in ("OneDrive", "OneDriveConsumer", "OneDriveCommercial"):
         if os.environ.get(key):
             roots.append(Path(os.environ[key]))
@@ -84,8 +86,9 @@ def find_file(query: str, extensions=EXCEL_EXTENSIONS, roots: list[Path] | None 
     wanted = _words(query)
     if not wanted:
         return []
-    matches, scanned = [], 0
+    matches = []
     for root in roots or _search_roots():
+        scanned = 0  # per place: a big OneDrive must not use up the search before Google Drive
         for folder, dirs, files in os.walk(root):
             dirs[:] = [d for d in dirs if not d.startswith(".") and d.lower() not in SKIP_DIRS]
             for name in files:
@@ -94,7 +97,8 @@ def find_file(query: str, extensions=EXCEL_EXTENSIONS, roots: list[Path] | None 
                 if path.suffix.lower() not in extensions or name.startswith("~$"):
                     continue
                 stem = _lower(path.stem)
-                if all(w in stem for w in wanted):
+                joined = re.sub(r"[\s_.-]+", "", stem)  # "HourGlow_Takip" also matches "hour glow takip"
+                if all(w in stem or w in joined for w in wanted) or "".join(wanted) in joined:
                     matches.append(path)
             if scanned > MAX_FILES_SCANNED:
                 break
