@@ -357,6 +357,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   var; ayrı sürücüsü yok, "Generic USB Audio" doğru sürücü). Kullanıcıya kazanç düğmesi ve konuşma yönü (logolu yüz) önerildi.
   İsteği: test kaydıyla kendi kendine ayarlayan mikrofon kalibrasyonu + Ayarlar'ın iki kolon ve kategorili olması → yapıldı.
   Kullanıcıdan kalibrasyon sonucunu (konuşma dB'i, önerilen kazanç) ve ardından sesini yeniden tanıtmasını beklemek.
+- **2026-09-30:** 3.15 kalibrasyon gerçek sonucu (MC-PW8): konuşma **−42 dB**, tepe **−15 dB**, önerilen kazanç **+14 dB**
+  (tepe sınırı yüzünden; hedef için +22 gerekirdi), gürültü (kazanç sonrası) **−68 dB** (çok temiz). Kazanç sonrası konuşma
+  ≈ −28 dB: kullanılabilir. İyileştirme fikri: GainNode'dan sonra DynamicsCompressor (limiter, eşik −6 dB) koyup tepe
+  sınırını kaldırmak → tam +22 dB. Kullanıcıya sesini yeniden tanıtması önerildi.
 
 ## Sıradaki fikirler
 
