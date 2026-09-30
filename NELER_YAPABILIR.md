@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.30
+Sürüm: 3.31
 
 ---
 
@@ -51,6 +51,18 @@ Spotify"). Ses tanıma bunları bekler ve Türkçe harflerle yazılmış halleri
 sesinle konuş; asistan sesinin seviyesini ölçer ve gereken yükseltmeyi kendisi ayarlar. "Test kaydını dinle" ile sonucu
 duyabilir, kaydırma çubuğuyla elle düzeltebilirsin. Ayar yaptıktan sonra sesini **Ses profilleri**'nden yeniden tanıtmak
 tanımayı iyileştirir.
+
+## ☀️ Sabah özeti (3.31)
+
+| Söyle / yaz | Ne olur |
+|---|---|
+| "Günaydın Asiye" / "Günaydın" | Günün özetini okur |
+| "Sabah özeti" / "Bugün neler var?" / "Bugünkü programım ne?" | Aynısı, günün her saatinde |
+
+- Özette: tarih ve saat, şehrinin hava durumu (yağmur varsa şemsiye önerisi), bugünkü Outlook toplantıları ve
+  hatırlatmaların (öğleden sonra sorarsan yalnızca kalanlar), alışveriş ve yapılacaklar listen, gündemden 3 haber başlığı.
+- Adınla seslenme açıksa mikrofona basmadan "Günaydın Asiye" demen yeterli (uyandırma sözün "Merhaba Asiye" olsa da olur).
+- Yapay zekâ kullanılmaz: anında gelir ve bir şey uydurmaz. Misafir modunda yalnızca selam ve tarih söylenir.
 
 ## 🕐 Saat ve tarih
 
@@ -314,4 +326,3 @@ Herkesin hafızası ayrıdır.
 ## 🔜 Planlananlar
 
 - 🖼️ Fotoğraf anlama ("Bu fişte ne yazıyor?")
-- ☀️ Sabah özeti ("Günaydın" deyince günün hatırlatmaları)

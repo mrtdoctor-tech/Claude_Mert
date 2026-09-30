@@ -16,7 +16,7 @@ from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import analysis, config, db, documents, identity, llm, memory, notes, online, outlook, pc, presence, quick, reminders, stt, tts, vocab, voiceid, wake
+from . import analysis, config, db, documents, identity, llm, memory, morning, notes, online, outlook, pc, presence, quick, reminders, stt, tts, vocab, voiceid, wake
 from . import history as past  # chat() has its own `history` (the conversation's messages)
 
 logging.basicConfig(level=logging.INFO)
@@ -335,6 +335,8 @@ async def chat(body: ChatIn):
                 instant = (f"{when + ' ' if when else ''}önceki sohbetlerimizde bununla ilgili bir şey bulamadım. "
                            "Sol üstteki 🔎 arama kutusuna bir kelime yazarak da arayabilirsin.")
                 instant = instant[0].upper() + instant[1:]
+    if not instant and not job and not sources and morning.is_command(text):  # "Günaydın Asiye" (3.31)
+        instant = await run_in_threadpool(morning.build, who)
     if not instant and not job and not sources and pc.is_command(text):  # Excel, music, Spotify on this computer
         instant = await run_in_threadpool(pc.handle, text, who)
     if not instant and not job and not sources and online.is_command(text):  # weather and news from the internet (never for guests)

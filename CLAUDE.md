@@ -270,6 +270,13 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   adı), `_stems` (5 harf kök, `_STOP`), `context` 9000 karaktere kadar mesaj (tarih · başlık · kim) son kullanıcı
   mesajına eklenir; önceki "ne konuşmuştuk" soruları ve "🔎 Kaynak sohbetler"li cevaplar dışarıda. Hiç bulunmazsa hazır
   cevap. Cevabın sonuna "🔎 Kaynak sohbetler: …" eklenir. Misafire kapalı.
+- **Sabah özeti (3.31):** `app/morning.py`, chat'te `past`'tan sonra, pc'den önce `run_in_threadpool(morning.build)`.
+  `is_command`: tek başına "günaydın (+≤2 kelime)", "sabah/günün özeti", "bugün neler var / programım", "bugünkü plan".
+  Kurallarla: selam (12'den önce "Günaydın") + tarih/saat, `online.weather_summary` (≥%50 yağışta şemsiye), bugünkü
+  hatırlatmalar (sayaç hariç) + `outlook.events` (yönetici/kimlik kapalı + `can_read`), 12'den sonra yalnızca kalanlar,
+  alışveriş/yapılacaklar (işaretlenmemiş, en çok 6), `online.headlines("gündem")[:3]` (başlıktaki [] → ()). Misafir:
+  selam + tarih. `wake.match`: `_HELLO` (merhaba/selam/günaydın) sözde birbirinin yerine geçer ("hey" değil: şarkılar);
+  yalnızca "Günaydın Asiye" denirse kalan metin "Günaydın" olur → özet. Sahte veriyle test edildi.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -493,6 +500,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   3.29 gerçekte doğrulandı: sesle "HourGlow yayın takip dosyasını Excel'de aç" dosyayı açtı (Excel açma ilk kez gerçekte çalıştı).
 - **2026-09-30 (3.30):** Kullanıcı sıradaki olarak eski sohbetlerde aramayı seçti → arama kutusu + sohbetten sorma.
   Kalan fikirler: sabah özeti, fotoğraf anlama.
+- **2026-09-30 (3.31):** Kullanıcı "Günaydın Asiye ile devam" dedi → sabah özeti. Kalan: fotoğraf anlama.
 
 ## Sıradaki fikirler
 
@@ -502,7 +510,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   "aile" yok; tarayıcı kapalıyken Windows bildirimi, asistan kapalıyken sonraki açılışta "kaçırılanlar"; yalnızca ev
   bilgisayarı) + **takvim kaydı oluşturma** (telefona bildirim gelsin diye; hangi takvim olduğu sorulacak — bulut servisi,
   kullanıcı onayı gerekir). 2) Yapabildiklerini komut örnekleriyle anlatan belge. Sonra listeden: notlar/alışveriş
-  listesi (✅ 3.16), fotoğraf anlama (gemma3:4b görebilir), ✅ belge yükleme (3.23), sabah özeti, ✅ uyandırma sözcüğü (3.19), ✅ eski
+  listesi (✅ 3.16), fotoğraf anlama (gemma3:4b görebilir), ✅ belge yükleme (3.23), ✅ sabah özeti (3.31), ✅ uyandırma sözcüğü (3.19), ✅ eski
   sohbetlerde arama (3.30), ✅ hava durumu/haber (3.11). Kullanıcı "hepsi çok güzel" dedi.
 
 - Spotify: kullanıcı ücretsiz hesapta → otomatik çalma yok. Premium'a geçerse Spotify Web API (PKCE) ile "X çal".

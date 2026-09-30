@@ -12,7 +12,9 @@ only mentions the name in the middle ("dün Asiye'yle konuştum") does not wake 
 import re
 from difflib import SequenceMatcher
 
-GREETINGS = {"hey", "hei", "ey", "merhaba", "selam", "hop", "alo", "bak", "sevgili", "canım"}
+GREETINGS = {"hey", "hei", "ey", "merhaba", "selam", "hop", "alo", "bak", "sevgili", "canım", "günaydın", "gunaydin",
+             "tünaydın"}
+_HELLO = {"merhaba", "selam", "günaydın", "gunaydin", "tünaydın"}  # interchangeable in a phrase; not "hey" (songs!)
 # How alike a heard word must be to the wake word (0..1). A one-word phrase must be close ("Aziye" 0.8 passes, "Ayşe"
 # and "Asya" 0.67 do not: both are real names); with two words ("Merhaba Asiye") the pair is rare enough to be looser.
 SIMILAR_ONE = 0.75
@@ -88,8 +90,13 @@ def match(text: str, phrase: str) -> tuple[bool, str]:
         if skip and len(wanted) == 1 and heard[0] not in GREETINGS:
             continue
         part = heard[skip:skip + len(wanted)]
-        if len(part) == len(wanted) and all(_alike(h, w, similar) for h, w in zip(part, wanted)):
-            return True, _rest(text, skip + len(wanted))
+        # 3.31: "Günaydın Asiye" wakes a "Merhaba Asiye" phrase too (any greeting for a greeting)
+        if len(part) == len(wanted) and all(_alike(h, w, similar) or (w in _HELLO and h in _HELLO)
+                                            for h, w in zip(part, wanted)):
+            rest = _rest(text, skip + len(wanted))
+            if not rest and (part[0] if len(wanted) > 1 else heard[0]).startswith(("günaydın", "gunaydin")):
+                rest = "Günaydın"  # the greeting itself asks for the morning summary
+            return True, rest
     return False, ""
 
 
