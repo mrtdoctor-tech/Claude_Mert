@@ -41,6 +41,26 @@ def phrase_for(settings: dict) -> str:
     return (settings.get("wake_phrase") or "").strip() or settings.get("assistant_name") or "Asistan"
 
 
+_ENGLISH = {"the", "and", "you", "i", "i'm", "im", "me", "my", "is", "are", "was", "to", "of", "it", "in", "on", "for",
+            "with", "that", "this", "what", "here", "there", "since", "let", "out", "your", "we", "be", "so", "love",
+            "baby", "just", "don't", "can't", "all", "no", "oh", "yeah", "when", "like", "know", "got", "get", "go"}
+
+
+def sounds_foreign(text: str, language: str | None) -> bool:
+    """Heard speech in another language while the assistant speaks Turkish: song lyrics from music (3.21).
+
+    Used only where nobody pressed the button (wake word, reopened microphone), so a deliberate English question
+    typed or spoken with the button still works.
+    """
+    if (language or "") != "tr":
+        return False
+    words = re.findall(r"[a-zçğıöşü']+", text.replace("I", "ı").replace("İ", "i").lower().replace("ı'm", "i'm"))
+    if len(words) < 3 or re.search(r"[çğıöşü]", " ".join(w for w in words if w not in ("ı", "ı'm"))):
+        return False
+    english = sum(w.replace("ı", "i") in _ENGLISH for w in words)
+    return english / len(words) >= 0.25
+
+
 def hotwords(settings: dict) -> str:
     """Words Whisper is told to expect: the assistant's name and the wake phrase (3.20).
 

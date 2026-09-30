@@ -211,6 +211,12 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   test edildi; **gerçek Whisper/gerçek mikrofonla denenmedi** (TV/müzik açıkken GPU'ya sürekli iş düşebilir).
   3.20: tüm yazıya çevirmelerde faster-whisper `hotwords` = asistan adı + uyandırma sözü (`wake.hotwords`; eski sürümde
   TypeError → hotwords'süz tekrar). Neden: kullanıcının hızlı "Merhaba Asiye"si "Merhaba size" yazıldı.
+  3.21: müzikte uyandı ve şarkı sözü + "İzlediğiniz için teşekkür ederim" mesaj olarak gitti, kullanıcı misafire düştü
+  (büyük olasılıkla hotwords istemi Whisper'a müzikte sözü uydurttu). → `wake_check`'te hotwords YOK; `stt.clean`
+  (`HALLUCINATIONS`: altyazı/izlediğiniz için/abone olmayı unutma/thanks for watching…) tüm çevirilerde;
+  `wake.sounds_foreign` (dil tr iken İngilizce sözcük oranı ≥%25, Türkçe harf yok) `wake_check` ve `hands_free`
+  (otomatik yeniden açılan mikrofon + uyandırma sonrası dinleme; `startListening(auto, handsFree)`) isteklerinde metni
+  atar, kimlik kontrolüne gitmeden `music: true` döner. Misafir modunda uyandırma açık kalır (kullanıcı kararı).
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -404,7 +410,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-30 (3.20):** İlk deneme: 👂 görünmüyordu → Ayarlar'daki kutu açılmamıştı (varsayılan kapalı). Mikrofonla
   "Merhaba Asiye" → Whisper "Merhaba size" yazdı → hotwords. Kullanıcıya kutuyu açması ve "Merhaba Asiye" sözü önerildi.
   3.20 gerçekte **çalıştı** (👂 görünüyor, seslenince cevap verdi). Kullanıcı misafir modunu sordu: uyandırma misafirde de
-  açık (kodda misafir kısıtı yok); ses kimliği her seslenmede çalışır, tanınan ses profiline geçer.
+  açık (kodda misafir kısıtı yok); ses kimliği her seslenmede çalışır, tanınan ses profiline geçer. Kullanıcı: "misafir
+  modunda çalışsın". Konuşurken kendiliğinden uyanmadı; müzik açınca uyandı → 3.21.
 
 ## Sıradaki fikirler
 

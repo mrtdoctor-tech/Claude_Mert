@@ -328,7 +328,9 @@ async function openMic({ gainDb = Number(state.settings.mic_gain) || 0, agc = !s
   };
 }
 
-async function startListening(auto) {
+// auto: reopened after a spoken reply; handsFree: nobody pressed the button (auto or after the wake word), so song
+// lyrics heard from music are dropped by the server.
+async function startListening(auto, handsFree = auto) {
   if (state.busy || (recorder && recorder.state === "recording")) return;
   fetch("/api/transcribe/warmup", { method: "POST" }).catch(() => {}); // load the speech model while the user talks
   let mic;
@@ -359,14 +361,16 @@ async function startListening(auto) {
     try {
       const form = new FormData();
       form.append("audio", blob, "kayit.webm");
+      if (handsFree) form.append("hands_free", "true");
       const sttStart = performance.now();
-      const { text, device, identity, voice_too_short: tooShort, echo } = await api("/api/transcribe", { method: "POST", body: form });
+      const { text, device, identity, voice_too_short: tooShort, echo, music } = await api("/api/transcribe", { method: "POST", body: form });
       state.voiceTooShort = !!tooShort; // guest bar asks for a longer sentence
       const sttMs = performance.now() - sttStart;
       showSttDevice(device);
       applyIdentity(identity); // a different voice starts its own conversation
       setBusy(false);
       if (echo) return setStatus("🔇 Hoparlörden kendi okuduğum cevabı duydum; mesaj olarak almadım.");
+      if (music) return setStatus("🎵 Müzik ya da yabancı dilde şarkı sözü duydum; mesaj olarak almadım. Sesli sohbet bitti.");
       if (!text) return setStatus("Bir şey duyamadım, tekrar dener misin?", true);
       send(text, true, sttMs, device);
     } catch (err) {
@@ -1673,7 +1677,7 @@ const wakeListener = (() => {
       else {
         chime();
         await sleep(600); // the chime is not recorded as speech
-        startListening(false);
+        startListening(false, true);
       }
     } catch {
       // a failed check is not worth a message; the next burst is checked again

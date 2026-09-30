@@ -6,6 +6,7 @@ Otherwise, or if the GPU fails at any point, it quietly uses the CPU.
 """
 
 import logging
+import re
 import os
 import threading
 
@@ -101,7 +102,19 @@ def _run(model, path: str, language: str | None, hotwords: str | None = None) ->
     except TypeError:  # faster-whisper older than 1.1 has no hotwords
         options.pop("hotwords", None)
         segments, _ = model.transcribe(path, **options)
-    return " ".join(s.text.strip() for s in segments).strip()
+    return clean(" ".join(s.text.strip() for s in segments))
+
+
+# Sentences Whisper makes up from music or noise (learned from video subtitles). 3.21: music woke the assistant and
+# "İzlediğiniz için teşekkür ederim" arrived as a message.
+HALLUCINATIONS = re.compile(
+    r"[^.!?]*(izlediğiniz için teşekkür|altyazı\s*m\.?\s*k\b\.?|abone olmayı unutma|beğenmeyi unutma|kanalıma abone|"
+    r"thanks? (you )?for watching|"
+    r"subtitles? by|amara\.org|müzik\s*\]|\[\s*müzik)[^.!?]*[.!?]*", re.IGNORECASE)
+
+
+def clean(text: str) -> str:
+    return re.sub(r"\s+", " ", HALLUCINATIONS.sub(" ", text)).strip(" ,")
 
 
 def transcribe(path: str, model_name: str, language: str | None, device: str = "auto",

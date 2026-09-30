@@ -489,7 +489,7 @@ async def transcribe_warmup():
 
 
 @app.post("/api/transcribe")
-async def transcribe(audio: UploadFile = File(...), wake_check: bool = Form(False)):
+async def transcribe(audio: UploadFile = File(...), wake_check: bool = Form(False), hands_free: bool = Form(False)):
     """Speech → text (+ who is speaking). With wake_check (3.19) the audio is a burst of room sound heard while waiting
     for the wake phrase: unless it starts with the phrase it is dropped quietly (not logged, identity unchanged)."""
     settings = config.load()
@@ -503,11 +503,17 @@ async def transcribe(audio: UploadFile = File(...), wake_check: bool = Form(Fals
     try:
         text, device = await run_in_threadpool(
             stt.transcribe, path, settings["whisper_model"], settings["language"], settings["whisper_device"],
-            wake.hotwords(settings),
+            None if wake_check else wake.hotwords(settings),  # a hint to hear the name makes Whisper "hear" it in music
         )
         score = None
         too_short = False
         woken = None
+        if (wake_check or hands_free) and wake.sounds_foreign(text, settings["language"]):
+            # song lyrics while nobody pressed the button: not a message, and not a reason to switch to guest
+            if wake_check:
+                return {"text": "", "device": device, "wake": False}
+            return {"text": "", "device": device, "identity": identity.state(), "voice_score": None,
+                    "voice_too_short": False, "music": True}
         if wake_check:
             woken, text = wake.match(text, wake.phrase_for(settings))
             if not woken:
