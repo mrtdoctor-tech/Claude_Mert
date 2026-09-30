@@ -587,6 +587,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   typing-inspection); gerisi yeni paket (tokenizers, protobuf, onnxruntime, av, nvidia-cublas/cudnn/nvrtc cu12…).
   `import whisper, torch` çalıştı. Bekleyen: baslat.bat'ta sol altta GPU/sürüm kontrolü, HourGlow betiği ilk çalışınca
   sorun var mı; birkaç gün sonra `conda env remove -n asistan`. Artık requirements'e paket eklerken ai_assistant'ı düşün.
+  Taşıma sonrası kullanıcı: "analiz düzgün çalışıyor" (ai_assistant ortamında analiz sorunsuz).
 
 ## Sıradaki fikirler
 
