@@ -638,6 +638,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   ile indirdi: **11,6 MB/s (~93 Mbps)**, 9,3 GB ~15 dk → sorun tek bağlantılı indirme. Büyük modeller için FDM kullanılsın.
   Üç Wan dosyası models\diffusion_models / text_encoders / vae'ye taşındı → Wan 2.2 5B şablonunda **hata yok**. Sırada ilk video.
   Video öncesi VRAM boşaltmak için asistan + Ollama kapatıldı (tepsi → Quit Ollama; gemma3:4b ~3 GB VRAM tutuyordu).
+  **İlk video (Wan 2.2 5B i2v, 1280×704, 49 kare, 20 adım): toplam 12:06.** Örnekleme 5:02 (15,1 sn/adım; WAN22 9535 MB
+  dinamik VRAM), gerisi yükleme + VAE decode (VRAM 7,7/8 GB, paylaşılan 15,5/15,9 GB, cudaMallocAsync "recovered from an
+  allocation failure"). İyileştirme adayları: VAE Decode (Tiled), modeller C:'ye (NVMe), daha küçük çözünürlük / fp8-GGUF model.
 - **2026-09-30 (3.42):** `baslat.bat` `:run`'da `tasklist | findstr ollama.exe` (find değil: conda PATH'inde GNU find.exe var);
   yoksa `%LOCALAPPDATA%\Programs\Ollama\ollama app.exe` (yoksa `start /min ollama serve`). Ollama yolu gerçekte doğrulanmadı.
 
