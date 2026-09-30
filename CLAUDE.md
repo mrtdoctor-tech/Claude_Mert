@@ -588,6 +588,13 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `import whisper, torch` çalıştı. Bekleyen: baslat.bat'ta sol altta GPU/sürüm kontrolü, HourGlow betiği ilk çalışınca
   sorun var mı; birkaç gün sonra `conda env remove -n asistan`. Artık requirements'e paket eklerken ai_assistant'ı düşün.
   Taşıma sonrası kullanıcı: "analiz düzgün çalışıyor" (ai_assistant ortamında analiz sorunsuz).
+  Ekran görüntüsü: ai_assistant'ta ses→yazı 0,6 sn (GPU), "Müziği durdur" hazır cevap, Mert · yönetici → asistan tamam.
+- **2026-09-30 (3.40):** Kullanıcı "ComfyUI'ye bakalım" dedi. Önce durum: `araclar/comfyui_durum.bat` + `comfyui_durum.py`
+  (ComfyUI ortamının python'uyla; salt okunur): ComfyUI.bat içeriği, python/torch/CUDA/GPU, numpy/cv2 (hg_olcum ComfyUI
+  ortamındaki cv2 4.11'e bağlı → güncellemede OpenCV değişmemeli), `comfyui_version.py`/git, custom_nodes,
+  extra_model_paths.yaml, models (≥50 MB), `P:\pinokio\api` altındaki ≥500 MB modeller (Fooocus: extra_model_paths ile
+  paylaşılabilir), boş disk. Çıktı `Documents\comfyui_durum.txt`. Rapor bekleniyor; sonra güncelleme yolu seçilecek
+  (mevcut kurulumu güvenli güncelleme vs. ayrı yeni kurulum; 8 GB VRAM'e uygun resim/video modelleri).
 
 ## Sıradaki fikirler
 
