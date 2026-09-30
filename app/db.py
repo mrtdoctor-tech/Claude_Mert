@@ -80,6 +80,15 @@ CREATE TABLE IF NOT EXISTS documents (
     summary TEXT,                     -- section summaries of a long document, made once (JSON list)
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
+CREATE TABLE IF NOT EXISTS pictures (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    data BLOB NOT NULL,               -- JPEG, at most 1600 px on the long side
+    width INTEGER,
+    height INTEGER,
+    created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
 CREATE TABLE IF NOT EXISTS security_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
@@ -98,6 +107,7 @@ _NEW_COLUMNS = [
     ("speakers", "passcode", "TEXT"),  # "salt$hash" (PBKDF2), never the code itself
     ("reminders", "calendar_id", "TEXT"),  # Outlook appointment EntryID (3.6)
     ("reminders", "calendar_note", "TEXT"),  # why it could not be added to Outlook
+    ("messages", "image_id", "INTEGER"),  # a picture sent in the chat (3.32)
 ]
 
 
@@ -159,11 +169,12 @@ def delete_conversation(conversation_id: int):
 
 # Messages
 
-def add_message(conversation_id: int, role: str, content: str, speaker: str | None = None):
+def add_message(conversation_id: int, role: str, content: str, speaker: str | None = None,
+                image_id: int | None = None):
     with session() as conn:
         conn.execute(
-            "INSERT INTO messages (conversation_id, role, content, speaker) VALUES (?, ?, ?, ?)",
-            (conversation_id, role, content, speaker),
+            "INSERT INTO messages (conversation_id, role, content, speaker, image_id) VALUES (?, ?, ?, ?, ?)",
+            (conversation_id, role, content, speaker, image_id),
         )
         conn.execute(
             "UPDATE conversations SET updated_at = datetime('now', 'localtime') WHERE id = ?",
@@ -174,7 +185,7 @@ def add_message(conversation_id: int, role: str, content: str, speaker: str | No
 def list_messages(conversation_id: int) -> list[dict]:
     with session() as conn:
         rows = conn.execute(
-            "SELECT id, role, content, created_at FROM messages WHERE conversation_id = ? ORDER BY id",
+            "SELECT id, role, content, created_at, image_id FROM messages WHERE conversation_id = ? ORDER BY id",
             (conversation_id,),
         ).fetchall()
         return [dict(r) for r in rows]
@@ -473,3 +484,17 @@ def search_messages(owner: str = ALL, since: str | None = None, until: str | Non
             params,
         ).fetchall()
     return [dict(r) for r in rows]
+
+
+# Pictures (3.32)
+
+def add_picture(conversation_id: int, name: str, data: bytes, width: int, height: int) -> int:
+    with session() as conn:
+        return conn.execute("INSERT INTO pictures (conversation_id, name, data, width, height) VALUES (?, ?, ?, ?, ?)",
+                            (conversation_id, name, data, width, height)).lastrowid
+
+
+def get_picture(picture_id: int) -> dict | None:
+    with session() as conn:
+        row = conn.execute("SELECT * FROM pictures WHERE id = ?", (picture_id,)).fetchone()
+    return dict(row) if row else None

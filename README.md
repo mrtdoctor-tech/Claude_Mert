@@ -114,6 +114,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.32** — Fotoğraf anlama: sohbete resim ekle (📎, sürükle-bırak ya da ekran görüntüsünü Ctrl+V ile yapıştır) ve sor: "Bunda ne yazıyor?", "Bu fişin toplamı ne?", "Bu hata ne diyor?". Resim sohbette görünür ve bilgisayardan çıkmaz. Taranmış PDF'ler de artık okunuyor: sayfalar yapay zekâya tek tek gösterilip yazıya çevriliyor (en çok 20 sayfa). Güncellemeden sonra baslat.bat yeni paketi (pypdfium2) kendisi kurar.
 - **3.31** — Sabah özeti: "Günaydın Asiye" (ya da "Sabah özeti", "Bugün neler var?") deyince tarih-saat, hava durumu, bugünkü Outlook toplantıları ve hatırlatmalar, alışveriş ve yapılacaklar listesi, gündemden 3 haber. Uyandırma sözü "Merhaba Asiye" olsa da "Günaydın Asiye" / "Selam Asiye" ile uyanır. Misafire yalnızca selam ve tarih.
 - **3.30** — Eski sohbetlerde arama: sol üstteki 🔎 kutusuna kelime yaz (Türkçe harf/ek fark etmez), sonuca tıklayınca sohbet o mesajda açılır. Sohbette de sorulabilir: "Geçen hafta doktor hakkında ne konuşmuştuk?", "Dün ne konuşmuştuk?", "Eylül'de tatilden bahsetmiştik" — cevabın sonunda kaynak sohbetler yazar. Yalnızca kendi sohbetlerin; misafire kapalı.
 - **3.29** — Dosya araması Türkçe harfleri yok sayıyor: söylenen "yayın takip", dosya adındaki "Yayin_Takip" ile eşleşiyor (ı/i, ş/s, ç/c, ğ/g, ö/o, ü/u).

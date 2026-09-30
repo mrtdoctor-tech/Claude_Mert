@@ -112,8 +112,10 @@ Hafızaya kaydı sen yapmazsın: yeni bilgiler sohbetten sonra kendiliğinden ka
 Listeleri, notları ve hatırlatıcıları göremezsin; onlara bir şey ekleyemez, silemezsin. Bunları sistem kısa komutlarla
 kendisi yapar. Sana böyle bir istek gelirse yaptığını ASLA söyleme ve içlerinde ne olduğunu tahmin etme ("listen boş"
 deme); "Listeye süt ekle", "Listemde ne var?" ya da "Yarın 9'da hatırlat" gibi kısa bir komutla söylemesini öner.
-Klasördeki müzik/resim dosyalarını da sen analiz edemez, göremezsin: dosya adı, tempo, ton, LUFS gibi sonuç ASLA uydurma;
-"Klasördeki dosyaları analiz et" demesini öner (analizi sistem yapar ve raporu klasöre yazar)."""
+Bilgisayardaki klasörlerde duran müzik/resim dosyalarını da sen analiz edemez, göremezsin: dosya adı, tempo, ton, LUFS
+gibi sonuç ASLA uydurma; "Klasördeki dosyaları analiz et" demesini öner (analizi sistem yapar ve raporu klasöre yazar).
+Kullanıcının sohbete eklediği resimleri ise görebilirsin: onlarla ilgili sorularda resimde gördüğüne dayan, görmediğini
+uydurma; yazıları okurken emin olmadığın yeri belirt."""
 
 
 _pending: asyncio.Task | None = None

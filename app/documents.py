@@ -34,6 +34,10 @@ class DocumentError(Exception):
     pass
 
 
+class ScannedPDF(DocumentError):
+    """A PDF with pictures of pages only: read by the model page by page (pictures.read_scanned_pdf, 3.32)."""
+
+
 # Reading the file
 
 def extract(path: str, name: str) -> tuple[str, int | None]:
@@ -52,8 +56,7 @@ def extract(path: str, name: str) -> tuple[str, int | None]:
     text = _tidy(text)
     if not text.strip():
         if kind == ".pdf":
-            raise DocumentError("Bu PDF'te okunabilir yazı yok: büyük olasılıkla taranmış bir görüntü (fotoğraf gibi). "
-                                "Şimdilik yalnızca yazısı seçilebilen PDF'leri okuyabiliyorum.")
+            raise ScannedPDF("Bu PDF'te seçilebilir yazı yok: taranmış bir belge.")
         raise DocumentError("Dosyada okunacak yazı bulamadım.")
     return text[:MAX_TEXT], pages
 

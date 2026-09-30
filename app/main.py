@@ -16,7 +16,7 @@ from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import analysis, config, db, documents, identity, llm, memory, morning, notes, online, outlook, pc, presence, quick, reminders, stt, tts, vocab, voiceid, wake
+from . import analysis, config, db, documents, identity, llm, memory, morning, pictures, notes, online, outlook, pc, presence, quick, reminders, stt, tts, vocab, voiceid, wake
 from . import history as past  # chat() has its own `history` (the conversation's messages)
 
 logging.basicConfig(level=logging.INFO)
@@ -227,21 +227,43 @@ async def add_document(file: UploadFile = File(...), conversation_id: int | None
     if len(data) > documents.MAX_BYTES:
         raise HTTPException(400, "Dosya çok büyük (en çok 30 MB).")
     suffix = Path(name).suffix.lower()
+    if conversation_id:
+        _own_conversation(conversation_id)
+    who = identity.owner()
+    if suffix in pictures.KINDS:  # a photo or screenshot (3.32)
+        try:
+            jpeg, width, height = await run_in_threadpool(pictures.prepare, data)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+        if not conversation_id:
+            conversation_id = db.create_conversation(f"{_new_title('')} 🖼️ {name}"[:80], None if who == db.ALL else who)
+        picture_id = db.add_picture(conversation_id, name, jpeg, width, height)
+        db.add_message(conversation_id, "user", f"🖼️ {name}", None if who == db.ALL else who, image_id=picture_id)
+        log.info("Resim eklendi: %s (%d×%d)", name, width, height)
+        return {"conversation_id": conversation_id, "picture": {"id": picture_id, "name": name}}
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
         tmp.write(data)
         path = tmp.name
+    scanned = False
     try:
-        text, pages = await run_in_threadpool(documents.extract, path, name)
+        try:
+            text, pages = await run_in_threadpool(documents.extract, path, name)
+        except documents.ScannedPDF:  # pictures of pages: the model reads them (3.32)
+            try:
+                text, pages = await pictures.read_scanned_pdf(path, config.load()["model"])
+            except ImportError:
+                raise HTTPException(500, "PDF görüntüleme paketi kurulu değil. baslat.bat'ı kapatıp yeniden aç.")
+            except ValueError as e:
+                raise HTTPException(400, f"Taranmış PDF okunamadı: {e}. Seçili yapay zekâ modeli resim görebiliyor mu "
+                                         "(ör. gemma3:4b)?")
+            scanned = True
     except documents.DocumentError as e:
         raise HTTPException(400, str(e))
     except ImportError:
         raise HTTPException(500, "Belge okuma paketi kurulu değil. baslat.bat'ı kapatıp yeniden aç (kendiliğinden kurar).")
     finally:
         os.remove(path)
-    who = identity.owner()
-    if conversation_id:
-        _own_conversation(conversation_id)
-    else:
+    if not conversation_id:
         conversation_id = db.create_conversation(f"{_new_title('')} 📄 {name}"[:80], None if who == db.ALL else who)
     lang = documents.language(text)
     doc_id = db.add_document(conversation_id, name, text, pages, lang)
@@ -249,11 +271,23 @@ async def add_document(file: UploadFile = File(...), conversation_id: int | None
     long = len(text) > documents.FULL_CHARS or not documents.fits_whole(db.list_documents(conversation_id))
     note = (" Belge uzun olduğu için her soruda ilgili bölümlerine bakacağım; \"özetle\" dersen bölüm bölüm okuyup "
             "özetlerim (ilk seferde biraz sürer)." if long else "")
+    if scanned:
+        note = (" Taranmış bir belge olduğu için sayfaları yapay zekâ gözüyle okudum; birkaç kelime yanlış okunmuş "
+                "olabilir." + note)
     db.add_message(conversation_id, "assistant",
                    f"📄 **{name}** belgesini okudum ({documents.describe(doc)}).{note} Şimdi soru sorabilirsin, örneğin: "
                    "\"Bu belgeyi özetle\", \"Önemli tarihler neler?\", \"Bana ne gibi yükümlülükler getiriyor?\"")
     log.info("Belge eklendi: %s (%s)", name, documents.describe(doc))
     return {"conversation_id": conversation_id, "document": _document_view(doc)}
+
+
+@app.get("/api/pictures/{picture_id}")
+def picture(picture_id: int):
+    found = db.get_picture(picture_id)
+    if not found:
+        raise HTTPException(404, "Resim bulunamadı")
+    _own_conversation(found["conversation_id"])
+    return Response(found["data"], media_type="image/jpeg", headers={"Cache-Control": "private, max-age=86400"})
 
 
 @app.delete("/api/documents/{document_id}")
@@ -313,7 +347,14 @@ async def chat(body: ChatIn):
     docs = db.list_documents(conversation_id) if conv is not None else []
     system = memory.system_prompt_for(conversation_id, settings, who) + documents.prompt_block(docs)
     messages = [{"role": "system", "content": system}]
-    messages += [{"role": m["role"], "content": m["content"]} for m in history]
+    for m in history:
+        message = {"role": m["role"], "content": m["content"]}
+        if m.get("image_id"):  # a picture sent earlier in this conversation: the model sees it (3.32)
+            found = db.get_picture(m["image_id"])
+            if found:
+                message["images"] = [pictures.b64(found["data"])]
+                message["content"] = f"[Kullanıcı bir resim gönderdi: {found['name']}]"
+        messages.append(message)
     messages.append({"role": "user", "content": text + memory.clock_note()})  # the note is not saved
     num_ctx = documents.DOC_CTX if docs else llm.NUM_CTX
     # "saat kaç?" comes from the clock, "20 dakikalık sayaç kur" is set by rules: not by the model

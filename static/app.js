@@ -79,13 +79,22 @@ function scrollToBottom() {
   els.messages.scrollTop = els.messages.scrollHeight;
 }
 
-function addMessage(role, text) {
+function addMessage(role, text, imageId = null) {
   els.empty.hidden = true;
   const wrap = document.createElement("div");
   wrap.className = `msg ${role}`;
   const bubble = document.createElement("div");
   bubble.className = "bubble";
   bubble.innerHTML = role === "user" ? escapeHtml(text).replace(/\n/g, "<br>") : renderMarkdown(text);
+  if (imageId) { // a picture sent in the chat (3.32)
+    const src = `/api/pictures/${imageId}`;
+    bubble.innerHTML = `<img class="chat-img" alt=""><span class="chat-img-name"></span>`;
+    const img = bubble.querySelector("img");
+    img.src = src;
+    img.onclick = () => window.open(src, "_blank");
+    img.onload = scrollToBottom;
+    bubble.querySelector(".chat-img-name").textContent = text.replace(/^🖼️\s*/, "");
+  }
   wrap.appendChild(bubble);
   els.messages.appendChild(wrap);
   scrollToBottom();
@@ -217,7 +226,7 @@ async function openConversation(id, title) {
   clearMessages();
   setStatus("");
   for (const m of await api(`/api/conversations/${id}/messages`)) {
-    addMessage(m.role, m.content).parentElement.dataset.id = m.id;
+    addMessage(m.role, m.content, m.image_id).parentElement.dataset.id = m.id;
   }
   loadDocs();
   loadConversations();
@@ -258,6 +267,7 @@ async function send(text, fromVoice = false, sttMs = null, sttDevice = null) {
   text = text.trim();
   if (!text || state.busy) return;
   els.input.value = "";
+  els.input.placeholder = "Mesajını yaz...";
   autoGrow();
   setStatus("");
   setBusy(true);
@@ -1880,7 +1890,9 @@ async function uploadDocs(files) {
   setBusy(true);
   let added = null;
   for (const file of files) {
-    setStatus(`📄 "${file.name}" okunuyor…`);
+    const isPicture = /^image\//.test(file.type) || /\.(jpe?g|png|webp|gif|bmp|tiff?)$/i.test(file.name);
+    setStatus(isPicture ? `🖼️ "${file.name}" ekleniyor…`
+      : `📄 "${file.name}" okunuyor… (taranmış bir PDF ise sayfalar tek tek okunur, biraz sürebilir)`);
     try {
       const form = new FormData();
       form.append("file", file, file.name);
@@ -1896,7 +1908,8 @@ async function uploadDocs(files) {
   setBusy(false);
   if (added) {
     const conv = (await api("/api/conversations").catch(() => [])).find((c) => c.id === state.conversationId);
-    await openConversation(state.conversationId, conv ? conv.title : added.document.name);
+    await openConversation(state.conversationId, conv ? conv.title : (added.document || added.picture).name);
+    if (added.picture) els.input.placeholder = "Resim hakkında sor: \"Bunda ne yazıyor?\", \"Bu nedir?\"";
     els.input.focus();
   }
 }
@@ -1919,4 +1932,14 @@ document.addEventListener("drop", (e) => {
   dragDepth = 0;
   document.body.classList.remove("dropping");
   uploadDocs([...e.dataTransfer.files]);
+});
+
+// Ctrl+V with a screenshot or copied picture: added to the conversation like a file (3.32).
+document.addEventListener("paste", (e) => {
+  const files = [...(e.clipboardData?.files || [])].filter((f) => f.type.startsWith("image/"));
+  if (!files.length) return;
+  e.preventDefault();
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "");
+  uploadDocs(files.map((f, i) => new File([f], `ekran-goruntusu-${stamp}${i ? "-" + i : ""}.${(f.type.split("/")[1] || "png")}`,
+    { type: f.type })));
 });

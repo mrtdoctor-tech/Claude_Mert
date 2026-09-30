@@ -277,6 +277,15 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   alışveriş/yapılacaklar (işaretlenmemiş, en çok 6), `online.headlines("gündem")[:3]` (başlıktaki [] → ()). Misafir:
   selam + tarih. `wake.match`: `_HELLO` (merhaba/selam/günaydın) sözde birbirinin yerine geçer ("hey" değil: şarkılar);
   yalnızca "Günaydın Asiye" denirse kalan metin "Günaydın" olur → özet. Sahte veriyle test edildi.
+- **Fotoğraf anlama (3.32):** `app/pictures.py` + `db.pictures` (conversation_id CASCADE, JPEG ≤1600 px, EXIF'e göre
+  döndürülmüş, saydamlık beyaza) + `messages.image_id`. `POST /api/documents` resim uzantısında: resim kaydedilir, "🖼️ ad"
+  kullanıcı mesajı (image_id'li) eklenir. `GET /api/pictures/{id}` (sahip kontrolü). Chat geçmişi kurulurken image_id'li
+  mesaj modele `images: [b64]` + "[Kullanıcı bir resim gönderdi: ad]" olarak gider (pencere içinde kaldıkça). Arayüz:
+  `addMessage(role, text, imageId)` küçük resim, tıklayınca yeni sekmede; `paste` olayıyla Ctrl+V resmi "ekran-goruntusu-…"
+  adıyla yüklenir; 📎 `accept` resimleri de alır. Taranmış PDF: `documents.ScannedPDF` → `read_scanned_pdf` (pypdfium2 ile
+  en çok 20 sayfa, ~150-180 dpi JPEG, her sayfa `llm.chat_text` + `READ_PAGE`) → normal belge (not: "yapay zekâ gözüyle
+  okudum"). Sistem istemi: klasör dosyalarını göremez ama sohbete eklenen resimleri görebilir. Sahte Ollama + Chromium ile
+  test edildi (yükleme, yapıştırma, geçmişte images, taranmış PDF); **gerçek modelin okuma kalitesi denenmedi**.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -501,6 +510,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-30 (3.30):** Kullanıcı sıradaki olarak eski sohbetlerde aramayı seçti → arama kutusu + sohbetten sorma.
   Kalan fikirler: sabah özeti, fotoğraf anlama.
 - **2026-09-30 (3.31):** Kullanıcı "Günaydın Asiye ile devam" dedi → sabah özeti. Kalan: fotoğraf anlama.
+- **2026-09-30 (3.32):** Son fikir: fotoğraf anlama (+ Ctrl+V, taranmış PDF). Kullanıcının seçtiği listedeki tüm fikirler
+  tamamlandı; sıradaki iş kullanıcıdan gelecek (bkz. Sıradaki fikirler'deki diğer maddeler).
 
 ## Sıradaki fikirler
 
@@ -510,7 +521,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   "aile" yok; tarayıcı kapalıyken Windows bildirimi, asistan kapalıyken sonraki açılışta "kaçırılanlar"; yalnızca ev
   bilgisayarı) + **takvim kaydı oluşturma** (telefona bildirim gelsin diye; hangi takvim olduğu sorulacak — bulut servisi,
   kullanıcı onayı gerekir). 2) Yapabildiklerini komut örnekleriyle anlatan belge. Sonra listeden: notlar/alışveriş
-  listesi (✅ 3.16), fotoğraf anlama (gemma3:4b görebilir), ✅ belge yükleme (3.23), ✅ sabah özeti (3.31), ✅ uyandırma sözcüğü (3.19), ✅ eski
+  listesi (✅ 3.16), ✅ fotoğraf anlama (3.32), ✅ belge yükleme (3.23), ✅ sabah özeti (3.31), ✅ uyandırma sözcüğü (3.19), ✅ eski
   sohbetlerde arama (3.30), ✅ hava durumu/haber (3.11). Kullanıcı "hepsi çok güzel" dedi.
 
 - Spotify: kullanıcı ücretsiz hesapta → otomatik çalma yok. Premium'a geçerse Spotify Web API (PKCE) ile "X çal".

@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.31
+Sürüm: 3.32
 
 ---
 
@@ -233,8 +233,8 @@ PDF, Word (.docx), .txt, .md ve .csv dosyalarını okuyup onlar hakkında konuş
   küçük model hata yapabilir.
 - Uzun belgelerde (yaklaşık 15 sayfadan uzun) her soruda belgenin ilgili bölümlerine bakar. "Özetle" dersen belgeyi bölüm
   bölüm okur (ilk seferde biraz sürer, ekranda "bölüm 3/8 okunuyor" yazar); ikinci seferde hızlıdır.
-- Taranmış (fotoğraf gibi) PDF'lerde seçilebilir yazı olmadığı için okuyamaz. Eski Word (.doc) dosyasını Word'de açıp
-  ".docx" olarak kaydet.
+- Taranmış (fotoğraf gibi) PDF'ler de okunur (3.32; aşağıdaki Fotoğraflar bölümüne bak). Eski Word (.doc) dosyasını
+  Word'de açıp ".docx" olarak kaydet.
 
 ## 💬 Sohbetler
 
@@ -281,6 +281,25 @@ dosyanın yanına aynı adla bir **"….analiz.txt"** raporu yazarım (ör. `sar
 - Her şey bilgisayarında yapılır. Yalnızca sesinden ya da şifresinden tanıdığım kişiler kullanabilir.
 - Başka bir klasör için: ⚙️ Ayarlar → 🌐 Bağlantılar → **Analiz klasörü**.
 
+## 🖼️ Fotoğraflar ve ekran görüntüleri (3.32)
+
+- Resim eklemek için: **📎** düğmesi, dosyayı sohbet ekranına **sürükle-bırak** ya da bir ekran görüntüsünü/kopyaladığın
+  resmi **Ctrl+V** ile yapıştır (Windows'ta ekran görüntüsü: **Windows + Shift + S**). Resim sohbette görünür.
+- Sonra sor:
+
+| Sor | Ne olur |
+|---|---|
+| "Bunda ne yazıyor?" | Resimdeki yazıları okur |
+| "Bu fişin toplamı ne kadar?" | Fişi okuyup söyler |
+| "Bu hata mesajı ne diyor, ne yapmalıyım?" | Ekran görüntüsünü açıklar |
+| "Bu resimde ne var?" / "Bu bitkinin adı ne?" | Anlatır |
+| "Bu yazıyı Türkçeye çevir" | Resimdeki yazıyı çevirir |
+
+- Taranmış PDF'ler (sayfası fotoğraf gibi olanlar) de artık okunuyor: 📎 ile eklediğinde sayfalar yapay zekâya tek tek
+  gösterilip yazıya çevrilir (en çok 20 sayfa; sayfa başına birkaç saniye). Sonra diğer belgeler gibi soru sorabilirsin.
+- Küçük yapay zekâ bazen bir harfi ya da rakamı yanlış okuyabilir: önemli sayılarda resme kendin de bak.
+- Resimler bilgisayarından çıkmaz. Resim görebilen bir model gerekir (gemma3:4b görebilir; gemma3:1b göremez).
+
 ## 🧠 Hafıza
 
 Asistan sohbetlerden senin hakkındaki önemli bilgileri kendiliğinden öğrenir ve yeni sohbetlerde de hatırlar.
@@ -325,4 +344,3 @@ Herkesin hafızası ayrıdır.
 
 ## 🔜 Planlananlar
 
-- 🖼️ Fotoğraf anlama ("Bu fişte ne yazıyor?")
