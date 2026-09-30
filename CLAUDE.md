@@ -636,6 +636,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   o da yavaşsa çok bağlantılı indirme aracı yazılacak (bulut proxy'si huggingface.co'yu engelliyor, adresler buradan doğrulanamadı).
   Sonuç: Chrome ile doğrudan HF de ~10 Mbps (tek bağlantı). Kullanıcı kendi bulduğu **Free Download Manager** (çok bağlantı)
   ile indirdi: **11,6 MB/s (~93 Mbps)**, 9,3 GB ~15 dk → sorun tek bağlantılı indirme. Büyük modeller için FDM kullanılsın.
+  Üç Wan dosyası models\diffusion_models / text_encoders / vae'ye taşındı → Wan 2.2 5B şablonunda **hata yok**. Sırada ilk video.
 
 ## Sıradaki fikirler
 
