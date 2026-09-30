@@ -564,6 +564,15 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   "asistan" ortamını bilmiyor: o **bu uygulamanın ortamı**, silinmez. Kullanıcı deneme yapmak istemiyor ve eski ayrıntıları
   hatırlamıyor → karar: **ai_assistant silinmiyor** (yalnızca disk tutuyor), muzik'e eklenen whisper zararsız kalıyor;
   geçiş ileride HourGlow çalışmasıyla birlikte (Rising testiyle) yapılabilir.
+- **2026-09-30 (3.37):** Kullanıcı: Suno anahtarı her seferinde yenileniyor (açık yok). Tersi yönde sadeleştirme istedi:
+  **asistan'ı ai_assistant'a taşı** (ai_assistant zamanında aynı amaçla açılmıştı). `araclar/asistani_ai_assistanta_tasi.bat`:
+  ai_assistant python ≥3.10 + ssl kontrolü → `pip install -r requirements.txt (+ -gpu) --dry-run`; "Would install"da
+  numpy/torch/torchaudio/torchvision/numba/llvmlite/scipy/librosa/soundfile/tiktoken/openai-whisper/transformers/
+  tokenizers/huggingface-hub varsa durur; yoksa kurar, `import` kontrolleri (asistan + `whisper, torch`), eski
+  `python-yolu.txt` → `python-yolu.eski.txt`, yenisine ai_assistant python.exe yazılır. Geri alma:
+  `araclar/asistan_ortamini_geri_al.bat`. Not: `kurulum.bat` yeniden çalıştırılırsa yine `asistan` ortamını kurar ve yolu
+  ona çevirir. Taşıma sonrası baslat.bat her açılışta ai_assistant'a `pip install -r requirements.txt` yapar → gelecekte
+  requirements'e eklenen paketler HourGlow ortamını etkileyebilir; yeni paket eklerken buna dikkat.
 
 ## Sıradaki fikirler
 
