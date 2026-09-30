@@ -646,6 +646,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Üçüncü video, **VAE Decode (Tiled)** ile: **256 sn (4:16)**, örnekleme 3:32 (10,6 sn/adım), "recovered" uyarısı yok →
   decode ~3,5 dk'dan ~40 sn'ye. Kalite "güzel"; kum akıyor, duman çıktı, ama orbit/yaklaşma gibi kamera hareketleri zayıf
   (49 kare ≈ 2 sn kısa; 5B kamera komutlarında zayıf). Öneri: kamera cümlesi başa, "dolly in/zoom in", length 81/121.
+  Dördüncü: length 81, "slow dolly in" başta → **482 sn (8:02)**, 20,1 sn/adım (49 karede 10,6; kare sayısıyla ~2 kat).
+  Kamera yine yaklaşmadı; fizik bozuldu (kum hızlanıyor, camın dışından akıp içine doluyor, camda kum taneleri beliriyor).
+  Öneri: sakin/sabit akışı tarif eden prompt + İngilizce negatif ekleri; kamera hareketini video düzenleyicide (zoom/Ken
+  Burns) yapmak; daha iyisi için Wan 2.2 14B (GGUF, high+low noise) — çok daha yavaş.
 - **2026-09-30 (3.42):** `baslat.bat` `:run`'da `tasklist | findstr ollama.exe` (find değil: conda PATH'inde GNU find.exe var);
   yoksa `%LOCALAPPDATA%\Programs\Ollama\ollama app.exe` (yoksa `start /min ollama serve`). Ollama yolu gerçekte doğrulanmadı.
 
