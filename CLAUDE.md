@@ -627,6 +627,11 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Video: LTX-2.3 i2v şablonu 40 GB istedi (ltx-2.3-22b-dev-fp8 27 GB + gemma_3_12B fp4 8,8 GB + LoRA'lar) → 8 GB VRAM/32 GB RAM'e
   uygun değil, indirilmedi. **Wan 2.2 TI2V 5B** şablonu: wan2.2_ti2v_5B_fp16 9,31 GB + umt5_xxl_fp8_e4m3fn_scaled 6,27 GB +
   wan2.2_vae 1,31 GB = 16,9 GB → önerildi (ComfyUI_yeni\ComfyUI\models'e iner). İlk deneme kısa (length ~49 kare) önerildi.
+  İndirme ~1,2 MB/s (≈10 Mbps tavan, speedtest'te de indirme+yükleme ≈10). Chrome indiriyor (127.0.0.1:8188 üzerinden →
+  İndirilenler klasörüne; sonra models\diffusion_models / text_encoders / vae'ye taşınmalı). PC link 1000/1000. Ev ağı:
+  ZTE ZXHN H1601P (Vodafone, 100 Mbps) → kablo → Linksys Velop WHW01 (10.155.1.x) → TP-Link TL-SG1008D → PC. **PC doğrudan
+  ZTE'ye: 96,3/19,6 Mbps** → hat sağlam; darboğaz Velop, ZTE–Velop kablosu ya da switch–Velop bağlantısı (10 Mbps'e düşmüş
+  link belirtisi). Öneri: indirmeyi doğrudan modemdeyken bitir; sonra PC'yi Velop'un boş portuna takarak switch'i ayır.
 
 ## Sıradaki fikirler
 
