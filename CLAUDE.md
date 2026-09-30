@@ -595,6 +595,15 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   extra_model_paths.yaml, models (≥50 MB), `P:\pinokio\api` altındaki ≥500 MB modeller (Fooocus: extra_model_paths ile
   paylaşılabilir), boş disk. Çıktı `Documents\comfyui_durum.txt`. Rapor bekleniyor; sonra güncelleme yolu seçilecek
   (mevcut kurulumu güvenli güncelleme vs. ayrı yeni kurulum; 8 GB VRAM'e uygun resim/video modelleri).
+  Rapor: ComfyUI **0.3.12, git 2025-01-26** (çok eski), çekirdekte **37 elle değiştirilmiş dosya** (model_management.py,
+  model_patcher.py, nodes_*; models/ yer tutucuları silinmiş) → `git pull` çakışır. Ortam: Python 3.10.16, torch 2.5.1 **cu118**,
+  xformers 0.0.29, **numpy 1.22.0**, opencv-python + contrib + headless 4.11.0.86 (üçü birden), transformers 4.48.2, av 14.1.
+  13 eklenti (GGUF, Manager, cogvideoxwrapper, kjnodes, videohelpersuite, controlnet_aux, rgthree, crystools, IF_AI…).
+  ComfyUI\models'ta 50 MB üstü dosya YOK (alt klasörler sembolik bağ olabilir; os.walk izlemez). Fooocus
+  `P:\pinokio\api\fooocus\app\modelsM` 102 dosya **475 GB** (SDXL checkpoint'ler, Pony, Juggernaut, RealVis, refiner'lar).
+  Disk: P: 1204 GB boş, C: 222 GB boş. Öneri: yerinde güncelleme yok (numpy/torch değişir → hg_olcum riski + çakışma);
+  **ayrı yeni ComfyUI Windows portable** (gömülü python, conda yok) + `extra_model_paths.yaml` ile Fooocus modelleri; eski
+  kurulum/ortam dokunulmadan kalır. Kullanıcının onayı bekleniyor.
 
 ## Sıradaki fikirler
 
