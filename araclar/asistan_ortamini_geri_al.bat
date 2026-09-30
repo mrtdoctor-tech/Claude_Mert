@@ -4,6 +4,7 @@ rem Yerel Asistan araci: asistani tasimadan onceki ortamina (python-yolu.eski.tx
 set "DIR=%LOCALAPPDATA%\YerelAsistan"
 if not exist "%DIR%\python-yolu.eski.txt" goto none
 copy /y "%DIR%\python-yolu.eski.txt" "%DIR%\python-yolu.txt" >nul
+del "%DIR%\python-yolu.eski.txt"
 echo Asistan eski ortamina dondu:
 type "%DIR%\python-yolu.txt"
 echo baslat.bat penceresini kapatip yeniden ac.

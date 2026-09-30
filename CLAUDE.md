@@ -573,6 +573,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `araclar/asistan_ortamini_geri_al.bat`. Not: `kurulum.bat` yeniden çalıştırılırsa yine `asistan` ortamını kurar ve yolu
   ona çevirir. Taşıma sonrası baslat.bat her açılışta ai_assistant'a `pip install -r requirements.txt` yapar → gelecekte
   requirements'e eklenen paketler HourGlow ortamını etkileyebilir; yeni paket eklerken buna dikkat.
+- **2026-09-30 (3.38):** Kullanıcı taşıma aracını çalıştırıp ara verdi, döndüğünde pencere kapalıydı (ne olduğu belirsiz).
+  Araç artık `%LOCALAPPDATA%\YerelAsistan\tasima_kaydi.txt` günlüğü tutuyor (1/4…4/4, DURDURULDU, HATA), `python-yolu.eski.txt`
+  yalnızca ilk taşımada yazılıyor (tekrar çalıştırmak güvenli); geri alma yedeği siliyor. `araclar/durum_kontrol.bat`: geçerli
+  python yolu, yedek var mı, günlük özeti, asistan paketleri import testi. Kullanıcının çıktıyı göndermesi bekleniyor.
 
 ## Sıradaki fikirler
 
