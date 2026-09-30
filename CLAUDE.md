@@ -643,6 +643,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   allocation failure"). İyileştirme adayları: VAE Decode (Tiled), modeller C:'ye (NVMe), daha küçük çözünürlük / fp8-GGUF model.
   İkinci video (sıcak, yalnızca prompt değişti): **444,8 sn (7:25)**; örnekleme 3:34 (10,7 sn/adım), VAE decode ~3,5 dk ve 6×
   "recovered from an allocation failure" → darboğaz VAE decode; VAE Decode (Tiled) önerildi.
+  Üçüncü video, **VAE Decode (Tiled)** ile: **256 sn (4:16)**, örnekleme 3:32 (10,6 sn/adım), "recovered" uyarısı yok →
+  decode ~3,5 dk'dan ~40 sn'ye. Kalite "güzel"; kum akıyor, duman çıktı, ama orbit/yaklaşma gibi kamera hareketleri zayıf
+  (49 kare ≈ 2 sn kısa; 5B kamera komutlarında zayıf). Öneri: kamera cümlesi başa, "dolly in/zoom in", length 81/121.
 - **2026-09-30 (3.42):** `baslat.bat` `:run`'da `tasklist | findstr ollama.exe` (find değil: conda PATH'inde GNU find.exe var);
   yoksa `%LOCALAPPDATA%\Programs\Ollama\ollama app.exe` (yoksa `start /min ollama serve`). Ollama yolu gerçekte doğrulanmadı.
 
