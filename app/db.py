@@ -134,6 +134,11 @@ def create_conversation(title: str, owner: str | None = None) -> int:
         return conn.execute("INSERT INTO conversations (title, owner) VALUES (?, ?)", (title, owner)).lastrowid
 
 
+def rename_conversation(conversation_id: int, title: str):
+    with session() as conn:
+        conn.execute("UPDATE conversations SET title = ? WHERE id = ?", (title, conversation_id))
+
+
 def get_conversation(conversation_id: int):
     with session() as conn:
         row = conn.execute("SELECT * FROM conversations WHERE id = ?", (conversation_id,)).fetchone()
@@ -276,6 +281,11 @@ def assign_unowned(owner: str):
 def log_security(event: str, detail: str = "", score: float | None = None):
     with session() as conn:
         conn.execute("INSERT INTO security_log (event, detail, score) VALUES (?, ?, ?)", (event, detail, score))
+
+
+def clear_security_log() -> int:
+    with session() as conn:
+        return conn.execute("DELETE FROM security_log").rowcount
 
 
 def list_security_log(limit: int = 500) -> list[dict]:

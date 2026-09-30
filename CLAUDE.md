@@ -99,7 +99,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `app/identity.py`: süreç içi `_current`; 3.14'ten beri `_set` ile `SETTINGS_DIR/oturum.json`'a da yazılır (her bilgisayara
   özel, OneDrive'daki DB'ye değil), `touch()` her mesajda (dakikada en çok bir) tazeler, açılışta `restore()` son 15 dk
   (`RESTORE_SECONDS`) içindeki oturumu geri getirir ("Oturum geri yüklendi" loglanır). Neden: uvicorn reload (Pull, OneDrive'ın
-  dosyalara dokunması) kullanıcıyı sessizce misafire düşürüyordu. Yankı: `main._last_reply` (son cevap, 120 sn) ile duyulan
+  dosyalara dokunması) kullanıcıyı sessizce misafire düşürüyordu. 3.25: `run.py` (yalnızca elle başlatmada çalışan
+  `__main__` bloğu; reload işçisi çalıştırmaz) `oturum.json`'u siler → baslat.bat açılışında oturum yok (kullanıcı fark etti:
+  "başlat Mert profilini açarak getiriyor"). Yankı: `main._last_reply` (son cevap, 120 sn) ile duyulan
   metnin kelimelerinin ≥%60'ı örtüşürse `/api/transcribe` `echo: true` döner, kimlik değişmez, arayüz mesajı göndermez
   (sesli sohbette hoparlörden Emel'in sesi "Tanınmayan ses" sayılabiliyordu). Hiç profil yoksa özellik kapalı, owner `db.ALL`
   ("*"). İlk profil yönetici olur ve `assign_unowned` ile eski tüm veriler onun olur. `1234` → misafir; yönetici
@@ -238,6 +240,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   sürükle-bırak (`body.dropping`), `#doc-bar` çipleri (`loadDocs`), `progress` balonda gösterilir. Misafire açık (yerel).
   Sahte Ollama + Chromium'un yazdığı PDF, python-docx ile yapılan .docx ve uzun .txt ile test edildi; **gerçek modelle
   denenmedi** (cevap kalitesi, 16k bağlamın 8 GB VRAM'e sığması kullanıcıda görülecek).
+- **Sohbet adları + güvenlik kaydı temizleme (3.25):** yeni sohbet `main._new_title` = `%Y%m%d%H%M` + ilk kelime
+  (kullanıcı isteği, ör. "202609301324 Merhaba"; belge sohbeti "… 📄 ad"); `meta` olayı `title` taşır. `PUT
+  /api/conversations/{id}` (yeniden adlandırma; listede ✏️, başlığa tıklama, `prompt`). `DELETE /api/security-log`
+  (yönetici; ardından "Güvenlik kaydı temizlendi" satırı yazılır), güvenlik penceresinde 🧹.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -441,6 +447,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   %100 GPU kalıp kalmadığı).
 - **2026-09-30 (3.24):** 3.23 PDF ile gerçekte çalıştı (.txt/.docx henüz denenmedi; bulutta test edildi). Kullanıcı Ayarlar'ı
   Notlar penceresi gibi sekmeli istedi → yapıldı.
+- **2026-09-30 (3.25):** Word ve .txt belgeleri gerçekte çalıştı. İstekler: açılışta Mert oturumunun gelmesi fark edildi
+  (→ elle açılışta oturum yok), sohbet adı "tarih-saat + ilk kelime", sohbet adını değiştirme, güvenlik kaydını temizleme.
 
 ## Sıradaki fikirler
 

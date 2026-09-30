@@ -168,6 +168,27 @@ def conversation_messages(conversation_id: int):
     return db.list_messages(conversation_id)
 
 
+class RenameIn(BaseModel):
+    title: str
+
+
+@app.put("/api/conversations/{conversation_id}")
+def rename_conversation(conversation_id: int, body: RenameIn):
+    _own_conversation(conversation_id)
+    title = " ".join(body.title.split())[:80]
+    if not title:
+        raise HTTPException(400, "Sohbet adı boş olamaz")
+    db.rename_conversation(conversation_id, title)
+    return {"title": title}
+
+
+def _new_title(first: str) -> str:
+    """3.25 (user's wish): "202609301324 Merhaba": when it started, then the conversation's first word."""
+    words = re.findall(r"[\wçğıöşüÇĞİÖŞÜ'’.-]+", first)
+    word = words[0].strip(".-") if words else ""
+    return f"{datetime.now():%Y%m%d%H%M} {word}".strip()
+
+
 @app.delete("/api/conversations/{conversation_id}")
 def delete_conversation(conversation_id: int):
     _own_conversation(conversation_id)
@@ -210,7 +231,7 @@ async def add_document(file: UploadFile = File(...), conversation_id: int | None
     if conversation_id:
         _own_conversation(conversation_id)
     else:
-        conversation_id = db.create_conversation(f"📄 {name}"[:50], None if who == db.ALL else who)
+        conversation_id = db.create_conversation(f"{_new_title('')} 📄 {name}"[:80], None if who == db.ALL else who)
     lang = documents.language(text)
     doc_id = db.add_document(conversation_id, name, text, pages, lang)
     doc = db.get_document(doc_id)
@@ -269,8 +290,7 @@ async def chat(body: ChatIn):
     conversation_id = body.conversation_id
     conv = db.get_conversation(conversation_id) if conversation_id else None
     if conv is None or (who != db.ALL and conv.get("owner") != who):
-        title = text if len(text) <= 50 else text[:47].rstrip() + "..."
-        conversation_id = db.create_conversation(title, speaker)
+        conversation_id = db.create_conversation(_new_title(text), speaker)
 
     memory.cancel()  # free the CPU for the reply
     history = db.list_messages(conversation_id)
@@ -297,7 +317,7 @@ async def chat(body: ChatIn):
 
     async def stream():
         yield _line({"type": "meta", "conversation_id": conversation_id, "instant": bool(instant),
-                     "identity": identity.state()})
+                     "identity": identity.state(), "title": db.get_conversation(conversation_id)["title"]})
         parts = []
         try:
             if not instant and docs and not documents.fits_whole(docs):
@@ -709,6 +729,15 @@ def voice_delete(speaker_id: int):
 def security_log():
     _require_admin()
     return db.list_security_log()
+
+
+@app.delete("/api/security-log")
+def clear_security_log():
+    _require_admin()
+    count = db.clear_security_log()
+    who = identity.owner()
+    db.log_security("Güvenlik kaydı temizlendi", f"{'' if who == db.ALL else who + ': '}{count} satır silindi")
+    return {"deleted": count}
 
 
 class TtsIn(BaseModel):

@@ -106,10 +106,14 @@ async function loadConversations() {
   for (const c of list) {
     const item = document.createElement("div");
     item.className = "conv" + (c.id === state.conversationId ? " active" : "");
-    item.innerHTML = `<span></span><button title="Sil">🗑</button>`;
+    item.innerHTML = `<span></span><button class="rename" title="Adını değiştir">✏️</button><button class="delete" title="Sil">🗑</button>`;
     item.querySelector("span").textContent = c.title;
     item.onclick = () => openConversation(c.id, c.title);
-    item.querySelector("button").onclick = async (e) => {
+    item.querySelector(".rename").onclick = (e) => {
+      e.stopPropagation();
+      renameConversation(c.id, c.title);
+    };
+    item.querySelector(".delete").onclick = async (e) => {
       e.stopPropagation();
       if (!confirm(`"${c.title}" sohbeti silinsin mi?`)) return;
       await api(`/api/conversations/${c.id}`, { method: "DELETE" });
@@ -119,6 +123,22 @@ async function loadConversations() {
     els.conversations.appendChild(item);
   }
 }
+
+// 3.25: conversations are named "202609301324 Merhaba" by the server; the name can be changed here or on the title.
+async function renameConversation(id, current) {
+  const title = prompt("Sohbetin yeni adı:", current);
+  if (title === null || !title.trim() || title.trim() === current) return;
+  try {
+    const result = await api(`/api/conversations/${id}`, { method: "PUT", body: JSON.stringify({ title }) });
+    if (id === state.conversationId) els.title.textContent = result.title;
+  } catch (err) {
+    setStatus(err.message, true);
+  }
+  loadConversations();
+}
+
+els.title.title = "Adını değiştirmek için tıkla";
+els.title.onclick = () => { if (state.conversationId) renameConversation(state.conversationId, els.title.textContent); };
 
 function clearMessages() {
   els.messages.querySelectorAll(".msg").forEach((m) => m.remove());
@@ -224,7 +244,7 @@ async function send(text, fromVoice = false, sttMs = null, sttDevice = null) {
           if (notice) continue;
           if (state.conversationId !== event.conversation_id) {
             state.conversationId = event.conversation_id;
-            els.title.textContent = text.length > 50 ? text.slice(0, 47) + "..." : text;
+            els.title.textContent = event.title || text;
           }
         } else if (event.type === "progress") { // a long document is being read part by part
           if (!reply) bubble.textContent = event.text;
@@ -834,6 +854,15 @@ $("#open-security").onclick = async () => {
     filter.add(new Option(ev, ev));
   }
   renderSecurity();
+};
+$("#security-clear").onclick = async () => {
+  if (!confirm("Güvenlik kaydındaki tüm satırlar silinsin mi? (Önce \"Excel'e aktar\" ile saklayabilirsin.)")) return;
+  try {
+    await api("/api/security-log", { method: "DELETE" });
+  } catch (err) {
+    return setStatus(err.message, true);
+  }
+  $("#open-security").onclick(); // reload: only the "temizlendi" line is left
 };
 $("#security-search").addEventListener("input", renderSecurity);
 $("#security-filter").addEventListener("change", renderSecurity);
@@ -1807,8 +1836,8 @@ async function uploadDocs(files) {
   }
   setBusy(false);
   if (added) {
-    const title = state.conversationId && els.title.textContent !== "Yeni sohbet" ? els.title.textContent : `📄 ${added.document.name}`;
-    await openConversation(state.conversationId, title);
+    const conv = (await api("/api/conversations").catch(() => [])).find((c) => c.id === state.conversationId);
+    await openConversation(state.conversationId, conv ? conv.title : added.document.name);
     els.input.focus();
   }
 }

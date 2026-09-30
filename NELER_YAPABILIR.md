@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.24
+Sürüm: 3.25
 
 ---
 
@@ -219,6 +219,12 @@ PDF, Word (.docx), .txt, .md ve .csv dosyalarını okuyup onlar hakkında konuş
 - Taranmış (fotoğraf gibi) PDF'lerde seçilebilir yazı olmadığı için okuyamaz. Eski Word (.doc) dosyasını Word'de açıp
   ".docx" olarak kaydet.
 
+## 💬 Sohbetler
+
+- Yeni sohbetin adı başladığı tarih-saat ve ilk kelimesidir: **202609301324 Merhaba** (2026-09-30, 13:24).
+- Adını değiştirmek için sol listede sohbetin üstüne gel ve **✏️**'ye bas ya da üstteki sohbet başlığına tıkla.
+- 🗑 sohbeti siler.
+
 ## 🧠 Hafıza
 
 Asistan sohbetlerden senin hakkındaki önemli bilgileri kendiliğinden öğrenir ve yeni sohbetlerde de hatırlar.
@@ -244,6 +250,14 @@ Herkesin hafızası ayrıdır.
 - **🛡️ Güvenlik kaydı** (yalnızca yönetici): tanınmayan sesler, misafir mesajları, şifre denemeleri. Tablo hâlinde;
   arayabilir, olay türüne göre süzebilir, sütun başlığına tıklayıp sıralayabilir, **📥 Excel'e aktar** ile indirebilirsin.
 - **⚙️ Ayarlar** yalnızca yöneticiye görünür.
+
+## 🛡️ Güvenlik kaydı (yalnızca yönetici)
+
+- Sol menüdeki **🛡️ Güvenlik kaydı**: tanınmayan sesler, misafir mesajları, şifre denemeleri, oturum değişiklikleri.
+- **📥 Excel'e aktar** ile saklayabilir, **🧹 Kaydı temizle** ile hepsini silebilirsin (temizlendiği bilgisi tek satır
+  olarak kalır).
+- **baslat.bat** ile her açılışta kimse oturum açmış sayılmaz: bir cümle söyle ya da şifreni yaz. Güncelleme sonrası
+  asistan kendiliğinden yeniden başladığında ise oturumun açık kalır.
 
 ## 💡 İpuçları
 

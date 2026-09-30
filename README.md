@@ -114,6 +114,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.25** — Yeni sohbetlerin adı tarih-saat ve ilk kelimeyle başlar ("202609301324 Merhaba"); sohbet adı sol listedeki ✏️ ile ya da üstteki başlığa tıklayarak değiştirilir. Güvenlik kaydında "🧹 Kaydı temizle" düğmesi. baslat.bat ile açılışta kimse oturum açmış sayılmaz (sesle ya da şifreyle tanınana kadar misafir); yalnızca güncelleme sonrası kendiliğinden yeniden başlamada son kişi geri gelir.
 - **3.24** — Ayarlar sekmeli: Yapay zekâ, Ses ve konuşma, Mikrofon, Bağlantılar, Ses profilleri (Notlar ve listeler penceresindeki gibi). Son açılan sekme hatırlanır; Kaydet tüm sekmeleri birlikte kaydeder.
 - **3.23** — Belge yükleme: 📎 düğmesiyle ya da dosyayı sohbete sürükleyerek PDF, Word (.docx), .txt, .md, .csv ekle; "Bu belgeyi özetle", "Teslim tarihi ne?" diye sor. Türkçe ve İngilizce belgeler (İngilizce belgeye Türkçe soru da olur). Belge bilgisayardan çıkmaz. Uzun belgelerde her soruda ilgili bölümler bulunur, özet bölüm bölüm çıkarılır. Güncellemeden sonra baslat.bat yeni paketleri (pypdf, python-docx) kendisi kurar.
 - **3.22** — Müzik çalarken adla seslenme: müzik hiç susmadığı için ses 6 saniyelik, üst üste binen parçalar halinde kontrol ediliyor; "Merhaba Asiye" gibi iki kelimelik söz cümlenin ortasında da yakalanıyor ("Merhaba Asiye, müziği durdur"). Müzik üstünden gelen seste kimlik değiştirilmiyor (misafire düşmez).
