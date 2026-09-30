@@ -657,6 +657,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   kum düştüğü yerde alev gibi yanıyor (kaynak resimde de orada turuncu parıltı var) → mum sözcüğü çıkarılıp ışık
   yönü tarif edildi, negatife flame/fire eklendi. Önerilen kalıcı ayarlar: Wan 2.2 5B, 81 kare, VAE Decode (Tiled)
   temporal_size 128; iş akışı "HourGlow video" olarak kaydedilsin.
+  Yedinci (mumsuz ışık istemi + negatife flame/fire): **alevler gitti, kum düzgün** → Wan 2.2 5B i2v ayarları tamam.
 - **2026-09-30 (3.42):** `baslat.bat` `:run`'da `tasklist | findstr ollama.exe` (find değil: conda PATH'inde GNU find.exe var);
   yoksa `%LOCALAPPDATA%\Programs\Ollama\ollama app.exe` (yoksa `start /min ollama serve`). Ollama yolu gerçekte doğrulanmadı.
 
