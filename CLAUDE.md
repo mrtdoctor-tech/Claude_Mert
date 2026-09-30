@@ -418,6 +418,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   açık (kodda misafir kısıtı yok); ses kimliği her seslenmede çalışır, tanınan ses profiline geçer. Kullanıcı: "misafir
   modunda çalışsın". Konuşurken kendiliğinden uyanmadı; müzik açınca uyandı → 3.21.
   3.21 gerçekte: müzikte yanlış uyanma olmadı ama müzik çalarken "Merhaba Asiye" de yakalanmadı → 3.22.
+  3.22 gerçekte **doğrulandı**: telefonda müzik çalarken "Merhaba Asiye saat kaç" cevaplandı; Spotify yüksek seste
+  "müziği durdur" yakalanmadı, ses kısılınca çalıştı. Kullanıcı: "normal, bu kadar tepki yeterli" → uyandırma tamam.
 
 ## Sıradaki fikirler
 
