@@ -469,6 +469,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   bütün analizleri yapsın, tek tek bir txt dosyasına yazsın, aynı klasörde" → 3.26.
 - **2026-09-30 (3.27):** 3.26 gerçekte: "klasörünü aç" çalıştı, gerçek .wav'ın raporu yazıldı. "Hepsini yeniden analiz et."
   klasör kelimesi olmadığı için modele gitti; model 4 olmayan şarkıyı (BPM/ton/LUFS ile) uydurdu → düzeltildi.
+  3.27 gerçekte doğrulandı ("doğru çalıştı"). Tempo/ton doğruluğu gerçek şarkılarda kullanıcıdan henüz duyulmadı.
 
 ## Sıradaki fikirler
 
