@@ -670,6 +670,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   +22 çıkmalı). Chromium sahte mikrofonla: +30 dB'de 0,3'lük patlama tepe 0,49'da kaldı, sessiz ses kazançla doğru ölçeklendi.
   Kullanıcı kararları: A (asistandan ComfyUI) şimdilik hayır — parametreleri birlikte elle ayarlamak istiyor; B (yerel XTTS
   sesi) hayır — hızı bozmasın; D (anlamsal hafıza) şimdilik gerek yok. Sezin'in ses kaydı acele değil.
+  3.43 gerçekte: kalibrasyon sınırlayıcıyla **+22 dB** önerdi ve kaydetti (3.15'te +14). Mert'in sesini yeni kazançla yeniden
+  tanıtması önerildi; tanıma puanları bekleniyor. Haber komutunun gerçek denemesi henüz bildirilmedi.
 
 ## Sıradaki fikirler
 
