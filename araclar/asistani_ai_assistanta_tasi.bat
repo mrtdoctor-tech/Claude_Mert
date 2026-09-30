@@ -26,9 +26,14 @@ where nvidia-smi >nul 2>nul
 if not errorlevel 1 set "GPU=1"
 if defined GPU "%TPY%" -m pip install -r requirements-gpu.txt --dry-run >> "%PLAN%" 2>&1
 findstr /i /c:"Would install" "%PLAN%"
-findstr /i /c:"Would install" "%PLAN%" | findstr /i /r "numpy- torch- torchaudio- torchvision- numba- llvmlite- scipy- librosa- soundfile- tiktoken- openai-whisper- transformers- tokenizers- huggingface-hub-" >nul
 >>"%LOG%" type "%PLAN%"
-if not errorlevel 1 goto risky
+rem 3.39: yalnizca ZATEN KURULU hassas bir paketin surumu degisecekse dur (ortamda hic olmayan paketin eklenmesi zararsiz)
+echo.
+"%TPY%" "%~dp0tasima_plan_kontrol.py" "%PLAN%" > "%PLAN%.sonuc" 2>&1
+set "RISK=%ERRORLEVEL%"
+type "%PLAN%.sonuc"
+>>"%LOG%" type "%PLAN%.sonuc"
+if not "%RISK%"=="0" goto risky
 
 echo.
 >>"%LOG%" echo 1/4 deneme tamam, hassas paket degismiyor
@@ -64,8 +69,8 @@ exit /b 0
 :risky
 >>"%LOG%" echo DURDURULDU: hassas bir paket degisecekti, hicbir sey kurulmadi
 echo.
-echo DURDURULDU: Asistanin paketleri kurulursa HourGlow'un kullandigi paketlerden biri degisecek
-echo (yukaridaki "Would install" satirina bak). Hicbir sey kurulmadi, asistan eski ortaminda calismaya devam ediyor.
+echo DURDURULDU: Asistanin paketleri kurulursa HourGlow'un kullandigi, zaten kurulu bir paketin surumu degisecek
+echo (yukaridaki "hassas olan ve degisecek" satirina bak). Hicbir sey kurulmadi, asistan eski ortaminda calismaya devam ediyor.
 echo Bu pencerenin tamamini kopyalayip Claude'a gonder.
 pause
 exit /b 1

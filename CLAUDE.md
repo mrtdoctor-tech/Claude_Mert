@@ -577,6 +577,11 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Araç artık `%LOCALAPPDATA%\YerelAsistan\tasima_kaydi.txt` günlüğü tutuyor (1/4…4/4, DURDURULDU, HATA), `python-yolu.eski.txt`
   yalnızca ilk taşımada yazılıyor (tekrar çalıştırmak güvenli); geri alma yedeği siliyor. `araclar/durum_kontrol.bat`: geçerli
   python yolu, yedek var mı, günlük özeti, asistan paketleri import testi. Kullanıcının çıktıyı göndermesi bekleniyor.
+  Sonuç: ilk çalıştırma kediden (tuşa basılmış) kapanmıştı, taşıma olmamıştı. Tekrarında DURDURULDU: dry-run'da tek hassas
+  eşleşme `tokenizers-0.23.2` (ayrıca protobuf, pydantic, onnxruntime, av, ctranslate2… — hangisi yeni hangisi yükseltme belli değil).
+- **2026-09-30 (3.39):** `araclar/tasima_plan_kontrol.py` (ai_assistant python'uyla çalışır): "Would install" paketlerini
+  `importlib.metadata` ile karşılaştırır; yalnızca ZATEN KURULU hassas paket (listeye protobuf ve `nvidia-*` eklendi) değişecekse
+  çıkış 1 → DURDURULDU. Yeni eklenen paketler zararsız sayılır. Çıktıda "Yeni eklenecek" / "Sürümü değişecek" listeleri.
 
 ## Sıradaki fikirler
 
