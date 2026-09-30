@@ -520,6 +520,18 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-30 (3.33):** Kullanıcı: "müzik/resim analizlerinin Scripts'tekilerin hepsini yaptığını varsayıyorum; öyleyse
   env sadeleştirmesi kolay". Betikler hiç görülmedi → varsayım doğrulanamaz; "Betiklerimi incele" envanteri eklendi.
   Kullanıcının `betik_envanteri.txt` içeriğini göndermesi bekleniyor; sonra ortam planı (ComfyUI kendi ortamında kalmalı).
+- **2026-09-30 (3.34):** Gerçek envanter (19 betik, `...\HourGlowMusic\Scripts`): `analiz\analiz.py` (şarkı analiz hattı:
+  torch + openai-whisper), `analiz\find_vocal_timestamps\Suno\fvts.py` (vokal zaman damgası; whisper; `Calistir.bat` →
+  `ai_assistant`), `hg_olcum\hg_bpm.py` (librosa BPM), `hg_olcum\hg_olcum.py` + `hg_dikis.py` (OpenCV kare/outpaint dikiş
+  ölçümü), `hg_olcum\hg_qc.py` (üretim kontrolü, yalnızca standart kütüphane), `hg_olcum\muzik_analiz.py` (allin1 +
+  demucs + whisperx + torch + librosa → `muzik` ortamı; `kur_muzik.bat/.ps1` kurar, `muzik_doctor.py` denetler),
+  `hg_ses_kalite.py` (numpy/scipy/soundfile teknik kalite), `Suno Data Cekme\*.py` (requests), `test_qc.py` (2 kopya),
+  `-1.py` kopyaları. Envanterde hata: difflib/gc/importlib paket sayıldı, .bat açıklamalarındaki kelimeler ortam sayıldı
+  → düzeltildi. Sonuç: asistanın analizi yalnızca BPM/ton/ses seviyesi kısmını karşılıyor; demucs/allin1/whisperx/
+  whisper/torch/OpenCV işleri karşılanmıyor. Önerilen plan: `asistan` (asistan + hafif betikler: hg_qc, hg_ses_kalite,
+  hg_bpm, Suno, test_qc; OpenCV eklenirse hg_olcum/hg_dikis), `muzik` (ağır müzik yapay zekâsı; openai-whisper eklenirse
+  ai_assistant'ın işlerini de alır), ComfyUI (tek; ComfyUI/comfyui'den kullanılanı), `tts` bilinmiyor → sor. Silmeden önce
+  `conda env export`, önce .bat'leri yeni ortama çevirip dene, sonra sil.
 
 ## Sıradaki fikirler
 

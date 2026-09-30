@@ -114,6 +114,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.34** — Betik envanteri düzeltildi: Python'un kendi parçaları (difflib, gc, importlib…) artık "paket" sayılmıyor; .bat/.ps1 dosyalarında yalnızca gerçekten açılan conda ortamları yazılıyor (açıklama satırlarındaki kelimeler değil).
 - **3.33** — "Betiklerimi incele": HourGlowMusic\Scripts altındaki betikleri (çalıştırmadan) okuyup Asiye klasörüne "betik_envanteri.txt" yazar: her betiğin ne yaptığı (ilk not), kullandığı paketler, .bat dosyalarının hangi conda ortamını açtığı; asistanın kendi analizinin kapsadığı ve kapsamadığı paketler. Ortamları sadeleştirmeden önce neyin gerçekten gerektiğini görmek için.
 - **3.32** — Fotoğraf anlama: sohbete resim ekle (📎, sürükle-bırak ya da ekran görüntüsünü Ctrl+V ile yapıştır) ve sor: "Bunda ne yazıyor?", "Bu fişin toplamı ne?", "Bu hata ne diyor?". Resim sohbette görünür ve bilgisayardan çıkmaz. Taranmış PDF'ler de artık okunuyor: sayfalar yapay zekâya tek tek gösterilip yazıya çevriliyor (en çok 20 sayfa). Güncellemeden sonra baslat.bat yeni paketi (pypdfium2) kendisi kurar.
 - **3.31** — Sabah özeti: "Günaydın Asiye" (ya da "Sabah özeti", "Bugün neler var?") deyince tarih-saat, hava durumu, bugünkü Outlook toplantıları ve hatırlatmalar, alışveriş ve yapılacaklar listesi, gündemden 3 haber. Uyandırma sözü "Merhaba Asiye" olsa da "Günaydın Asiye" / "Selam Asiye" ile uyanır. Misafire yalnızca selam ve tarih.

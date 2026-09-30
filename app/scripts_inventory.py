@@ -10,6 +10,7 @@ scripts it starts. The list is written to Asiye\\betik_envanteri.txt and summari
 import ast
 import json
 import re
+import sys
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
@@ -31,6 +32,9 @@ STANDARD = {"os", "sys", "re", "json", "time", "datetime", "pathlib", "glob", "s
             "zipfile", "platform", "statistics", "warnings", "concurrent", "asyncio", "queue", "struct", "pprint",
             "__future__", "abc", "contextlib", "fnmatch", "unicodedata", "locale", "calendar", "signal", "socket",
             "http", "email", "html", "xml", "sqlite3", "pickle", "configparser", "getpass", "shlex", "wave", "codecs"}
+
+
+STANDARD |= set(getattr(sys, "stdlib_module_names", ()))  # 3.34: difflib, gc, importlib were counted as packages
 
 
 def is_command(text: str) -> bool:
@@ -76,12 +80,26 @@ def _notebook(path: Path) -> str:
     return "\n".join("".join(c.get("source", [])) for c in cells if c.get("cell_type") == "code")
 
 
+_ENV_PATTERNS = [
+    r"\bconda(?:\.exe|\.bat)?\s+activate\s+([\w.-]+)",      # conda activate muzik
+    r"\bactivate(?:\.bat)?\s+([\w.-]+)",                      # call ...\activate.bat ai_assistant
+    r"\bconda(?:\.exe|\.bat)?\s+(?:run|create|env\s+\w+|install)\b[^\n]*?(?:-n|--name)\s+([\w.-]+)",
+    r"envs[\\/]+([\w.-]+)[\\/]",                               # C:\Apps\anaconda3\envs\muzik\python.exe
+]
+_COMMENT = re.compile(r"^\s*(?:rem\b|::|#|echo\b|write-host\b|@?echo\b)", re.I)
+
+
 def _batch(text: str) -> tuple[set[str], list[str]]:
-    envs = set(re.findall(r"(?:conda|activate)(?:\.bat)?\s+(?:activate\s+)?([\w.-]+)", text, re.I))
-    envs |= set(re.findall(r"envs[\\/]+([\w.-]+)", text, re.I))
-    envs -= {"activate", "deactivate", "run", "call"}
-    started = [a or b for a, b in re.findall(r'"([^"]+\.py)"|([\w.()\\/-]+\.py)\b', text)]
-    return envs, sorted({Path(s.strip()).name for s in started})
+    """(conda environments it uses, .py files it starts), ignoring comments and printed messages."""
+    envs, started = set(), set()
+    for line in text.splitlines():
+        if _COMMENT.match(line):
+            continue
+        for pattern in _ENV_PATTERNS:
+            envs |= {e for e in re.findall(pattern, line, re.I) if not e.startswith(("-", "%", "$"))}
+        started |= {Path((a or b).replace("%~dp0", "")).name for a, b in re.findall(r'"([^"]+\.py)"|([\w.()\\/%~-]+\.py)\b', line)}
+    envs -= {"activate", "deactivate"}
+    return envs, sorted(started)
 
 
 def build() -> tuple[str, str]:
