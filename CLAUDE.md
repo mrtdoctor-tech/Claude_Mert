@@ -403,6 +403,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Kullanıcının gerçek denemesi bekleniyor: yanlış uyanma / uyanmama, GPU yükü.
 - **2026-09-30 (3.20):** İlk deneme: 👂 görünmüyordu → Ayarlar'daki kutu açılmamıştı (varsayılan kapalı). Mikrofonla
   "Merhaba Asiye" → Whisper "Merhaba size" yazdı → hotwords. Kullanıcıya kutuyu açması ve "Merhaba Asiye" sözü önerildi.
+  3.20 gerçekte **çalıştı** (👂 görünüyor, seslenince cevap verdi). Kullanıcı misafir modunu sordu: uyandırma misafirde de
+  açık (kodda misafir kısıtı yok); ses kimliği her seslenmede çalışır, tanınan ses profiline geçer.
 
 ## Sıradaki fikirler
 
