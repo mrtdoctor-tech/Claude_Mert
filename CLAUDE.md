@@ -383,6 +383,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   ekler misin?" modele gitti ve model "ekledim" diye uydurdu → rica biçimleri + sistem istemine dürüstlük satırı.
 - **2026-09-30 (3.18):** 3.17 gerçekte çalıştı ("gösterir misin", "ekler misin" hazır cevap). "Alışveriş listemi göster."
   modele gitti, model "listende yok" dedi → "listem" biçimleri + istemde "içini tahmin etme".
+  3.18 gerçekte doğrulandı (temizle, ekle, "Alışveriş listemi göster" hepsi hazır cevap). Kullanıcı sayaçtaki "hazır cevap"
+  ifadesini anlamadı → anlamı açıklandı (etiketi değiştirmek istenirse ör. "yapay zekâsız, anında").
 
 ## Sıradaki fikirler
 
