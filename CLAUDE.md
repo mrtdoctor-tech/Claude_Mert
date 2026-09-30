@@ -209,6 +209,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   sürerken, istek yoldayken veya bir `dialog` açıkken dinlemez (`deaf`). `#wake-toggle` 👂 duraklatır (`localStorage`
   `wakePaused`). AudioContext askıdaysa ilk tıklama/tuşta `resume`. Sahte mikrofon (ses patlamalı WAV) + sahte STT ile
   test edildi; **gerçek Whisper/gerçek mikrofonla denenmedi** (TV/müzik açıkken GPU'ya sürekli iş düşebilir).
+  3.20: tüm yazıya çevirmelerde faster-whisper `hotwords` = asistan adı + uyandırma sözü (`wake.hotwords`; eski sürümde
+  TypeError → hotwords'süz tekrar). Neden: kullanıcının hızlı "Merhaba Asiye"si "Merhaba size" yazıldı.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -399,6 +401,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-09-30 (3.19):** Kullanıcı sıradaki olarak "Asiye diye seslenmek"i seçti; kısa olduğu için yanlış anlaşılmasından
   endişeli, "Merhaba Asiye" gibi daha uzun söz önerdi → söz ayarlanabilir, öneri olarak iki kelimelik söz yazıldı.
   Kullanıcının gerçek denemesi bekleniyor: yanlış uyanma / uyanmama, GPU yükü.
+- **2026-09-30 (3.20):** İlk deneme: 👂 görünmüyordu → Ayarlar'daki kutu açılmamıştı (varsayılan kapalı). Mikrofonla
+  "Merhaba Asiye" → Whisper "Merhaba size" yazdı → hotwords. Kullanıcıya kutuyu açması ve "Merhaba Asiye" sözü önerildi.
 
 ## Sıradaki fikirler
 

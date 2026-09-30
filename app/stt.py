@@ -92,18 +92,26 @@ def current_device() -> str | None:
     return _model_key[1] if _model_key else None
 
 
-def _run(model, path: str, language: str | None) -> str:
-    segments, _ = model.transcribe(path, language=language or None, vad_filter=True, beam_size=1)
+def _run(model, path: str, language: str | None, hotwords: str | None = None) -> str:
+    options = {"language": language or None, "vad_filter": True, "beam_size": 1}
+    if hotwords:
+        options["hotwords"] = hotwords  # names Whisper should expect ("Asiye" was heard as "size")
+    try:
+        segments, _ = model.transcribe(path, **options)
+    except TypeError:  # faster-whisper older than 1.1 has no hotwords
+        options.pop("hotwords", None)
+        segments, _ = model.transcribe(path, **options)
     return " ".join(s.text.strip() for s in segments).strip()
 
 
-def transcribe(path: str, model_name: str, language: str | None, device: str = "auto") -> tuple[str, str]:
+def transcribe(path: str, model_name: str, language: str | None, device: str = "auto",
+               hotwords: str | None = None) -> tuple[str, str]:
     """Returns (text, "gpu" | "cpu")."""
     global _gpu_failed
     model = load(model_name, device)
     try:
         with _lock:
-            return _run(model, path, language), current_device()
+            return _run(model, path, language, hotwords), current_device()
     except Exception:
         if current_device() != "gpu":
             raise
@@ -111,4 +119,4 @@ def transcribe(path: str, model_name: str, language: str | None, device: str = "
         _gpu_failed = True
     model = load(model_name, "cpu")
     with _lock:
-        return _run(model, path, language), current_device()
+        return _run(model, path, language, hotwords), current_device()

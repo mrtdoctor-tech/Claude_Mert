@@ -41,6 +41,15 @@ def phrase_for(settings: dict) -> str:
     return (settings.get("wake_phrase") or "").strip() or settings.get("assistant_name") or "Asistan"
 
 
+def hotwords(settings: dict) -> str:
+    """Words Whisper is told to expect: the assistant's name and the wake phrase (3.20).
+
+    Without this, a quickly said "Merhaba Asiye" came out as "Merhaba size".
+    """
+    words = [settings.get("assistant_name") or "", (settings.get("wake_phrase") or "").strip()]
+    return " ".join(dict.fromkeys(w for w in words if w))
+
+
 def match(text: str, phrase: str) -> tuple[bool, str]:
     """(woken?, the rest of the sentence after the wake phrase)."""
     heard, wanted = _words(text), _words(phrase)

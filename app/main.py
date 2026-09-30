@@ -502,7 +502,8 @@ async def transcribe(audio: UploadFile = File(...), wake_check: bool = Form(Fals
         path = tmp.name
     try:
         text, device = await run_in_threadpool(
-            stt.transcribe, path, settings["whisper_model"], settings["language"], settings["whisper_device"]
+            stt.transcribe, path, settings["whisper_model"], settings["language"], settings["whisper_device"],
+            wake.hotwords(settings),
         )
         score = None
         too_short = False
