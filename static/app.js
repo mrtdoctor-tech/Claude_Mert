@@ -101,6 +101,7 @@ function setBusy(busy) {
 // Conversations
 
 async function loadConversations() {
+  if ($("#conv-search").value.trim()) return searchConversations(); // keep the search results while searching
   const list = await api("/api/conversations");
   els.conversations.innerHTML = "";
   for (const c of list) {
@@ -140,6 +141,59 @@ async function renameConversation(id, current) {
 els.title.title = "Adını değiştirmek için tıkla";
 els.title.onclick = () => { if (state.conversationId) renameConversation(state.conversationId, els.title.textContent); };
 
+// Search in old conversations (3.30): results replace the list while something is typed.
+let searchTimer = null;
+$("#conv-search").addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadConversations().catch(() => {}), 250);
+});
+
+async function searchConversations() {
+  const query = $("#conv-search").value.trim();
+  let results = [];
+  try {
+    results = await api(`/api/search?q=${encodeURIComponent(query)}`);
+  } catch (err) {
+    els.conversations.textContent = err.message;
+    return;
+  }
+  if (query !== $("#conv-search").value.trim()) return; // typed on meanwhile
+  els.conversations.innerHTML = "";
+  if (!results.length) {
+    els.conversations.innerHTML = `<p class="hint">Bulunamadı.</p>`;
+    return;
+  }
+  const words = query.toLocaleLowerCase("tr").split(/\s+/).filter(Boolean);
+  for (const r of results) {
+    const item = document.createElement("div");
+    item.className = "conv found" + (r.conversation_id === state.conversationId ? " active" : "");
+    item.innerHTML = `<span></span><small></small>`;
+    item.querySelector("span").textContent = r.title;
+    const when = r.created_at.slice(8, 10) + "." + r.created_at.slice(5, 7) + "." + r.created_at.slice(0, 4);
+    item.querySelector("small").innerHTML = `${when} · ` + highlight(r.snippet, words);
+    item.onclick = async () => {
+      await openConversation(r.conversation_id, r.title);
+      const target = els.messages.querySelector(`.msg[data-id="${r.message_id}"]`);
+      if (target) {
+        target.scrollIntoView({ block: "center" });
+        target.classList.add("spotlight");
+        setTimeout(() => target.classList.remove("spotlight"), 2500);
+      }
+    };
+    els.conversations.appendChild(item);
+  }
+}
+
+function highlight(text, words) {
+  let html = escapeHtml(text);
+  for (const word of words) {
+    if (word.length < 2) continue;
+    const safe = escapeHtml(word).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    html = html.replace(new RegExp(`(${safe})`, "giu"), "<mark>$1</mark>");
+  }
+  return html;
+}
+
 function clearMessages() {
   els.messages.querySelectorAll(".msg").forEach((m) => m.remove());
   els.empty.hidden = false;
@@ -162,7 +216,9 @@ async function openConversation(id, title) {
   els.title.textContent = title;
   clearMessages();
   setStatus("");
-  for (const m of await api(`/api/conversations/${id}/messages`)) addMessage(m.role, m.content);
+  for (const m of await api(`/api/conversations/${id}/messages`)) {
+    addMessage(m.role, m.content).parentElement.dataset.id = m.id;
+  }
   loadDocs();
   loadConversations();
   els.sidebar.classList.remove("open");
@@ -632,6 +688,7 @@ function applyIdentity(id) {
   $("#open-security").hidden = !(id.active && id.admin);
   $("#open-reminders").hidden = !!id.guest; // reminders are personal
   $("#open-notes").hidden = !!id.guest;
+  $("#conv-search").hidden = !!id.guest;
   if (id.guest) $("#notes-dialog").close();
   showAgenda(!id.guest);
   if (id.guest) $("#agenda-weather").hidden = true;

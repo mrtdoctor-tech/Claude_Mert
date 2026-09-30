@@ -17,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from . import analysis, config, db, documents, identity, llm, memory, notes, online, outlook, pc, presence, quick, reminders, stt, tts, vocab, voiceid, wake
+from . import history as past  # chat() has its own `history` (the conversation's messages)
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("asistan")
@@ -191,6 +192,14 @@ def _new_title(first: str) -> str:
     return f"{datetime.now():%Y%m%d%H%M} {word}".strip()
 
 
+@app.get("/api/search")
+def search_conversations(q: str = ""):
+    who = identity.owner()
+    if past.refusal(who):
+        raise HTTPException(403, past.refusal(who))
+    return past.search(who, q.strip()[:100]) if q.strip() else []
+
+
 @app.delete("/api/conversations/{conversation_id}")
 def delete_conversation(conversation_id: int):
     _own_conversation(conversation_id)
@@ -313,9 +322,22 @@ async def chat(body: ChatIn):
     if not instant and analysis.is_command(text):
         instant = analysis.refusal(who) or analysis.open_reply(text)
         job = not instant
-    if not instant and not job and pc.is_command(text):  # Excel, music, Spotify on this computer
+    sources = []  # "Geçen hafta doktor hakkında ne konuşmuştuk?" (3.30): earlier messages go to the model with it
+    if not instant and not job and past.is_question(text):
+        instant = past.refusal(who)
+        if not instant:
+            found, sources, when = past.context(who, text, conversation_id)
+            if found:
+                messages[-1]["content"] += (
+                    "\n\n[Önceki sohbetlerden bu soruyla ilgili mesajlar (tarih · sohbet adı · kim). Cevabını YALNIZCA "
+                    "bunlara dayandır, ne zaman konuşulduğunu da söyle; burada yoksa \"bulamadım\" de:]\n" + found)
+            else:
+                instant = (f"{when + ' ' if when else ''}önceki sohbetlerimizde bununla ilgili bir şey bulamadım. "
+                           "Sol üstteki 🔎 arama kutusuna bir kelime yazarak da arayabilirsin.")
+                instant = instant[0].upper() + instant[1:]
+    if not instant and not job and not sources and pc.is_command(text):  # Excel, music, Spotify on this computer
         instant = await run_in_threadpool(pc.handle, text, who)
-    if not instant and not job and online.is_command(text):  # weather and news from the internet (never for guests)
+    if not instant and not job and not sources and online.is_command(text):  # weather and news from the internet (never for guests)
         instant = await run_in_threadpool(online.handle, text, who)
 
     async def from_clock():
@@ -355,6 +377,11 @@ async def chat(body: ChatIn):
                                                 "\"belgede bulamadım\" de:]\n" + documents.passages(docs, query))
             source = from_clock() if instant else llm.chat_stream(settings["model"], messages, num_ctx)
             async for piece in source:
+                parts.append(piece)
+                yield _line({"type": "token", "text": piece})
+            if sources and not instant:  # which conversations the answer came from
+                names = ", ".join(f"\"{s['title']}\" ({s['created_at'][8:10]}.{s['created_at'][5:7]})" for s in sources[:5])
+                piece = f"\n\n🔎 Kaynak sohbetler: {names}"
                 parts.append(piece)
                 yield _line({"type": "token", "text": piece})
         except llm.OllamaError as e:

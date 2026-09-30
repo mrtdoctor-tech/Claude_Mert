@@ -3,7 +3,7 @@
 Bu sayfa, asistanın bugün yapabildiklerini **örnek komutlarla** anlatır. Komutları yazabilir ya da 🎤 düğmesine basıp
 söyleyebilirsin. Aynen böyle söylemen gerekmez; benzer cümleler de çalışır.
 
-Sürüm: 3.29
+Sürüm: 3.30
 
 ---
 
@@ -230,6 +230,22 @@ PDF, Word (.docx), .txt, .md ve .csv dosyalarını okuyup onlar hakkında konuş
 - Adını değiştirmek için sol listede sohbetin üstüne gel ve **✏️**'ye bas ya da üstteki sohbet başlığına tıkla.
 - 🗑 sohbeti siler.
 
+**Eski sohbetlerde arama (3.30):**
+- Sol üstteki **🔎 Sohbetlerde ara** kutusuna bir ya da birkaç kelime yaz (ör. "doktor", "kombi servis"). Türkçe harf ve
+  ekler fark etmez ("doktora" da bulunur). Sonuca tıklayınca sohbet açılır ve o mesaj işaretlenir. Kutuyu silince liste
+  geri gelir.
+- Sohbette sorabilirsin; önceki sohbetlerden ilgili mesajları bulup cevaplar, sonunda hangi sohbetlerden bulduğunu yazar:
+
+| Sor | Ne olur |
+|---|---|
+| "Geçen hafta doktor hakkında ne konuşmuştuk?" | Geçen haftaki sohbetlerde "doktor" geçenlere bakar |
+| "Dün ne konuşmuştuk?" | Dünkü sohbetleri özetler |
+| "3 gün önce kira hakkında ne demiştim?" | O günlerin çevresine bakar |
+| "Eylül'de tatil planından bahsetmiştik" | Eylül ayındaki sohbetlere bakar |
+| "Daha önce Sezin'in doğum günü hakkında konuşmuş muyduk?" | Tüm sohbetlerde arar |
+
+- Yalnızca kendi sohbetlerinde arar; misafir modunda kapalı.
+
 ## 🎵 Klasör analizi — HourGlow Music (3.26)
 
 Google Drive'daki **HourGlowMusic\Scripts\Asiye** klasörüne attığın müzik ve resim dosyalarını analiz ederim ve her
@@ -299,4 +315,3 @@ Herkesin hafızası ayrıdır.
 
 - 🖼️ Fotoğraf anlama ("Bu fişte ne yazıyor?")
 - ☀️ Sabah özeti ("Günaydın" deyince günün hatırlatmaları)
-- 🔎 Eski sohbetlerde arama

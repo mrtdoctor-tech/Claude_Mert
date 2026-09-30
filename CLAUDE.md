@@ -262,6 +262,14 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   korunur). "Avır glo/Aurglo/Hour glow/Havır Glov/Ağır glo" → HourGlow; "Argo", "Ağır gelir", "Avrupa" değişmez.
   `pc._search_roots` Google Drive'ı da tarar (`~/My Drive*`, `~/Google Drive*`, `G:/My Drive`), `find_file` tarama sınırı
   yer başına; ad eşleşmesi boşluk/altçizgi yok sayarak da ("hour glow" = "HourGlow_Takip").
+- **Eski sohbetlerde arama (3.30):** `app/history.py` (main'de `past` adıyla: `chat()` içinde `history` yerel değişken!),
+  `db.search_messages` (sahip, tarih aralığı, geçerli sohbet hariç). Kenar çubuğu `#conv-search` → `GET /api/search`:
+  sohbet bazında (tüm kelimeler başlıkta ya da herhangi bir mesajda, Türkçe harf katlamalı alt dizgi), en iyi mesaj parçası
+  + `<mark>`, tıklayınca `openConversation` + `.msg[data-id]` `spotlight`. Sohbet: `is_question` (konuşmuştuk/bahsetmiştik/
+  demiştim/"daha önce … konuş"…), `time_range` (bugün/dün/evvelsi gün/N gün-hafta-ay önce/bu-geçen hafta/ay/gün adı/ay
+  adı), `_stems` (5 harf kök, `_STOP`), `context` 9000 karaktere kadar mesaj (tarih · başlık · kim) son kullanıcı
+  mesajına eklenir; önceki "ne konuşmuştuk" soruları ve "🔎 Kaynak sohbetler"li cevaplar dışarıda. Hiç bulunmazsa hazır
+  cevap. Cevabın sonuna "🔎 Kaynak sohbetler: …" eklenir. Misafire kapalı.
 - **Yardım (3.5):** `NELER_YAPABILIR.md` = yapabildikleri + örnek komutlar; `/api/help` ile uygulamada "❓ Neler
   yapabilirim?". **Yeni özellik eklendikçe bu dosyayı güncelle.**
 - **Saat notu yankısı (3.0):** model son mesajdaki "(Şu an: …)" notunu cevabına kopyalıyordu. Not artık
@@ -483,6 +491,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `HourGlow_Yayin_Takip.xlsx` bulunamadı: söylenen "yayın" (ı) ≠ dosya adı "Yayin" → `pc._ascii` ile iki taraf da Türkçe
   harfsiz karşılaştırılıyor. Kullanıcının dosyaları `My Drive (hourglowmusic…)\HourGlowMusic\` altında.
   3.29 gerçekte doğrulandı: sesle "HourGlow yayın takip dosyasını Excel'de aç" dosyayı açtı (Excel açma ilk kez gerçekte çalıştı).
+- **2026-09-30 (3.30):** Kullanıcı sıradaki olarak eski sohbetlerde aramayı seçti → arama kutusu + sohbetten sorma.
+  Kalan fikirler: sabah özeti, fotoğraf anlama.
 
 ## Sıradaki fikirler
 
@@ -492,8 +502,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   "aile" yok; tarayıcı kapalıyken Windows bildirimi, asistan kapalıyken sonraki açılışta "kaçırılanlar"; yalnızca ev
   bilgisayarı) + **takvim kaydı oluşturma** (telefona bildirim gelsin diye; hangi takvim olduğu sorulacak — bulut servisi,
   kullanıcı onayı gerekir). 2) Yapabildiklerini komut örnekleriyle anlatan belge. Sonra listeden: notlar/alışveriş
-  listesi (✅ 3.16), fotoğraf anlama (gemma3:4b görebilir), ✅ belge yükleme (3.23), sabah özeti, ✅ uyandırma sözcüğü (3.19), eski
-  sohbetlerde arama, ✅ hava durumu/haber (3.11). Kullanıcı "hepsi çok güzel" dedi.
+  listesi (✅ 3.16), fotoğraf anlama (gemma3:4b görebilir), ✅ belge yükleme (3.23), sabah özeti, ✅ uyandırma sözcüğü (3.19), ✅ eski
+  sohbetlerde arama (3.30), ✅ hava durumu/haber (3.11). Kullanıcı "hepsi çok güzel" dedi.
 
 - Spotify: kullanıcı ücretsiz hesapta → otomatik çalma yok. Premium'a geçerse Spotify Web API (PKCE) ile "X çal".
 - Kullanıcı conda ortamlarını (ComfyUI, comfyui, ai_assistant, muzik, tts, asistan) düzenlemek/birleştirmek için yardım isteyecek.
@@ -503,5 +513,4 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - İstenirse tamamen yerel kadın sesi: NVIDIA olduğu için ses klonlama (XTTS-v2 / Chatterbox Multilingual gibi,
   Türkçe destekli) eklenebilir; kullanıcı bir kadın sesi örneği verir.
 - Hafıza büyüdükçe: tüm bilgileri isteme koymak yerine anlamsal arama (Ollama embedding modeli).
-- Eski sohbetlerde arama.
 - Tek tıkla çalışan masaüstü uygulaması (Python kurulumu gerektirmeyen paket).

@@ -40,9 +40,9 @@ Answer with JSON only: {"memories": ["..."]}. If there is nothing new: {"memorie
 
 def _is_command(text: str) -> bool:
     """Clock questions and commands ("yarın 7'de uyandır", "Excel'i kapat") are not facts about the person."""
-    from . import analysis, notes, online, pc, quick, reminders  # late import keeps startup order simple
+    from . import analysis, history, notes, online, pc, quick, reminders  # late import keeps startup order simple
     return bool(quick.answer(text) or reminders.is_command(text) or notes.is_command(text) or pc.is_command(text)
-                or online.is_command(text) or analysis.is_command(text))
+                or online.is_command(text) or analysis.is_command(text) or history.is_question(text))
 
 def clock_note() -> str:
     """Current date and time, added to the newest user message only.

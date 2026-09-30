@@ -114,6 +114,7 @@ Yeni paket gerektiren güncellemelerde `baslat.bat`'ı bir kez kapatıp açman g
 
 Kullandığın sürüm, asistanın sol menüsünün en altında ve siyah pencerenin ilk satırında yazar.
 
+- **3.30** — Eski sohbetlerde arama: sol üstteki 🔎 kutusuna kelime yaz (Türkçe harf/ek fark etmez), sonuca tıklayınca sohbet o mesajda açılır. Sohbette de sorulabilir: "Geçen hafta doktor hakkında ne konuşmuştuk?", "Dün ne konuşmuştuk?", "Eylül'de tatilden bahsetmiştik" — cevabın sonunda kaynak sohbetler yazar. Yalnızca kendi sohbetlerin; misafire kapalı.
 - **3.29** — Dosya araması Türkçe harfleri yok sayıyor: söylenen "yayın takip", dosya adındaki "Yayin_Takip" ile eşleşiyor (ı/i, ş/s, ç/c, ğ/g, ö/o, ü/u).
 - **3.28** — "HourGlow" gibi yabancı adlar: Ayarlar → Ses ve konuşma → "Özel kelimeler" (varsayılan "HourGlow"); ses tanıma bu kelimeleri bekler ve "Avır glo", "Hour glow" gibi yazılışları "HourGlow"a çevirir. Dosya araması artık Google Drive'a da bakıyor ve "HourGlow_Takip" ile "hour glow takip"i eşleştiriyor.
 - **3.27** — "Hepsini yeniden analiz et", "Tekrar analiz eder misin?" gibi kısa cümleler de klasör analizi sayılıyor (önceden yapay zekâya gidiyordu ve olmayan şarkılar uyduruyordu). Yapay zekâya dosya analizi sonucu uydurmaması, bunun yerine doğru komutu önermesi söylendi.

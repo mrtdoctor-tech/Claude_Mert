@@ -446,3 +446,30 @@ def set_document_summary(document_id: int, summary: str):
 def delete_document(document_id: int):
     with session() as conn:
         conn.execute("DELETE FROM documents WHERE id = ?", (document_id,))
+
+
+# Searching old conversations (3.30)
+
+def search_messages(owner: str = ALL, since: str | None = None, until: str | None = None,
+                    skip_conversation: int | None = None) -> list[dict]:
+    """Every message of the person's conversations (optionally between two local times), newest first."""
+    where, params = ["1=1"], []
+    if owner != ALL:
+        where.append("c.owner IS ?")
+        params.append(owner)
+    if since:
+        where.append("m.created_at >= ?")
+        params.append(since)
+    if until:
+        where.append("m.created_at < ?")
+        params.append(until)
+    if skip_conversation:
+        where.append("m.conversation_id != ?")
+        params.append(skip_conversation)
+    with session() as conn:
+        rows = conn.execute(
+            "SELECT m.id, m.conversation_id, m.role, m.content, m.created_at, c.title FROM messages m "
+            f"JOIN conversations c ON c.id = m.conversation_id WHERE {' AND '.join(where)} ORDER BY m.id DESC",
+            params,
+        ).fetchall()
+    return [dict(r) for r in rows]
