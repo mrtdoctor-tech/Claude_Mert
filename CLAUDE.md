@@ -283,6 +283,13 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   (dışı: "tür karakteri olabilir"), kırpılan 0, biçim: mono ya da ≤16-bit → UYARI (44,1 kHz dışı yalnızca not). Bit derinliği
   `_bits`: `pcm_s24le` adından; kayıplı (mp3/aac…) → yok; FLAC'ta PyAV söylemiyor → "bilinmiyor". Ölçüm kodu değişmedi.
   Gerçek Palabras de Sal 2'de: LUFS TAMAM, TP UYARI, LRA UYARI, biçim TAMAM (kabul testiyle aynı).
+  3.48 (İsterler §6 + kullanıcı): SES YÜKSEKLİĞİ yalnızca değer (LUFS "platform için uygun", "-1 dBTP üstünde", "kırpılma
+  sınırında", "bozulma duyulabilir" ekleri kaldırıldı; değerlendirme yalnızca HEDEF KONTROLÜ'nde). `bpm_cross_check`:
+  `_hg_bpm` her analizde Drive'daki `Scripts\hg_olcum\hg_bpm.py`'yi `importlib` ile yükler (kopya yok; modülün global
+  `filterwarnings('ignore')`'u `catch_warnings` içinde kalır) ve `olc_sinyal(y, 22050)` (taban 80 → 80-160 bandı) +
+  `bayrak` çağırır; aynı 22 050 Hz mono sinyal. `BPM_DIFF_MAX=2` (ham Asiye tempo − hg; yarım/iki kat adı), `BPM_STABLE_MIN=0,7`.
+  hg_bpm yoksa/hata verirse "ölçülemedi" satırı, analiz durmaz. Palabras: Asiye 112,3, hg_bpm 110,0 (kararlılık 0,68,
+  GOZ ikinci aday 107,7) → UYARI + Moises notu; `hg.olc()` tek başına da 110,0/0,68 verdi.
 - **Özel kelimeler (3.28):** `app/vocab.py`, ayar `vocabulary` (virgüllü, varsayılan "HourGlow"). Whisper `hotwords`'e eklenir
   (wake_check hariç) ve `/api/transcribe` her metinde `vocab.fix`: 1-3 kelimelik gruplar, sadeleştirme (Türkçe harf
   katlama, ğ→h, ou→a, ow→o) + ünsüz iskeleti (a e i o u h w v y atılır) eşit ve benzerlik ≥0,6 → terim (kesme işaretli ek
@@ -723,6 +730,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   kod yolu güncellendi.
 - **2026-10-02 (3.47):** İsterler bölüm 5: müzik raporuna HEDEF KONTROLÜ. Gerçek dosyada denendi (rapor dosyası yazılmadı;
   kabul testi kullanıcıda: "Hepsini yeniden analiz et"). Kalan bölümler: 6 (BPM çapraz), 4 (söz çıkarma), 2 (tek komut).
+  3.47 kabul testi kullanıcıda geçti.
+- **2026-10-02 (3.48):** İsterler bölüm 6 (BPM çapraz, hg_bpm.py) + kullanıcı isteği: SES YÜKSEKLİĞİ'nde değerlendirme yok.
+  Kabul testi bekleniyor. Kalan: 4 (söz çıkarma), 2 (tek komut).
 
 ## Sıradaki fikirler
 

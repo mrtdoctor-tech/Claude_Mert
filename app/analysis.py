@@ -9,6 +9,8 @@ Music: length, format, tags, loudness (LUFS, peak, RMS, dynamics, clipping), tem
 width, silence at the start/end, sections by loudness. 3.45: no model comment on music (it called -1.6 dBTP "safe" and
 suggested compression for more dynamics); the report is measurements only, in a fixed order (Asiye_Isterler.txt §3).
 3.47: a TARGET CHECK section right after DOSYA compares the measurements with the HourGlow mastering rules (TARGETS).
+3.48: SES YÜKSEKLİĞİ shows values only (verdicts live in HEDEF KONTROLÜ); the tempo is cross-checked with HourGlow's
+hg_bpm.py (BPM_DIFF_MAX, BPM_STABLE_MIN; Asiye_Isterler.txt §6).
 Pictures: size, format, EXIF (camera, date, settings), brightness, contrast, saturation, sharpness, dominant colors,
 warm/cool, and what the model sees in it (description, mood, text in the picture).
 """
@@ -49,6 +51,8 @@ TARGETS = {
     "bits": 24,             # format: 24-bit / 44.1 kHz / stereo; UYARI when mono or 16-bit (or less)
     "rate": 44100,
 }
+BPM_DIFF_MAX = 2.0     # 3.48: Asiye vs hg_bpm.py; more is UYARI (Asiye_Isterler.txt §6)
+BPM_STABLE_MIN = 0.7   # hg_bpm "kararlilik" below this is pointed out
 LOSSY = {"mp3", "mp3float", "aac", "opus", "vorbis", "wmav1", "wmav2", "wmapro"}
 
 
@@ -221,6 +225,57 @@ def target_check(info: dict, rate: int, lufs: float | None, tp_db: float | None,
     return lines, warnings
 
 
+def _hg_bpm():
+    """3.48: HourGlow's own BPM tool (Scripts\\hg_olcum\\hg_bpm.py), loaded from Drive each time — not copied, so a fix
+    there is used here too. Its import silences warnings globally; catch_warnings keeps that inside the import."""
+    import importlib.util
+    import warnings
+
+    where = folder()
+    path = where.parent / "hg_olcum" / "hg_bpm.py" if where else None
+    if not path or not path.is_file():
+        raise FileNotFoundError(f"hg_bpm.py bulunamadı ({path})")
+    spec = importlib.util.spec_from_file_location("hg_bpm", path)
+    module = importlib.util.module_from_spec(spec)
+    with warnings.catch_warnings():
+        spec.loader.exec_module(module)
+    return module
+
+
+def bpm_cross_check(tempo: float, y, rate: int) -> tuple[list[str], bool]:
+    """3.48 (Asiye_Isterler.txt §6): hg_bpm.py is the primary tool; both values are written, a difference over
+    BPM_DIFF_MAX is UYARI (half / double time named), a stability under BPM_STABLE_MIN is pointed out.
+    Returns (report lines, warning?)."""
+    import warnings
+
+    try:
+        hg = _hg_bpm()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            result = hg.olc_sinyal(y, rate)  # same mono 22 050 Hz signal hg_bpm.olc() would load; band 80-160
+        flag = hg.bayrak(result)
+    except Exception as e:
+        log.warning("hg_bpm.py çalıştırılamadı: %s", e)
+        return [f"  Tempo (hg_bpm.py): ölçülemedi — {e}"], False
+    bpm, stable = result["bpm"], result["kararlilik"]
+    if not math.isfinite(bpm):
+        return [f"  Tempo (hg_bpm.py): ölçülemedi (durum {flag})"], False
+    lines = [f"  Tempo (hg_bpm.py, birincil): {_num(bpm)} BPM — kararlılık {_num(stable, 2)}, durum {flag}"
+             + (f", ikinci aday {_num(result['aday2'])}" if math.isfinite(result.get("aday2", float("nan"))) else "")]
+    diff = abs(tempo - bpm)
+    warning = bool(diff > BPM_DIFF_MAX)
+    relation = next((name for factor, name in ((0.5, "yarısı (half-time)"), (2.0, "iki katı (double-time)"))
+                     if abs(tempo - bpm * factor) <= BPM_DIFF_MAX), "")
+    lines.append(f"  BPM karşılaştırması: {'UYARI' if warning else 'TAMAM'} — Asiye {_num(tempo)}, hg_bpm {_num(bpm)}, "
+                 f"fark {_num(diff)} BPM"
+                 + (f"; Asiye'nin değeri hg_bpm'in {relation}" if warning and relation else "")
+                 + (f" (en çok {_num(BPM_DIFF_MAX, 0)})" if warning else ""))
+    if stable < BPM_STABLE_MIN:
+        lines.append(f"  Not: hg_bpm kararlılığı {_num(stable, 2)} (< {_num(BPM_STABLE_MIN, 1)}): tempo değişken ya da "
+                     "belirsiz, Moises'te elle doğrula")
+    return lines, warning
+
+
 def true_peak(samples, oversample: int = 4) -> float:
     """3.44: inter-sample peak (ITU-R BS.1770 true peak): each channel upsampled 4x with a polyphase low-pass filter,
     in 10-second pieces with overlap so memory stays small. Returns the linear peak (dBTP = 20·log10)."""
@@ -306,10 +361,7 @@ def music_report(path: Path) -> tuple[list[str], dict]:
     dynamics = (np.percentile(loud_blocks, 95) - np.percentile(loud_blocks, 10)) if len(loud_blocks) > 4 else None
     lines += ["", "SES YÜKSEKLİĞİ"]
     if lufs is not None and math.isfinite(lufs):
-        advice = ("Spotify/YouTube (-14 LUFS) için yüksek; platform kısacaktır" if lufs > -12 else
-                  "yayın platformları için uygun seviyede (-14 LUFS civarı)" if lufs >= -16 else
-                  "yayın platformları için kısık; mastering'de yükseltilebilir")
-        lines.append(f"  Algılanan yükseklik: {_num(lufs)} LUFS ({advice})")
+        lines.append(f"  Algılanan yükseklik: {_num(lufs)} LUFS")
         facts["lufs"] = round(lufs, 1)
     try:
         tp = true_peak(samples)
@@ -321,12 +373,11 @@ def music_report(path: Path) -> tuple[list[str], dict]:
     except Exception as e:
         log.debug("LRA ölçülemedi: %s", e)
         lra = None
-    # 3.44: sample peak and true peak are different measurements; both are shown, each with its own unit
-    lines.append(f"  Örnek tepesi (sample peak): {_num(_db(peak))} dBFS" + (" — kırpılma sınırında" if peak >= 0.999 else ""))
+    # 3.44: sample peak and true peak are different measurements; both are shown, each with its own unit.
+    # 3.48: values only here; every verdict is in HEDEF KONTROLÜ (the -1 dBTP hint contradicted the -3 dBTP rule).
+    lines.append(f"  Örnek tepesi (sample peak): {_num(_db(peak))} dBFS")
     if tp is not None:
-        lines.append(f"  Gerçek tepe (true peak, 4× örnekleme): {_num(_db(tp))} dBTP"
-                     + (" — 0 dBTP üstü: dönüştürmede (mp3/AAC) bozulma olabilir" if tp > 1.0
-                        else " — yayın platformlarının önerdiği -1 dBTP'nin üstünde" if _db(tp) > -1 else ""))
+        lines.append(f"  Gerçek tepe (true peak, 4× örnekleme): {_num(_db(tp))} dBTP")
         facts["true_peak"] = round(_db(tp), 1)
     lines.append(f"  Ortalama (RMS): {_num(_db(rms))} dBFS")
     if lra is not None:
@@ -334,7 +385,7 @@ def music_report(path: Path) -> tuple[list[str], dict]:
         facts["lra"] = round(lra, 1)
     if dynamics is not None:  # not a dynamics measure: kept only as information, without any verdict
         lines.append(f"  Bölüm yükseklik farkı (0,5 sn blokların %95−%10 RMS farkı; LRA değildir): {_num(dynamics)} dB")
-    lines.append(f"  Kırpılan örnek: {clipped}" + (" (bozulma duyulabilir)" if clipped > rate // 100 else ""))
+    lines.append(f"  Kırpılan örnek: {clipped}")
     target, facts["warnings"] = target_check(info, rate, facts.get("lufs"), facts.get("true_peak"), facts.get("lra"),
                                              clipped)
     lines[target_at:target_at] = [""] + target
@@ -375,9 +426,12 @@ def music_report(path: Path) -> tuple[list[str], dict]:
     flatness = float(librosa.feature.spectral_flatness(y=y).mean())
     onset_rate = len(librosa.onset.onset_detect(y=y, sr=ANALYSIS_RATE)) / max(duration, 1)
     facts.update(tempo=round(tempo), key=key_tr, brightness=round(centroid), duration=round(duration))
+    bpm_lines, facts["bpm_warning"] = bpm_cross_check(tempo, y, ANALYSIS_RATE)
     lines += ["", "MÜZİKAL ÖZELLİKLER",
-              f"  Tempo: {round(tempo)} BPM" + (f" (yarısı {round(tempo / 2)} / iki katı {round(tempo * 2)} de olabilir)"
-                                                 if tempo > 150 or tempo < 70 else ""),
+              f"  Tempo (Asiye, librosa beat_track): {round(tempo)} BPM"
+              + (f" (yarısı {round(tempo / 2)} / iki katı {round(tempo * 2)} de olabilir)" if tempo > 150 or tempo < 70
+                 else ""),
+              *bpm_lines,
               f"  Ton: {key_tr} ({key_en}) — güven: {'yüksek' if score > 0.75 else 'orta' if score > 0.55 else 'düşük'}",
               f"  Parlaklık (spektral merkez): {round(centroid)} Hz — "
               + ("parlak/tiz ağırlıklı" if centroid > 3000 else "koyu/bas ağırlıklı" if centroid < 1500 else "dengeli"),
@@ -517,7 +571,8 @@ async def analyze(path: Path, model: str) -> str:
         lines, facts = await run_in_threadpool(music_report, path)
         summary = (f"🎵 {path.name}: {_time(facts.get('duration', 0))}, {facts.get('tempo')} BPM, {facts.get('key')}"
                    + (f", {_num(facts['lufs'])} LUFS" if "lufs" in facts else "")
-                   + (f" — hedef kontrolü: {facts['warnings']} uyarı" if facts.get("warnings") else " — hedefler tamam"))
+                   + (f" — hedef kontrolü: {facts['warnings']} uyarı" if facts.get("warnings") else " — hedefler tamam")
+                   + (" — BPM'ler uyuşmuyor (raporda)" if facts.get("bpm_warning") else ""))
     else:
         lines, image = await run_in_threadpool(picture_report, path)
         seen = await _ask(model, "Bu resmi Türkçe anlat: 1) Resimde ne var (kısa açıklama), 2) Atmosfer ve duygu, "
