@@ -274,8 +274,8 @@ dosyanın yanına aynı adla bir **"….analiz.txt"** raporu yazarım (ör. `sar
 - **Müzik** (mp3, wav, flac, m4a, ogg, aac, aiff): süre ve biçim, etiketler (parça adı, sanatçı…), ses yüksekliği (LUFS —
   Spotify/YouTube için uygun mu), örnek tepesi (dBFS) ve gerçek tepe (true peak, dBTP), ortalama seviye, yükseklik aralığı
   (LRA, EBU R128), kırpılma, baştaki/sondaki sessizlik, stereo genişliği ve faz, tempo (BPM), ton (ör. La minör / Am),
-  parlaklık, 10 saniyelik bölümlerin yüksekliği ve yapay zekânın bu ölçümlere göre mix/mastering yorumu (parçayı dinlemez;
-  tür tahmini yapmaz). LUFS, gerçek tepe ve LRA, ffmpeg'in `ebur128` ölçümüyle karşılaştırıldı (en çok ~0,1 fark).
+  parlaklık ve 10 saniyelik bölümlerin yüksekliği. Müzik raporunda yapay zekâ yorumu yoktur (3.45): yalnızca ölçümler,
+  sabit sırayla. LUFS, gerçek tepe ve LRA, ffmpeg'in `ebur128` ölçümüyle karşılaştırıldı (en çok ~0,1 fark).
 - **Resim** (jpg, png, webp, bmp, gif, tiff): çözünürlük ve en-boy oranı (albüm kapağına uygun mu), çekim bilgileri (EXIF;
   konum bilgisi varsa uyarır), parlaklık, kontrast, doygunluk, keskinlik, renk sıcaklığı, baskın renkler (renk kodlarıyla) ve
   yapay zekânın resimde gördükleri (ne var, atmosfer, resimdeki yazılar, hangi tarz müziğe kapak olur).

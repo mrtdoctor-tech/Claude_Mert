@@ -6,7 +6,8 @@ this computer: the measurements with librosa / pyloudnorm / Pillow, the picture 
 (gemma3 can see pictures). Only people recognized by voice or passcode can use it (the folder is theirs), not guests.
 
 Music: length, format, tags, loudness (LUFS, peak, RMS, dynamics, clipping), tempo (BPM), key, brightness, stereo
-width, silence at the start/end, sections by loudness, and a short reading of these numbers by the model.
+width, silence at the start/end, sections by loudness. 3.45: no model comment on music (it called -1.6 dBTP "safe" and
+suggested compression for more dynamics); the report is measurements only, in a fixed order (Asiye_Isterler.txt §3).
 Pictures: size, format, EXIF (camera, date, settings), brightness, contrast, saturation, sharpness, dominant colors,
 warm/cool, and what the model sees in it (description, mood, text in the picture).
 """
@@ -217,8 +218,7 @@ def music_report(path: Path) -> tuple[list[str], dict]:
     tag_names = {"title": "Parça adı", "artist": "Sanatçı", "album": "Albüm", "genre": "Tür", "date": "Yıl",
                  "year": "Yıl", "composer": "Besteci", "bpm": "BPM (etiket)", "tbpm": "BPM (etiket)", "comment": "Not"}
     tags = [f"  {label}: {info['tags'][key]}" for key, label in tag_names.items() if info["tags"].get(key)]
-    if tags:
-        lines += ["", "ETİKETLER"] + list(dict.fromkeys(tags))
+    lines += list(dict.fromkeys(tags))  # 3.45: tags are part of DOSYA (fixed section order, no ETİKETLER section)
 
     # Loudness
     peak = float(np.max(np.abs(samples))) if samples.size else 0.0
@@ -445,14 +445,6 @@ async def analyze(path: Path, model: str) -> str:
         lines, facts = await run_in_threadpool(music_report, path)
         summary = (f"🎵 {path.name}: {_time(facts.get('duration', 0))}, {facts.get('tempo')} BPM, {facts.get('key')}"
                    + (f", {_num(facts['lufs'])} LUFS" if "lufs" in facts else ""))
-        # 3.44: no genre guess (rock was called "Future House / lo-fi"); dynamics only from LRA
-        comment = await _ask(model, "Bir müzik parçasının ölçümleri aşağıda. Müzik yapımcısına Türkçe, en çok 7 kısa "
-                             "maddeyle yorum yap: mix/mastering için dikkat edilecek noktalar (ses yüksekliği, gerçek tepe, "
-                             "dinamik, stereo, kırpılma, baştaki/sondaki sessizlik). Tür ya da tarz tahmini YAPMA. Dinamik "
-                             "hakkında yalnızca LRA değerine dayan; 'bölüm yükseklik farkı' bir dinamik ölçüsü değildir, "
-                             "ona bakarak 'sıkıştırılmış' deme. Ölçümlerde olmayan bir şeyi uydurma.\n\n" + "\n".join(lines))
-        if comment:
-            lines += ["", "YORUM (yapay zekâ, ölçümlere göre; parçayı dinlemedi)"] + ["  " + c for c in comment.splitlines()]
     else:
         lines, image = await run_in_threadpool(picture_report, path)
         seen = await _ask(model, "Bu resmi Türkçe anlat: 1) Resimde ne var (kısa açıklama), 2) Atmosfer ve duygu, "
