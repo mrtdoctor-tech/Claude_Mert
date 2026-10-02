@@ -6,12 +6,21 @@ language=None → Whisper detects it), flatten_words, is_adlib_segment, find_gap
 DEFAULT_GAP_THRESHOLD seconds; ad-libs are not lyrics). Rules from HourGlow's 03.08.2026 test: Demucs is required
 (Whisper hallucinates on the full mix) and the model is medium (large on this GPU gives "Thank you" ×7).
 The stems go to a temporary folder and are deleted (never written into Drive).
+
+3.50: all of it runs in a child process (`python -m app.lyrics`, same Python), never inside the assistant. stt.py
+loads the cuDNN of the pip nvidia-cudnn-cu12 package for faster-whisper (and puts its folder on PATH); torch's own
+cudnn_cnn64_9.dll then failed in the same process: "[WinError 127] … cudnn_cnn64_9.dll". The child gets a PATH
+without those nvidia folders, so torch (and Demucs, its grandchild) load only torch's own DLLs.
 """
 
 import gc
 import importlib.util
+import json
 import logging
+import os
 import shutil
+import subprocess
+import sys
 import tempfile
 import warnings
 from pathlib import Path
@@ -70,8 +79,38 @@ def _free_gpu():
         pass
 
 
+RESULT_MARK = "@@SOZLER@@"  # the child's answer line; everything else it prints (Demucs, Whisper progress) is noise
+TIMEOUT = 30 * 60
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def _child_env() -> dict:
+    env = dict(os.environ, PYTHONIOENCODING="utf-8")
+    nvidia = os.sep + "site-packages" + os.sep + "nvidia" + os.sep
+    env["PATH"] = os.pathsep.join(p for p in env.get("PATH", "").split(os.pathsep)
+                                  if p and nvidia not in os.path.normcase(os.path.normpath(p)) + os.sep)
+    return env
+
+
 def section(path: Path, duration: float, folder: Path | None) -> tuple[list[str], dict]:
-    """SÖZLER report lines + {"language": "es" | None, "instrumental": bool}."""
+    """SÖZLER report lines + {"language": "es" | None, "instrumental": bool}, from a child process (see above)."""
+    args = json.dumps({"path": str(path), "duration": duration, "folder": str(folder) if folder else None})
+    done = subprocess.run([sys.executable, "-m", "app.lyrics", args], cwd=ROOT, env=_child_env(), capture_output=True,
+                          timeout=TIMEOUT, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    out = done.stdout.decode("utf-8", "replace")
+    answer = next((line[len(RESULT_MARK):] for line in reversed(out.splitlines()) if line.startswith(RESULT_MARK)), None)
+    if answer is None:
+        tail = done.stderr.decode("utf-8", "replace").strip().splitlines()[-15:]
+        log.warning("Söz çıkarma alt süreci sonuç vermedi (çıkış %s):\n%s", done.returncode, "\n".join(tail))
+        raise RuntimeError(next((t for t in reversed(tail) if t.strip()), f"alt süreç çıkış kodu {done.returncode}"))
+    result = json.loads(answer)
+    if result.get("error"):
+        raise RuntimeError(result["error"])
+    return result["lines"], result["info"]
+
+
+def _section(path: Path, duration: float, folder: Path | None) -> tuple[list[str], dict]:
+    """The work itself; runs only in the child process."""
     lines, info = ["SÖZLER", NOTE], {"language": None, "instrumental": False}
     hg = _analiz(folder)
     temp = tempfile.mkdtemp(prefix="asiye_stem_")
@@ -121,3 +160,16 @@ def section(path: Path, duration: float, folder: Path | None) -> tuple[list[str]
         for a_start, a_end in hg.adlibs_in_gap(start, end, adlibs):
             lines.append(f"      ad-lib: {_time(a_start)} – {_time(a_end)}")
     return lines, info
+
+
+if __name__ == "__main__":  # python -m app.lyrics '{"path": …, "duration": …, "folder": …}'
+    logging.basicConfig(level=logging.INFO)
+    job = json.loads(sys.argv[1])
+    try:
+        found, about = _section(Path(job["path"]), job["duration"], Path(job["folder"]) if job["folder"] else None)
+        reply = {"lines": found, "info": about}
+    except Exception as e:
+        log.exception("Sözler çıkarılamadı")
+        reply = {"error": str(e)}
+    sys.stdout.flush()
+    print(RESULT_MARK + json.dumps(reply, ensure_ascii=False), flush=True)

@@ -300,6 +300,14 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `analyze`'da hata → "Sözler çıkarılamadı" satırı, rapor yine yazılır. Palabras: ~28 sn (Demucs + medium, RTX 4060),
   dil es, sözler doğru görünüyor; iki çalıştırma arasında bazı satırlar farklı (Whisper sıcaklık geri dönüşü + Demucs
   rastgele kaydırma) → taslak. Whisper tek dil seçer (şarkı başı): İngilizce+Zulu amapiano'da Zulu kısımlar bozuk olabilir.
+  **3.50: söz çıkarma ALT SÜREÇTE** (`python -m app.lyrics '<json>'`, aynı python, cwd=proje, `@@SOZLER@@` + JSON satırı,
+  30 dk zaman aşımı, CREATE_NO_WINDOW). Neden: 3.49 Asiye'nin içinde "[WinError 127] … torch\lib\cudnn_cnn64_9.dll"
+  verdi — `stt` (faster-whisper GPU) pip nvidia-cudnn-cu12 DLL'lerini ctypes ile yüklüyor ve PATH'e ekliyor, sonra aynı
+  süreçte torch'un kendi cuDNN'i açılamıyor. Benim 3.49 testim ayrı süreçteydi, hata görünmedi. Çocuğun PATH'inden
+  `site-packages\nvidia\` klasörleri çıkarılıyor (Demucs torununa da geçer). Yeniden üretim: `stt._gpu_usable()` sonra
+  aynı süreçte `lyrics` → hata; düzeltmeden sonra 26 sn. **Gerçek akış testi:** canlı Asiye'de `/api/transcribe/warmup`
+  (stt GPU) + `POST /api/chat` "Hepsini yeniden analiz et." → 35 sn, rapor tam. **Kural: torch/CUDA kullanan yeni işleri
+  asistan sürecine import etme; alt süreçte çalıştır ve testi canlı süreçte yap.**
   Demucs ilk denemede de hemen çalıştı (modeli daha önce analiz.py için inmiş; yeri doğrulanmadı), Whisper
   `~/.cache/whisper/medium.pt` (vardı).
 - **Özel kelimeler (3.28):** `app/vocab.py`, ayar `vocabulary` (virgüllü, varsayılan "HourGlow"). Whisper `hotwords`'e eklenir
@@ -745,8 +753,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   3.47 kabul testi kullanıcıda geçti.
 - **2026-10-02 (3.48):** İsterler bölüm 6 (BPM çapraz, hg_bpm.py) + kullanıcı isteği: SES YÜKSEKLİĞİ'nde değerlendirme yok.
   Kabul testi kullanıcıda geçti.
-- **2026-10-02 (3.49):** Tempo bir ondalık + İsterler bölüm 4 (sözler). Kabul testi bekleniyor. Kalan: 2 (tek komut akışı
-  ve adım adım ilerleme).
+- **2026-10-02 (3.49):** Tempo bir ondalık + İsterler bölüm 4 (sözler). Kullanıcının gerçek testinde SÖZLER cuDNN hatası
+  verdi (WinError 127).
+- **2026-10-02 (3.50):** Söz çıkarma alt sürece taşındı; canlı Asiye sürecinde (stt GPU yüklüyken) sohbet komutuyla test
+  edildi, geçti. Bu test kullanıcının veritabanına "202610022023 Hepsini" sohbetini (id 80) ekledi. Kalan: bölüm 2.
 
 ## Sıradaki fikirler
 
