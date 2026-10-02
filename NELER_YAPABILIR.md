@@ -289,8 +289,8 @@ dosyanın yanına aynı adla bir **"….analiz.txt"** raporu yazarım (ör. `sar
   konum bilgisi varsa uyarır), parlaklık, kontrast, doygunluk, keskinlik, renk sıcaklığı, baskın renkler (renk kodlarıyla) ve
   yapay zekânın resimde gördükleri (ne var, atmosfer, resimdeki yazılar, hangi tarz müziğe kapak olur).
 - Tek komut yeter (ayrı "sözleri çıkar" komutu yok). Analiz ekranda adım adım ilerler (3.51):
-  "🔎 1/1 Şarkı: ölçüm… hedef… BPM… sözler…". Asistan açıldıktan sonraki ilk müzik dosyası biraz uzun sürer
-  (yaklaşık yarım dakika, bir kerelik hazırlık); sonrakiler birkaç saniye.
+  "🔎 1/1 Şarkı: ölçüm… hedef… BPM… sözler…". Bir şarkı yaklaşık yarım dakika sürer (ölçümler birkaç saniye, sözler
+  ~25 saniye); asistan açıldıktan sonraki ilk dosyaya bir kerelik hazırlık için yarım dakika daha eklenebilir.
 - Her şey bilgisayarında yapılır. Yalnızca sesinden ya da şifresinden tanıdığım kişiler kullanabilir.
 - Başka bir klasör için: ⚙️ Ayarlar → 🌐 Bağlantılar → **Analiz klasörü**.
 
