@@ -793,6 +793,13 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   (3.53 yalnızca test sırasında canlı sunucuda göründü; kullanıcıya giden sürüm 3.54.) Kullanıcı onayı bekleniyor.
   **Uyarı:** yorumlardaki sürümü `sed 's/3\.53/3.54/g'` ile değiştirirken analysis.py'deki `MINOR` ton profilindeki 3.53
   de değişti (commit'ten önce fark edilip geri alındı). Sürüm numarasını toplu değiştirme; satırı tek tek düzelt.
+- **2026-10-02 (3.55):** Kullanıcı sordu: uydurma filtresi alçak sesli gerçek vokali atar mı? 3.54'te eşik −40 dBFS
+  (`VOCAL_LEVEL_DB`, enstrümantal kararıyla ortak) → ayrı `SILENCE_DB = −60`. Ölçüm (scratchpad silence_check.py):
+  Palabras'ta söylenen 28 segment −27,2…−21,7 dB, uydurma 3:03 −82,4 dB (bu sefer "Subtítulos por la comunidad de
+  Amara.org" — `stt.clean` İspanyolcasını tanımıyor, filtre yakaladı); Verse 2 −25 dB kısık → −49,5 dB, Whisper yazdı,
+  −60'ta kalıyor (−40 atıyordu); −35 dB kısık (~−59,5) → Whisper hiç yazmadı. Filtre segmentin TAMAMININ RMS'ine bakar:
+  söylenen + sessiz karışık segment söylenen kısım yüzünden kalır. Enstrümantal kararı (`_singing_share`, −40, %3)
+  değişmedi. Canlı regresyon: 56/56, 0/0/0, ölçümler aynı. İsterler §9b'ye not yazıldı.
 
 ## Sıradaki fikirler
 

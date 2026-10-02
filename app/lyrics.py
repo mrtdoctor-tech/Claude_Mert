@@ -32,6 +32,11 @@ log = logging.getLogger("asistan.lyrics")
 
 MODEL = "medium"        # never "large" here: broken on this GPU (analiz.py MODEL SECIMI)
 VOCAL_LEVEL_DB = -40.0  # a 0.5 s block of the vocal stem louder than this counts as singing
+# 3.55: a Whisper segment is dropped only when the vocal stem is really silent over the WHOLE segment (RMS below this).
+# -40 (3.54) was too close to quiet real singing. Palabras de Sal 2: 28 sung segments -27.2…-21.7 dB, the invented one
+# at 3:03 -82.4 dB; Verse 2 turned down 25 dB (-49.5 dB) is still written by Whisper and kept here (-40 dropped it);
+# turned down 35 dB (~-59.5 dB) Whisper writes nothing at all, so the filter never meets real singing it could hear.
+SILENCE_DB = -60.0
 VOCAL_MIN_SHARE = 0.03  # less singing than this share of the song → instrumental, Whisper is not run
 NOTE = "  Taslak transkript — resmi söz metni Suno'dan alınır."
 LANGUAGES = {"en": "İngilizce", "es": "İspanyolca", "tr": "Türkçe", "zu": "Zuluca", "pt": "Portekizce",
@@ -385,7 +390,7 @@ def _section(path: Path, duration: float, folder: Path | None) -> tuple[list[str
             continue
         # 3.54: words written where the vocal stem is silent are Whisper's own (Palabras de Sal 2: "Palabras de sal me
         # dejan aquí" at 3:03, stem -82 dB, no_speech_prob 0.97 — just inside Whisper's own keep rule)
-        if _level_db(mono, rate, seg["start"], seg["end"]) < VOCAL_LEVEL_DB:
+        if _level_db(mono, rate, seg["start"], seg["end"]) < SILENCE_DB:
             dropped.append((seg["start"], text))
             continue
         segments.append((seg, text))
