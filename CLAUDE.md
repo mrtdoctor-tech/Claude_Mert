@@ -12,6 +12,9 @@ Kullanıcıya cevapta yeni sürüm numarasını söyle ki ekranda doğru sürüm
 - Proje sahibi yazılımcı değil: açıklamaları **Türkçe**, sade ve adım adım yap; teknik terimleri açıkla.
 - **Windows** kullanıyor. Kurulum/çalıştırma talimatları Windows'a göre olmalı (çift tıklanan `.bat` dosyaları).
 - Öncelik **gizlilik**: veriler bilgisayardan çıkmamalı. Bulut servisi / API anahtarı gerektiren bir şey eklemeden önce kullanıcıya sor.
+- **Tek bilgisayar (02.10.2026'dan beri):** depo `C:\Apps\Claude_Mert` (eski OneDrive klasörü `Claude_Mert_ESKI` adıyla
+  duruyor, **dokunma**). Kod ve veritabanı (`data/`) yalnızca ev bilgisayarında (i7-14700F, RTX 4060); laptop artık
+  kullanılmıyor, OneDrive eşitlemesi yok. Aşağıda "iki bilgisayar / OneDrive / zayıf bilgisayar" geçen yerler geçmiştir.
 
 ## Projenin amacı
 
@@ -57,10 +60,12 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `ctranslate2>=4.5` (CUDA 12 + cuDNN 9) sabitlendi. `/api/transcribe` ve `/api/version` cihazı (`gpu`/`cpu`) döner;
   arayüz sayaçta ve sol alt özette gösterir. Bulutta GPU yok: GPU yolu gerçek donanımda denenmedi.
 - `app/config.py`: Ayarlar **bilgisayara özel** `%LOCALAPPDATA%\YerelAsistan\settings.json` (2.6; yoksa ilk açılışta eski
-  ortak `data/settings.json`'dan okunur). Veritabanı `data/` içinde, OneDrive ile **ortak** (kullanıcı kararı).
+  ortak `data/settings.json`'dan okunur). Veritabanı `data/` içinde. (2.6'daki "OneDrive ile ortak" kararı 02.10.2026'da
+  geçersiz oldu: depo `C:\Apps\Claude_Mert`'te, tek bilgisayar.)
 - `app/presence.py`: `data/kullanimda.json`'a dakikada bir bilgisayar adı + zaman yazar; başka bilgisayarın 150 sn'den
   yeni notu varsa `/api/version` `other_computer` döner ve arayüz kırmızı uyarı gösterir (ortak SQLite'ı aynı anda iki
-  bilgisayarda kullanmak bozabilir). Kapanışta kendi notunu siler.
+  bilgisayarda kullanmak bozabilir). Kapanışta kendi notunu siler. 02.10.2026'dan beri tek bilgisayar: uyarı artık
+  çıkmamalı; kod zararsız olduğu için duruyor.
 - `app/tts.py` + `POST /api/tts`: **edge-tts** ile Microsoft sinirsel sesi (varsayılan `tr-TR-EmelNeural`, kadın) →
   MP3. **Çevrimiçi**: okunacak yanıt metni Microsoft'a gider; kullanıcı bunu bilerek seçti (2026-09-27).
   `tts_voice: "windows"` ise sunucu kullanılmaz, tarayıcı internetsiz Windows sesiyle okur.
@@ -77,7 +82,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `replyTimer`: cevap beklerken canlı saniye sayacı, bitince "ses→yazı · ilk kelime · toplam · model" özeti
   (yalnızca o anki oturumda; veritabanına yazılmaz, eski sohbetlerde görünmez).
 - `kurulum.bat` / `baslat.bat`: Windows kurulumu ve başlatma (CRLF satır sonları, `.gitattributes` ile korunuyor).
-  **Python ortamı her bilgisayarda ayrı** (proje klasörü OneDrive ile iki bilgisayar arasında eşitleniyor):
+  **Python ortamı proje klasörünün dışında** (2.5'te proje OneDrive ile iki bilgisayar arasında eşitleniyordu; 02.10.2026'dan
+  beri tek bilgisayar, düzen aynı kaldı):
   2.6'dan beri `kurulum.bat` önce Anaconda/Miniconda arar (Pinokio'nunkini atlar) ve **`asistan` adlı conda ortamı**
   açar (`conda create -n asistan --override-channels -c conda-forge python=3.12`, conda-forge = Anaconda ToS derdi yok);
   yoksa python.org Python'u ile `%LOCALAPPDATA%\YerelAsistan\venv`. Seçilen python.exe yolu
@@ -324,7 +330,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 
 - Bulut ortamında Ollama yok: `app` sahte bir Ollama sunucusuyla (`/api/tags`, `/api/chat` akışlı + `format: json`)
   test edildi; arayüz headless Chromium ile ekran görüntüsü alınarak kontrol edildi.
-- Kullanıcı gerçek Windows + Ollama üzerinde çalıştırdı (zayıf bir bilgisayarda); ayrıntılar "Geçmiş" bölümünde.
+- Kullanıcı gerçek Windows + Ollama üzerinde çalıştırıyor (ev bilgisayarı, RTX 4060; ilk aylarda bir laptop da vardı);
+  ayrıntılar "Geçmiş" bölümünde.
 
 ## Geçmiş
 
@@ -705,6 +712,10 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   **muzik'e opencv-python-headless==4.11.0.86** kurdu; hg_olcum/hg_dikis çıktıları ComfyUI ortamındakiyle birebir → eski
   ComfyUI conda ortamını silmenin önündeki engel kalktı (hg_bpm de artık muzik'te; eski "ai_assistant" notu geçersiz).
   Gerçek şarkılarla (One More Card, Run Again) yeni rapor değerleri kullanıcıdan bekleniyor.
+- **2026-10-02:** Depo OneDrive'dan **`C:\Apps\Claude_Mert`**'e taşındı (eski klasör `Claude_Mert_ESKI`, dokunulmuyor).
+  Laptop artık kullanılmıyor; kod ve `data/` yalnızca ev bilgisayarında. 2.6'daki "veritabanı OneDrive'da ortak" kararı
+  geçersiz. README/CLAUDE.md buna göre güncellendi (sürüm değişmedi: yalnızca belgeler); `Asiye_Isterler.txt` bölüm 1'deki
+  kod yolu güncellendi.
 
 ## Sıradaki fikirler
 
@@ -722,8 +733,6 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   (`all-in-one-infer`, muzik'in kopyasında) ayrı iş. 3.44: HourGlow betikleri muzik'te (OpenCV dahil) → eski ComfyUI conda
   ortamı + `P:\Comfy\ComfyUI` klasörü silinebilir (yeni ComfyUI_yeni portable kendi python'unu kullanıyor).
 - Ses tanıma: Sezin'in 3.3 puanlarını gör (özellikle Mert profiline benzerliği); gerekirse eşik/MARGIN ayarı.
-- 1b yetersiz kalırsa zayıf bilgisayar için başka küçük model dene (ör. `gemma3n:e2b`, `qwen3:1.7b`); sonucu kullanıcıdan öğren.
-- Ana bilgisayara kurulum (henüz yapılmadı).
 - İstenirse tamamen yerel kadın sesi: NVIDIA olduğu için ses klonlama (XTTS-v2 / Chatterbox Multilingual gibi,
   Türkçe destekli) eklenebilir; kullanıcı bir kadın sesi örneği verir.
 - Hafıza büyüdükçe: tüm bilgileri isteme koymak yerine anlamsal arama (Ollama embedding modeli).

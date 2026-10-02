@@ -89,8 +89,10 @@ dosyasında. Aynı sayfa uygulamada sol menüdeki **❓ Neler yapabilirim?** dü
 
 ## Verilerin nerede?
 
-- **Sohbetler ve hafıza:** proje klasöründeki **`data\asistan.db`**. Proje klasörü OneDrive'daysa iki bilgisayar aynı sohbetleri ve hafızayı paylaşır. **Asistanı aynı anda iki bilgisayarda açma** (açarsan ekranda uyarı çıkar); yedeklemek için `data` klasörünü kopyala.
-- **Ayarlar ve Python ortamı:** her bilgisayarın kendi `%LOCALAPPDATA%\YerelAsistan` klasöründe (model seçimi gibi ayarlar bilgisayara özel).
+- **Sohbetler ve hafıza:** proje klasöründeki **`data\asistan.db`** (`C:\Apps\Claude_Mert\data`). Yalnızca bu bilgisayarda durur, buluta eşitlenmez; yedeklemek için `data` klasörünü kopyala.
+- **Ayarlar ve Python ortamı:** bilgisayarın `%LOCALAPPDATA%\YerelAsistan` klasöründe.
+
+> **Not (02.10.2026):** Eskiden proje OneDrive'daydı ve iki bilgisayar (laptop + ev bilgisayarı) aynı sohbetleri paylaşıyordu. Artık proje `C:\Apps\Claude_Mert`'te ve yalnızca ev bilgisayarında kullanılıyor. Sürüm geçmişindeki OneDrive / iki bilgisayar satırları o döneme aittir.
 
 ## Sorun giderme
 
@@ -99,7 +101,7 @@ dosyasında. Aynı sayfa uygulamada sol menüdeki **❓ Neler yapabilirim?** dü
 | "Ollama'ya bağlanılamadı" | Başlat menüsünden Ollama'yı aç, sonra tekrar dene. |
 | "... modeli yüklü değil" | Komut isteminde mesajdaki `ollama pull ...` komutunu çalıştır. |
 | Yanıtlar çok yavaş | Yukarıdaki "Bilgisayarın yavaşsa" bölümüne bak. |
-| "No Python at ..." hatası | Bu bilgisayarda bir kez `kurulum.bat`'ı çalıştır (2.5'ten itibaren her bilgisayarın kendi Python ortamı var). |
+| "No Python at ..." hatası | Bir kez `kurulum.bat`'ı çalıştır (Python ortamı proje klasöründe değil, `%LOCALAPPDATA%\YerelAsistan`'da tutulur). |
 | Kurulum Pinokio / Miniconda / Anaconda Python'unu kullanıyor | Python'u python.org'dan kur, `.venv` klasörünü sil, `kurulum.bat`'ı tekrar çalıştır. (`pyvenv.cfg`'yi elle düzenleme; yeni `kurulum.bat` bozuk `.venv`'i kendisi yeniler.) |
 | Mikrofon çalışmıyor | Tarayıcı adres çubuğundaki kilit/mikrofon simgesinden izin ver. |
 
