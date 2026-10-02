@@ -288,7 +288,8 @@ dosyanın yanına aynı adla bir **"….analiz.txt"** raporu yazarım (ör. `sar
 - **Resim** (jpg, png, webp, bmp, gif, tiff): çözünürlük ve en-boy oranı (albüm kapağına uygun mu), çekim bilgileri (EXIF;
   konum bilgisi varsa uyarır), parlaklık, kontrast, doygunluk, keskinlik, renk sıcaklığı, baskın renkler (renk kodlarıyla) ve
   yapay zekânın resimde gördükleri (ne var, atmosfer, resimdeki yazılar, hangi tarz müziğe kapak olur).
-- Analiz ekranda "🔎 2/5: … analiz ediliyor" diye ilerler. Asistan açıldıktan sonraki ilk müzik dosyası biraz uzun sürer
+- Tek komut yeter (ayrı "sözleri çıkar" komutu yok). Analiz ekranda adım adım ilerler (3.51):
+  "🔎 1/1 Şarkı: ölçüm… hedef… BPM… sözler…". Asistan açıldıktan sonraki ilk müzik dosyası biraz uzun sürer
   (yaklaşık yarım dakika, bir kerelik hazırlık); sonrakiler birkaç saniye.
 - Her şey bilgisayarında yapılır. Yalnızca sesinden ya da şifresinden tanıdığım kişiler kullanabilir.
 - Başka bir klasör için: ⚙️ Ayarlar → 🌐 Bağlantılar → **Analiz klasörü**.

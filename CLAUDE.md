@@ -308,6 +308,12 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   aynı süreçte `lyrics` → hata; düzeltmeden sonra 26 sn. **Gerçek akış testi:** canlı Asiye'de `/api/transcribe/warmup`
   (stt GPU) + `POST /api/chat` "Hepsini yeniden analiz et." → 35 sn, rapor tam. **Kural: torch/CUDA kullanan yeni işleri
   asistan sürecine import etme; alt süreçte çalıştır ve testi canlı süreçte yap.**
+  3.51 (İsterler §2): `music_report(path, step)` / `analyze(path, model, step)`: aşama başında `step("ölçüm"|"hedef"|"BPM"|
+  "sözler")` (resim: "ölçüm", "yapay zekâ bakıyor"); `run` bunları `loop.call_soon_threadsafe` + `asyncio.Queue` ile
+  toplar, `analyze` görevi sürerken "🔎 n/N <stem>: ölçüm… hedef… BPM… sözler…" `progress` olayları verir (ölçüm kodu
+  değişmedi). Canlı Asiye'de: ölçüm+hedef+BPM ~6 sn, sözler ~25 sn. Whisper satır bölmesi çalıştırmadan çalıştırmaya
+  değişiyor (bir seferde 27 satır, bir seferde 17: iki dize tek segmentte, metin tam).
+  Curl ile canlı test: Türkçe karakterli mesajı `--data-binary @dosya.json` (UTF-8) ile gönder; komut satırında bozuluyor.
   Demucs ilk denemede de hemen çalıştı (modeli daha önce analiz.py için inmiş; yeri doğrulanmadı), Whisper
   `~/.cache/whisper/medium.pt` (vardı).
 - **Özel kelimeler (3.28):** `app/vocab.py`, ayar `vocabulary` (virgüllü, varsayılan "HourGlow"). Whisper `hotwords`'e eklenir
@@ -756,7 +762,11 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
 - **2026-10-02 (3.49):** Tempo bir ondalık + İsterler bölüm 4 (sözler). Kullanıcının gerçek testinde SÖZLER cuDNN hatası
   verdi (WinError 127).
 - **2026-10-02 (3.50):** Söz çıkarma alt sürece taşındı; canlı Asiye sürecinde (stt GPU yüklüyken) sohbet komutuyla test
-  edildi, geçti. Bu test kullanıcının veritabanına "202610022023 Hepsini" sohbetini (id 80) ekledi. Kalan: bölüm 2.
+  edildi, geçti. Bu test kullanıcının veritabanına "202610022023 Hepsini" sohbetini (id 80) ekledi. Kullanıcı Suno metniyle
+  karşılaştırdı: 27 satırın 25'i birebir, 2'sinde birer kelime hatası, eksik satır yok.
+- **2026-10-02 (3.51):** İsterler bölüm 2 (tek komut + adım adım ilerleme) → İsterler'deki tüm bölümler uygulandı. Canlı
+  Asiye'de "Asiye klasörünü analiz et." (yeni dosya yok cevabı) ve "Hepsini yeniden analiz et." ile test edildi (sohbet
+  id 81, 82 eklendi); kabul testi maddelerinin hepsi raporda. Kullanıcının onayı bekleniyor.
 
 ## Sıradaki fikirler
 

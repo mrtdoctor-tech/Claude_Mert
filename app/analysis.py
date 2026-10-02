@@ -12,10 +12,12 @@ suggested compression for more dynamics); the report is measurements only, in a 
 3.48: SES YÜKSEKLİĞİ shows values only (verdicts live in HEDEF KONTROLÜ); the tempo is cross-checked with HourGlow's
 hg_bpm.py (BPM_DIFF_MAX, BPM_STABLE_MIN; Asiye_Isterler.txt §6).
 3.49: SÖZLER at the end — lyrics.py, with HourGlow's analiz.py (Demucs + Whisper medium; §4).
+3.51: one command runs every stage in order and reports each stage on the screen (Asiye_Isterler.txt §2).
 Pictures: size, format, EXIF (camera, date, settings), brightness, contrast, saturation, sharpness, dominant colors,
 warm/cool, and what the model sees in it (description, mood, text in the picture).
 """
 
+import asyncio
 import base64
 import io
 import logging
@@ -326,7 +328,8 @@ def loudness_range(samples, rate: int) -> float | None:
     return float(np.percentile(gated, 95) - np.percentile(gated, 10))
 
 
-def music_report(path: Path) -> tuple[list[str], dict]:
+def music_report(path: Path, step=lambda name: None) -> tuple[list[str], dict]:
+    """step(name) is called when a stage starts (3.51: progress on the screen); it changes nothing in the report."""
     import librosa
     import numpy as np
 
@@ -387,6 +390,7 @@ def music_report(path: Path) -> tuple[list[str], dict]:
     if dynamics is not None:  # not a dynamics measure: kept only as information, without any verdict
         lines.append(f"  Bölüm yükseklik farkı (0,5 sn blokların %95−%10 RMS farkı; LRA değildir): {_num(dynamics)} dB")
     lines.append(f"  Kırpılan örnek: {clipped}")
+    step("hedef")
     target, facts["warnings"] = target_check(info, rate, facts.get("lufs"), facts.get("true_peak"), facts.get("lra"),
                                              clipped)
     lines[target_at:target_at] = [""] + target
@@ -427,6 +431,7 @@ def music_report(path: Path) -> tuple[list[str], dict]:
     flatness = float(librosa.feature.spectral_flatness(y=y).mean())
     onset_rate = len(librosa.onset.onset_detect(y=y, sr=ANALYSIS_RATE)) / max(duration, 1)
     facts.update(tempo=round(tempo), key=key_tr, brightness=round(centroid), duration=round(duration), seconds=duration)
+    step("BPM")
     bpm_lines, facts["bpm_warning"] = bpm_cross_check(tempo, y, ANALYSIS_RATE)
     lines += ["", "MÜZİKAL ÖZELLİKLER",
               f"  Tempo (Asiye, librosa beat_track): {_num(tempo)} BPM"
@@ -562,14 +567,17 @@ def _color_name(r: int, g: int, b: int) -> str:
 
 # One file
 
-async def analyze(path: Path, model: str) -> str:
-    """Write the report next to the file; returns a one-line summary for the chat."""
+async def analyze(path: Path, model: str, step=lambda name: None) -> str:
+    """Write the report next to the file; returns a one-line summary for the chat. step(name): a stage starts (it may
+    be called from a worker thread)."""
     kind = "music" if path.suffix.lower() in MUSIC else "picture"
     from starlette.concurrency import run_in_threadpool
 
     header = [f"Yerel Asistan analiz raporu — {datetime.now():%d.%m.%Y %H:%M}", "=" * 60, ""]
     if kind == "music":
-        lines, facts = await run_in_threadpool(music_report, path)
+        step("ölçüm")
+        lines, facts = await run_in_threadpool(music_report, path, step)
+        step("sözler")
         try:  # 3.49: SÖZLER is the last section (Asiye_Isterler.txt §3, §4); a failure here must not lose the report
             words, sung = await run_in_threadpool(lyrics.section, path, facts["seconds"], folder())
         except Exception as e:
@@ -584,7 +592,9 @@ async def analyze(path: Path, model: str) -> str:
                    + (f" — hedef kontrolü: {facts['warnings']} uyarı" if facts.get("warnings") else " — hedefler tamam")
                    + (" — BPM'ler uyuşmuyor (raporda)" if facts.get("bpm_warning") else ""))
     else:
+        step("ölçüm")
         lines, image = await run_in_threadpool(picture_report, path)
+        step("yapay zekâ bakıyor")
         seen = await _ask(model, "Bu resmi Türkçe anlat: 1) Resimde ne var (kısa açıklama), 2) Atmosfer ve duygu, "
                           "3) Öne çıkan öğeler ve kompozisyon, 4) Resimdeki yazılar (varsa aynen), 5) Bir müzik parçasına "
                           "kapak olarak kullanılsa hangi tarz müziğe uyar. Kısa maddelerle yaz, görmediğin şeyi uydurma.",
@@ -641,10 +651,28 @@ async def run(text: str, model: str):
                        "\"hepsini yeniden analiz et\".")
         return
     done, failed = [], []
+    loop = asyncio.get_running_loop()
     for number, path in enumerate(files, 1):
-        yield "progress", f"🔎 {number}/{len(files)}: {path.name} analiz ediliyor…"
+        # 3.51 (Asiye_Isterler.txt §2): one command does every stage in order, and the screen shows each one as it
+        # starts: "🔎 1/1 Palabras de Sal 2: ölçüm… hedef… BPM… sözler…"
+        stages, news = [], asyncio.Queue()
+        yield "progress", f"🔎 {number}/{len(files)} {path.stem}: başlıyor…"
+        work = asyncio.ensure_future(analyze(path, model, lambda name: loop.call_soon_threadsafe(news.put_nowait, name)))
+        while True:
+            wait = asyncio.ensure_future(news.get())
+            await asyncio.wait({work, wait}, return_when=asyncio.FIRST_COMPLETED)
+            if not wait.done():
+                wait.cancel()
+            names = [wait.result()] if wait.done() and not wait.cancelled() else []
+            while not news.empty():
+                names.append(news.get_nowait())
+            if names:
+                stages += names
+                yield "progress", f"🔎 {number}/{len(files)} {path.stem}: " + " ".join(f"{s}…" for s in stages)
+            if work.done():
+                break
         try:
-            done.append(await analyze(path, model))
+            done.append(work.result())
         except Exception as e:
             log.exception("Analiz edilemedi: %s", path.name)
             failed.append(f"⚠️ {path.name}: {e}")
