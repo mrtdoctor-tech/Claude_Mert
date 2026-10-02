@@ -300,7 +300,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `analyze`'da hata → "Sözler çıkarılamadı" satırı, rapor yine yazılır. Palabras: ~28 sn (Demucs + medium, RTX 4060),
   dil es, sözler doğru görünüyor; iki çalıştırma arasında bazı satırlar farklı (Whisper sıcaklık geri dönüşü + Demucs
   rastgele kaydırma) → taslak. Whisper tek dil seçer (şarkı başı): İngilizce+Zulu amapiano'da Zulu kısımlar bozuk olabilir.
-  Demucs htdemucs modeli `~/.cache/torch/hub` (ilk kullanımda indi), Whisper `~/.cache/whisper/medium.pt` (vardı).
+  Demucs ilk denemede de hemen çalıştı (modeli daha önce analiz.py için inmiş; yeri doğrulanmadı), Whisper
+  `~/.cache/whisper/medium.pt` (vardı).
 - **Özel kelimeler (3.28):** `app/vocab.py`, ayar `vocabulary` (virgüllü, varsayılan "HourGlow"). Whisper `hotwords`'e eklenir
   (wake_check hariç) ve `/api/transcribe` her metinde `vocab.fix`: 1-3 kelimelik gruplar, sadeleştirme (Türkçe harf
   katlama, ğ→h, ou→a, ow→o) + ünsüz iskeleti (a e i o u h w v y atılır) eşit ve benzerlik ≥0,6 → terim (kesme işaretli ek
