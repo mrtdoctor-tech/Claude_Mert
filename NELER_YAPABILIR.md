@@ -284,7 +284,11 @@ dosyanın yanına aynı adla bir **"….analiz.txt"** raporu yazarım (ör. `sar
   doğrula" notu.
   **Sözler** (3.49, raporun en sonunda): vokali ayırıp (Demucs) sözleri yazıya çeviririm (Whisper medium, ekran kartında);
   dili kendim bulurum, her satırın başlangıç zamanını (dakika:saniye) ve 20 saniyeden uzun vokalsiz aralıkları yazarım.
-  Sözsüz parçada "enstrümantal, söz yok". Bu bir taslaktır; resmi söz metni Suno'dan alınır. Şarkı başına ~30 sn sürer.
+  Sözsüz parçada "enstrümantal, söz yok". Bu bir taslaktır; resmi söz metni Suno'dan alınır.
+  **Suno metniyle** (3.52): şarkının yanına aynı adla `.suno.txt` koy (ör. `Sarki.wav` → `Sarki.suno.txt`; Suno'daki
+  metni olduğu gibi yapıştır, [Verse 1] gibi satırlar bölüm adı). O zaman SÖZLER Suno'nun metnini dize dize, her dizenin
+  başlangıç zamanıyla yazar; bulunamayan dizeye zaman uydurmaz ("?:??"); Whisper'ın farklı duyduklarını "söylenen /
+  yazılan farkları" olarak listeler. `.suno.txt`'yi ekleyince ya da değiştirince "Asiye klasörünü analiz et" yeter. Şarkı başına ~30 sn sürer.
 - **Resim** (jpg, png, webp, bmp, gif, tiff): çözünürlük ve en-boy oranı (albüm kapağına uygun mu), çekim bilgileri (EXIF;
   konum bilgisi varsa uyarır), parlaklık, kontrast, doygunluk, keskinlik, renk sıcaklığı, baskın renkler (renk kodlarıyla) ve
   yapay zekânın resimde gördükleri (ne var, atmosfer, resimdeki yazılar, hangi tarz müziğe kapak olur).

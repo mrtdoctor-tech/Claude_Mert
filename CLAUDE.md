@@ -313,6 +313,13 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   toplar, `analyze` görevi sürerken "🔎 n/N <stem>: ölçüm… hedef… BPM… sözler…" `progress` olayları verir (ölçüm kodu
   değişmedi). Canlı Asiye'de: ölçüm+hedef+BPM ~6 sn, sözler ~25 sn. Whisper satır bölmesi çalıştırmadan çalıştırmaya
   değişiyor (bir seferde 27 satır, bir seferde 17: iki dize tek segmentte, metin tam).
+  3.52 (İsterler §9, Suno eşleme): `lyrics.suno_path` = `<stem>.suno.txt`; `read_suno` ([…] = bölüm, boş satır yok);
+  `_fold` (NFKD aksan atma + analiz.py `normalize`); `whisper_words`; `align` = Needleman-Wunsch (benzerlik ≥0,8 → +2,
+  ≥0,6 → +1, değilse −1; boşluk −1) Suno kelimeleri ↔ Whisper kelimeleri, sıra korunur → nakaratlar sırayla. Dize zamanı
+  = dizenin hizalanan ilk Whisper kelimesi; kelimelerin yarısından azı ≥0,6 ise "?:??". Fark: hizalı kelime anahtarı
+  farklı / eksik ya da arada ad-lib olmayan fazladan Whisper kelimesi. `waiting_files`: .suno.txt rapordan yeniyse şarkı
+  yeniden işlenir. Canlı test: 56/56, bölüm başları kabul testiyle birebir, farklar Bésame/Désame + miel/mi, ikinci
+  çalıştırmada 56 dize aynı (tek zaman farkı 2:08→2:07), .suno.txt kaldırılınca taslak geri geldi.
   Curl ile canlı test: Türkçe karakterli mesajı `--data-binary @dosya.json` (UTF-8) ile gönder; komut satırında bozuluyor.
   Demucs ilk denemede de hemen çalıştı (modeli daha önce analiz.py için inmiş; yeri doğrulanmadı), Whisper
   `~/.cache/whisper/medium.pt` (vardı).
@@ -766,7 +773,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   karşılaştırdı: 27 satırın 25'i birebir, 2'sinde birer kelime hatası, eksik satır yok.
 - **2026-10-02 (3.51):** İsterler bölüm 2 (tek komut + adım adım ilerleme) → İsterler'deki tüm bölümler uygulandı. Canlı
   Asiye'de "Asiye klasörünü analiz et." (yeni dosya yok cevabı) ve "Hepsini yeniden analiz et." ile test edildi (sohbet
-  id 81, 82 eklendi); kabul testi maddelerinin hepsi raporda. Kullanıcının onayı bekleniyor.
+  id 81, 82 eklendi); kabul testi maddelerinin hepsi raporda. Kullanıcı onayladı; büyük harfe göre satır bölme istemedi.
+- **2026-10-02 (3.52):** İsterler bölüm 9 (Suno sözleriyle eşleme). Canlı Asiye'de kabul testi geçti (sohbetler 83 ve
+  sonrası eklendi; test sırasında .suno.txt geçici olarak taşındı ve geri kondu). Kullanıcı onayı bekleniyor.
 
 ## Sıradaki fikirler
 

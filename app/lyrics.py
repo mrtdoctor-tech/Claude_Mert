@@ -109,6 +109,130 @@ def section(path: Path, duration: float, folder: Path | None) -> tuple[list[str]
     return result["lines"], result["info"]
 
 
+# Suno lyrics (3.52, Asiye_Isterler.txt §9): the text comes from "<song>.suno.txt", only the times from Whisper.
+# Suno's lines are aligned IN ORDER with Whisper's words (a global alignment, like comparing two texts), so a repeated
+# chorus takes the next sung chorus, never the first one again. A line that does not line up gets "?:??", not a guess.
+
+SAME_WORD = 0.8   # word similarity (difflib, accents and punctuation removed) for a sure match
+NEAR_WORD = 0.6   # still the same word heard a bit wrong ("Besame" / "Desame")
+GAP = -1.0        # a Suno word not heard, or a Whisper word not in Suno (ad-libs, hallucinations)
+
+
+def suno_path(path: Path) -> Path:
+    """"Song.wav" → "Song.suno.txt" next to it."""
+    return path.with_name(path.stem + ".suno.txt")
+
+
+def read_suno(path: Path) -> list[tuple[str | None, str]]:
+    """[(section or None, line)]: "[Verse 1]" lines name the section of the lines after them; empty lines are skipped."""
+    section, found = None, []
+    for raw in path.read_text(encoding="utf-8-sig", errors="replace").splitlines():
+        text = raw.strip()
+        if not text:
+            continue
+        if text.startswith("[") and text.endswith("]"):
+            section = text[1:-1].strip()
+            continue
+        found.append((section, text))
+    return found
+
+
+def _fold(text: str, hg) -> str:
+    import unicodedata
+
+    plain = "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c))
+    return hg.normalize(plain.replace("’", "'"))  # analiz.py's normalize: lower case, a-z 0-9 ' only
+
+
+def whisper_words(result: dict, hg) -> list[dict]:
+    """[{"word": as heard, "key": folded, "start": s}] in sung order."""
+    words = []
+    for seg in result.get("segments", []):
+        for w in seg.get("words", []):
+            for key in _fold(w.get("word", ""), hg).split():
+                words.append({"word": w["word"].strip(), "key": key, "start": float(w["start"])})
+    return words
+
+
+def _similar(a: str, b: str) -> float:
+    import difflib
+
+    return 1.0 if a == b else difflib.SequenceMatcher(None, a, b).ratio()
+
+
+def align(left: list[str], right: list[str]) -> list[tuple[int | None, int | None, float]]:
+    """Order-keeping alignment of two word lists (Needleman-Wunsch): [(i, j, similarity)], None on the side of a gap."""
+    n, m = len(left), len(right)
+    sim = [[_similar(a, b) for b in right] for a in left]
+
+    def gain(s: float) -> float:
+        return 2.0 if s >= SAME_WORD else 1.0 if s >= NEAR_WORD else -1.0
+
+    score = [[0.0] * (m + 1) for _ in range(n + 1)]
+    for i in range(1, n + 1):
+        score[i][0] = i * GAP
+    for j in range(1, m + 1):
+        score[0][j] = j * GAP
+    for i in range(1, n + 1):
+        row, above = score[i], score[i - 1]
+        for j in range(1, m + 1):
+            row[j] = max(above[j - 1] + gain(sim[i - 1][j - 1]), above[j] + GAP, row[j - 1] + GAP)
+    pairs, i, j = [], n, m
+    while i or j:
+        if i and j and score[i][j] == score[i - 1][j - 1] + gain(sim[i - 1][j - 1]):
+            pairs.append((i - 1, j - 1, sim[i - 1][j - 1]))
+            i, j = i - 1, j - 1
+        elif i and score[i][j] == score[i - 1][j] + GAP:
+            pairs.append((i - 1, None, 0.0))
+            i -= 1
+        else:
+            pairs.append((None, j - 1, 0.0))
+            j -= 1
+    return pairs[::-1]
+
+
+def suno_lines(suno: list[tuple[str | None, str]], heard: list[dict], hg) -> tuple[list[str], str]:
+    """SÖZLER body for a Suno text: section headers, "m:ss  line" (or "?:??"), and the sung/written differences.
+    Returns (lines, "timed/total")."""
+    keys, owner = [], []  # every Suno word with the number of its line
+    for number, (_, text) in enumerate(suno):
+        for key in _fold(text, hg).split():
+            keys.append(key)
+            owner.append(number)
+    per_line = [[] for _ in suno]  # [(Suno word index, Whisper word index or None, similarity)]
+    extra = []                    # Whisper words between Suno words (not in the text)
+    for i, j, s in align(keys, [w["key"] for w in heard]):
+        if i is None:
+            extra.append(j)
+        else:
+            per_line[owner[i]].append((i, j, s))
+    times, differences = [], []
+    for number, (_, text) in enumerate(suno):
+        pairs = per_line[number]
+        sure = sum(1 for _, j, s in pairs if j is not None and s >= NEAR_WORD)
+        heard_at = [j for _, j, _ in pairs if j is not None]
+        if not pairs or sure < max(1, (len(pairs) + 1) // 2):
+            times.append(None)
+            continue
+        times.append(heard[heard_at[0]]["start"])
+        span = range(heard_at[0], heard_at[-1] + 1)
+        inserted = [j for j in extra if j in span and heard[j]["key"] not in hg.ADLIB_TOKENS]
+        if inserted or any(j is None or heard[j]["key"] != keys[i] for i, j, _ in pairs):
+            differences.append((times[-1], text, " ".join(heard[j]["word"] for j in span)))
+    timed = sum(1 for t in times if t is not None)
+    lines = [f"  Eşleşme: {timed}/{len(suno)} dize zamanlandı" + ("" if timed == len(suno) else
+                                                                   " (\"?:??\" = Whisper'da bulunamadı, zaman uydurulmadı)")]
+    current = object()
+    for (part, text), start in zip(suno, times):
+        if part != current:
+            lines += ["", f"  [{part}]"] if part else [""]
+            current = part
+        lines.append(f"  {_time(start) if start is not None else '?:??'}  {text}")
+    lines += ["", "  SÖYLENEN / YAZILAN FARKLARI (bilgi: ya Whisper hatası ya da Suno şarkıda sözü değiştirmiş)"]
+    lines += [f"    {_time(t)}  Suno: \"{text}\"   Whisper: \"{said}\"" for t, text, said in differences] or ["    yok"]
+    return lines, f"{timed}/{len(suno)}"
+
+
 def _section(path: Path, duration: float, folder: Path | None) -> tuple[list[str], dict]:
     """The work itself; runs only in the child process."""
     lines, info = ["SÖZLER", NOTE], {"language": None, "instrumental": False}
@@ -143,14 +267,19 @@ def _section(path: Path, duration: float, folder: Path | None) -> tuple[list[str
         lines.append("  Enstrümantal, söz yok (Whisper ayrılan vokalde sözcük bulamadı).")
         return lines, info
     info["language"] = code
-    lines.append(f"  Dil: {LANGUAGES.get(code, code or 'bilinmiyor')} ({code}, Whisper algıladı; şarkının başına bakar, "
-                 "karışık dilli şarkıda diğer dil yanlış yazılabilir)")
-    lines.append(f"  Model: whisper-{MODEL}, izole vokal (Demucs)")
-    lines.append("")
-    for seg, text in segments:
-        lines.append(f"  {_time(seg['start'])}  {text}" + ("  [ad-lib]" if hg.is_adlib_segment(seg) else ""))
-
     kept = {"segments": [s for s, _ in segments]}
+    language = (f"  Dil: {LANGUAGES.get(code, code or 'bilinmiyor')} ({code}, Whisper algıladı; şarkının başına bakar, "
+                "karışık dilli şarkıda diğer dil yanlış yazılabilir)")
+    suno = suno_path(path)
+    if suno.is_file():  # 3.52 (§9): Suno's official text, Whisper's times
+        lines = ["SÖZLER", "  Kaynak: Suno metni (resmi); zamanlar Whisper'dan", language]
+        body, info["suno"] = suno_lines(read_suno(suno), whisper_words(kept, hg), hg)
+        lines += body
+    else:
+        lines += [language, f"  Model: whisper-{MODEL}, izole vokal (Demucs)", ""]
+        for seg, text in segments:
+            lines.append(f"  {_time(seg['start'])}  {text}" + ("  [ad-lib]" if hg.is_adlib_segment(seg) else ""))
+
     gaps, adlibs = hg.find_gaps(kept, hg.flatten_words(kept), hg.DEFAULT_GAP_THRESHOLD, duration)
     lines += ["", f"  Vokalsiz aralıklar (≥ {hg.DEFAULT_GAP_THRESHOLD:.0f} sn; ad-lib söz sayılmaz):"]
     if not gaps:

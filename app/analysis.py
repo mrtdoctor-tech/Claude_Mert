@@ -107,7 +107,9 @@ def waiting_files(again: bool = False) -> list[Path]:
         if not path.is_file() or path.suffix.lower() not in MUSIC | PICTURES:
             continue
         report = report_path(path)
-        if again or not report.exists() or report.stat().st_mtime < path.stat().st_mtime:
+        suno = lyrics.suno_path(path)  # 3.52: a new or edited "<song>.suno.txt" makes the song "changed" too
+        newest = max(path.stat().st_mtime, suno.stat().st_mtime if suno.is_file() else 0)
+        if again or not report.exists() or report.stat().st_mtime < newest:
             found.append(path)
     return found
 
