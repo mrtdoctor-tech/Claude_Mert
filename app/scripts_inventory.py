@@ -176,7 +176,7 @@ def build() -> tuple[str, str]:
              ] + ([f"⚠️ Düz 'conda activate' kullanan başlatma dosyaları ({ANACONDA_ACTIVATE} <ortam> olmalı): "
                    + ", ".join(bare)] if bare else []) + ["", "=" * 70, ""] + rows
     report = analysis.folder() / REPORT_NAME
-    report.write_text("\n".join(lines) + "\n", encoding="utf-8-sig")
+    report.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")  # 3.45: no BOM, LF (as analysis reports)
     summary = [f"📋 {count} betik inceledim (çalıştırmadan, yalnızca okudum). Rapor: 📂 {report}",
                f"- Asistanın analizinin de kapsadığı paketler: {', '.join(covered) or 'yok'}",
                f"- Asistanın **kapsamadığı** paketler: {', '.join(missing[:15]) or 'yok'}"

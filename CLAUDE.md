@@ -248,7 +248,7 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   (Google Drive yansıtma; yol kodda e-postasız). Komut `is_command` (analiz + klasör/dosya/şarkı/resim + et/yap/eder),
   "analiz klasörünü aç" → `os.startfile`. Chat'te notes'tan sonra, pc'den önce; `job` → `analysis.run` akışı `progress`
   olayları, sonunda özet. Misafire kapalı (`refusal`). Rapor yoksa / dosyadan eskiyse analiz; "hepsini yeniden" → hepsi.
-  Rapor `<ad>.analiz.txt` (utf-8-sig). Müzik: PyAV ile çözme (faster-whisper'la gelir, mp3/m4a), pyloudnorm LUFS, tepe/RMS,
+  Rapor `<ad>.analiz.txt` (3.46'dan beri BOM'suz utf-8, LF). Müzik: PyAV ile çözme (faster-whisper'la gelir, mp3/m4a), pyloudnorm LUFS, tepe/RMS,
   dinamik (0,5 sn blokların %95-%10'u), kırpılma, kenar sessizliği, stereo korelasyon/genişlik, librosa `beat_track`, ton
   (chroma_stft + Krumhansl), spektral merkez/düzlük, olay yoğunluğu, 10 sn bölüm çubukları, modelden yorum. Resim: Pillow
   (EXIF + GPS uyarısı, parlaklık/kontrast/doygunluk/kenar varyansı, MEDIANCUT 6 renk + Türkçe ad) + modele 896 px JPEG
@@ -266,6 +266,12 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   loudnorm −13,48: ffmpeg'in iki ölçeri bile 0,18 LU ayrışıyor; kod çözme aynı — PyAV ve ffmpeg aynı örnekleri verdi);
   true peak mp3'te 2,67 / ffmpeg 2,6 (ebur128 192 kHz'e swr ile çıkıyor, 8× bizde de 2,67 → farkı ffmpeg'in ara değerleme
   filtresi). Sabit düzeltme payı EKLENMEDİ (kullanıcı kuralı). 4 dk stereo: TP 2,8 sn + LRA 2,1 sn.
+  **İstek belgesi:** `HourGlowMusic\Scripts\Asiye_Isterler.txt` (Drive) — Asiye'nin ne yapması gerektiğinin tek kaynağı;
+  uygulanan bölüm "[uygulandi GG.AA.YYYY]" ile işaretlenir. 02.10.2026 ölçüm çekirdeği ffmpeg ebur128 ile gerçek dosyada
+  doğrulandı (Palabras de Sal 2: −15,5 / −1,6 / 3,0 / 184,3 sn): **ölçüm koduna dokunma.**
+  3.45: müzik raporunda model yorumu YOK (−1,6 dBTP'ye "güvenli" dedi, dinamik için sıkıştırma önerdi); etiketler DOSYA
+  bölümünde, ayrı ETİKETLER yok. Resimde "yapay zekânın gördükleri" duruyor (`_ask` yalnız resim için).
+  3.46: rapor ve betik envanteri UTF-8 **BOM'suz**, satır sonu **LF** (`write_text(..., newline="\n")`; Python ≥3.10).
 - **Özel kelimeler (3.28):** `app/vocab.py`, ayar `vocabulary` (virgüllü, varsayılan "HourGlow"). Whisper `hotwords`'e eklenir
   (wake_check hariç) ve `/api/transcribe` her metinde `vocab.fix`: 1-3 kelimelik gruplar, sadeleştirme (Türkçe harf
   katlama, ğ→h, ou→a, ow→o) + ünsüz iskeleti (a e i o u h w v y atılır) eşit ve benzerlik ≥0,6 → terim (kesme işaretli ek

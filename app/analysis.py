@@ -456,7 +456,8 @@ async def analyze(path: Path, model: str) -> str:
         first = next((c.strip(" -*0123456789.)") for c in (seen or "").splitlines() if len(c.strip()) > 20), "")
         summary = f"🖼️ {path.name}: " + (first[:120] if first else lines[4].strip())
     report = report_path(path)
-    report.write_text("\n".join(header + lines) + "\n", encoding="utf-8-sig")  # BOM: Notepad shows ç/ş right
+    # 3.45: UTF-8 without BOM and LF line ends (Asiye_Isterler.txt §7; today's Notepad reads both right)
+    report.write_text("\n".join(header + lines) + "\n", encoding="utf-8", newline="\n")
     log.info("Analiz yazıldı: %s", report.name)
     return summary
 
