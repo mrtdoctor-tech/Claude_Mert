@@ -8,6 +8,7 @@ this computer: the measurements with librosa / pyloudnorm / Pillow, the picture 
 Music: length, format, tags, loudness (LUFS, peak, RMS, dynamics, clipping), tempo (BPM), key, brightness, stereo
 width, silence at the start/end, sections by loudness. 3.45: no model comment on music (it called -1.6 dBTP "safe" and
 suggested compression for more dynamics); the report is measurements only, in a fixed order (Asiye_Isterler.txt §3).
+3.47: a TARGET CHECK section right after DOSYA compares the measurements with the HourGlow mastering rules (TARGETS).
 Pictures: size, format, EXIF (camera, date, settings), brightness, contrast, saturation, sharpness, dominant colors,
 warm/cool, and what the model sees in it (description, mood, text in the picture).
 """
@@ -34,6 +35,21 @@ KEYS_EN = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 # Krumhansl-Schmuckler key profiles
 MAJOR = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88]
 MINOR = [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17]
+
+# 3.47: target check (Asiye_Isterler.txt §5). The only place the limits live.
+# Kaynak: CLAUDE.md > Mastering (ileride _Referans\Mastering_Kurallari.txt)
+TARGETS = {
+    "lufs": -14.5,          # integrated loudness aimed at
+    "lufs_low": -16.0,      # UYARI below this
+    "lufs_high": -13.0,     # UYARI above this
+    "true_peak_max": -3.0,  # dBTP; UYARI above this
+    "lra_low": 4.0,         # LU; UYARI outside 4-7 ("genre character" note)
+    "lra_high": 7.0,
+    "clipped_max": 0,       # clipped samples
+    "bits": 24,             # format: 24-bit / 44.1 kHz / stereo; UYARI when mono or 16-bit (or less)
+    "rate": 44100,
+}
+LOSSY = {"mp3", "mp3float", "aac", "opus", "vorbis", "wmav1", "wmav2", "wmapro"}
 
 
 def folder() -> Path | None:
@@ -138,6 +154,7 @@ def _decode(path: Path):
         info["bitrate"] = container.bit_rate or stream.bit_rate
         info["tags"] = {k.lower(): v for k, v in {**(container.metadata or {}), **(stream.metadata or {})}.items()}
         rate = stream.rate or stream.codec_context.sample_rate
+        info["bits"] = _bits(stream.codec_context)
         channels = stream.codec_context.channels or 1
         resampler = av.AudioResampler(format="fltp", layout="stereo" if channels > 1 else "mono", rate=rate)
         parts = []
@@ -151,6 +168,57 @@ def _decode(path: Path):
     samples = np.concatenate(parts, axis=1).astype("float32")
     info["channels"] = samples.shape[0]
     return samples, rate, info
+
+
+def _bits(codec) -> int | None:
+    """Bit depth of the stored audio: pcm_s24le → 24, 16-bit sample format → 16; None for lossy or unknown (FLAC in
+    a 32-bit sample format may hold 24-bit audio, which PyAV does not tell)."""
+    found = re.fullmatch(r"pcm_[suf](\d+)\w*", codec.name or "")
+    if found:
+        return int(found.group(1))
+    if codec.name in LOSSY:
+        return None
+    bits = getattr(codec.format, "bits", None)
+    return bits if bits and bits <= 16 else None
+
+
+def target_check(info: dict, rate: int, lufs: float | None, tp_db: float | None, lra: float | None,
+                 clipped: int) -> tuple[list[str], int]:
+    """3.47: TAMAM / UYARI per mastering rule (TARGETS); returns (report lines, number of warnings)."""
+    t = TARGETS
+    rows = []
+    if lufs is None:
+        rows.append(("?", "Integrated LUFS", "ölçülemedi"))
+    else:
+        ok = t["lufs_low"] <= lufs <= t["lufs_high"]
+        rows.append(("TAMAM" if ok else "UYARI", "Integrated LUFS",
+                     f"{_num(lufs)} (hedef ~{_num(t['lufs'])}, aralık {_num(t['lufs_low'])} … {_num(t['lufs_high'])})"))
+    if tp_db is None:
+        rows.append(("?", "True peak", "ölçülemedi"))
+    else:
+        rows.append(("TAMAM" if tp_db <= t["true_peak_max"] else "UYARI", "True peak",
+                     f"{_num(tp_db)} dBTP (en çok {_num(t['true_peak_max'])} dBTP)"))
+    if lra is None:
+        rows.append(("?", "LRA", "ölçülemedi"))
+    else:
+        ok = t["lra_low"] <= lra <= t["lra_high"]
+        rows.append(("TAMAM" if ok else "UYARI", "LRA", f"{_num(lra)} LU (hedef {_num(t['lra_low'], 0)}–"
+                     f"{_num(t['lra_high'], 0)} LU)" + ("" if ok else " — tür karakteri olabilir")))
+    rows.append(("TAMAM" if clipped <= t["clipped_max"] else "UYARI", "Kırpılan örnek",
+                 f"{clipped} (hedef {t['clipped_max']})"))
+    bits, mono = info.get("bits"), info["channels"] < 2
+    shape = (f"{bits}-bit" if bits else "kayıplı biçim (bit derinliği yok)" if info["codec"] in LOSSY
+             else "bit derinliği bilinmiyor") + f" / {_num(rate / 1000)} kHz / {'mono' if mono else 'stereo'}"
+    problems = (["mono (Studio One varsayılanı bazen mono veriyor)"] if mono else []) + (
+        [f"{bits}-bit"] if bits and bits <= 16 else [])
+    note = (" — " + ", ".join(problems)) if problems else (
+        f" (hedef {t['bits']}-bit / {_num(t['rate'] / 1000)} kHz / stereo)"
+        if bits != t["bits"] or rate != t["rate"] else "")
+    rows.append(("UYARI" if problems else "TAMAM", "Biçim", shape + note))
+    warnings = sum(1 for r in rows if r[0] == "UYARI")
+    lines = ["HEDEF KONTROLÜ" + (f" — {warnings} uyarı" if warnings else " — hepsi tamam")]
+    lines += [f"  {status:<5}  {name}: {text}" for status, name, text in rows]
+    return lines, warnings
 
 
 def true_peak(samples, oversample: int = 4) -> float:
@@ -219,6 +287,7 @@ def music_report(path: Path) -> tuple[list[str], dict]:
                  "year": "Yıl", "composer": "Besteci", "bpm": "BPM (etiket)", "tbpm": "BPM (etiket)", "comment": "Not"}
     tags = [f"  {label}: {info['tags'][key]}" for key, label in tag_names.items() if info["tags"].get(key)]
     lines += list(dict.fromkeys(tags))  # 3.45: tags are part of DOSYA (fixed section order, no ETİKETLER section)
+    target_at = len(lines)  # 3.47: HEDEF KONTROLÜ goes here once the loudness is measured
 
     # Loudness
     peak = float(np.max(np.abs(samples))) if samples.size else 0.0
@@ -266,6 +335,9 @@ def music_report(path: Path) -> tuple[list[str], dict]:
     if dynamics is not None:  # not a dynamics measure: kept only as information, without any verdict
         lines.append(f"  Bölüm yükseklik farkı (0,5 sn blokların %95−%10 RMS farkı; LRA değildir): {_num(dynamics)} dB")
     lines.append(f"  Kırpılan örnek: {clipped}" + (" (bozulma duyulabilir)" if clipped > rate // 100 else ""))
+    target, facts["warnings"] = target_check(info, rate, facts.get("lufs"), facts.get("true_peak"), facts.get("lra"),
+                                             clipped)
+    lines[target_at:target_at] = [""] + target
 
     # Silence at the edges
     threshold = 10 ** (-50 / 20)
@@ -444,7 +516,8 @@ async def analyze(path: Path, model: str) -> str:
     if kind == "music":
         lines, facts = await run_in_threadpool(music_report, path)
         summary = (f"🎵 {path.name}: {_time(facts.get('duration', 0))}, {facts.get('tempo')} BPM, {facts.get('key')}"
-                   + (f", {_num(facts['lufs'])} LUFS" if "lufs" in facts else ""))
+                   + (f", {_num(facts['lufs'])} LUFS" if "lufs" in facts else "")
+                   + (f" — hedef kontrolü: {facts['warnings']} uyarı" if facts.get("warnings") else " — hedefler tamam"))
     else:
         lines, image = await run_in_threadpool(picture_report, path)
         seen = await _ask(model, "Bu resmi Türkçe anlat: 1) Resimde ne var (kısa açıklama), 2) Atmosfer ve duygu, "

@@ -278,6 +278,11 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   3.45: müzik raporunda model yorumu YOK (−1,6 dBTP'ye "güvenli" dedi, dinamik için sıkıştırma önerdi); etiketler DOSYA
   bölümünde, ayrı ETİKETLER yok. Resimde "yapay zekânın gördükleri" duruyor (`_ask` yalnız resim için).
   3.46: rapor ve betik envanteri UTF-8 **BOM'suz**, satır sonu **LF** (`write_text(..., newline="\n")`; Python ≥3.10).
+  3.47 (İsterler §5): `TARGETS` (modül başında tek ayar bloğu; kaynak HourGlowMusic\CLAUDE.md > Mastering) + `target_check`:
+  DOSYA'dan hemen sonra "HEDEF KONTROLÜ — n uyarı", satırlar `TAMAM`/`UYARI`/`?`. LUFS −16…−13, TP ≤ −3 dBTP, LRA 4–7 LU
+  (dışı: "tür karakteri olabilir"), kırpılan 0, biçim: mono ya da ≤16-bit → UYARI (44,1 kHz dışı yalnızca not). Bit derinliği
+  `_bits`: `pcm_s24le` adından; kayıplı (mp3/aac…) → yok; FLAC'ta PyAV söylemiyor → "bilinmiyor". Ölçüm kodu değişmedi.
+  Gerçek Palabras de Sal 2'de: LUFS TAMAM, TP UYARI, LRA UYARI, biçim TAMAM (kabul testiyle aynı).
 - **Özel kelimeler (3.28):** `app/vocab.py`, ayar `vocabulary` (virgüllü, varsayılan "HourGlow"). Whisper `hotwords`'e eklenir
   (wake_check hariç) ve `/api/transcribe` her metinde `vocab.fix`: 1-3 kelimelik gruplar, sadeleştirme (Türkçe harf
   katlama, ğ→h, ou→a, ow→o) + ünsüz iskeleti (a e i o u h w v y atılır) eşit ve benzerlik ≥0,6 → terim (kesme işaretli ek
@@ -716,6 +721,8 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Laptop artık kullanılmıyor; kod ve `data/` yalnızca ev bilgisayarında. 2.6'daki "veritabanı OneDrive'da ortak" kararı
   geçersiz. README/CLAUDE.md buna göre güncellendi (sürüm değişmedi: yalnızca belgeler); `Asiye_Isterler.txt` bölüm 1'deki
   kod yolu güncellendi.
+- **2026-10-02 (3.47):** İsterler bölüm 5: müzik raporuna HEDEF KONTROLÜ. Gerçek dosyada denendi (rapor dosyası yazılmadı;
+  kabul testi kullanıcıda: "Hepsini yeniden analiz et"). Kalan bölümler: 6 (BPM çapraz), 4 (söz çıkarma), 2 (tek komut).
 
 ## Sıradaki fikirler
 

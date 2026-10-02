@@ -276,6 +276,9 @@ dosyanın yanına aynı adla bir **"….analiz.txt"** raporu yazarım (ör. `sar
   (LRA, EBU R128), kırpılma, baştaki/sondaki sessizlik, stereo genişliği ve faz, tempo (BPM), ton (ör. La minör / Am),
   parlaklık ve 10 saniyelik bölümlerin yüksekliği. Müzik raporunda yapay zekâ yorumu yoktur (3.45): yalnızca ölçümler,
   sabit sırayla. LUFS, gerçek tepe ve LRA, ffmpeg'in `ebur128` ölçümüyle karşılaştırıldı (en çok ~0,1 fark).
+  Raporun en üstünde **HEDEF KONTROLÜ** (3.47): HourGlow mastering kurallarına göre her madde TAMAM ya da UYARI —
+  ses yüksekliği −16 … −13 LUFS (hedef ~−14,5), gerçek tepe en çok −3 dBTP, LRA 4–7 LU (dışındaysa "tür karakteri
+  olabilir"), kırpılan örnek 0, biçim 24-bit / 44,1 kHz / stereo (mono ya da 16-bit ise uyarı).
 - **Resim** (jpg, png, webp, bmp, gif, tiff): çözünürlük ve en-boy oranı (albüm kapağına uygun mu), çekim bilgileri (EXIF;
   konum bilgisi varsa uyarır), parlaklık, kontrast, doygunluk, keskinlik, renk sıcaklığı, baskın renkler (renk kodlarıyla) ve
   yapay zekânın resimde gördükleri (ne var, atmosfer, resimdeki yazılar, hangi tarz müziğe kapak olur).
