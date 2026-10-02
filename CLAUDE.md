@@ -290,6 +290,17 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   `bayrak` çağırır; aynı 22 050 Hz mono sinyal. `BPM_DIFF_MAX=2` (ham Asiye tempo − hg; yarım/iki kat adı), `BPM_STABLE_MIN=0,7`.
   hg_bpm yoksa/hata verirse "ölçülemedi" satırı, analiz durmaz. Palabras: Asiye 112,3, hg_bpm 110,0 (kararlılık 0,68,
   GOZ ikinci aday 107,7) → UYARI + Moises notu; `hg.olc()` tek başına da 110,0/0,68 verdi.
+  3.49: Asiye tempo satırı bir ondalık (karşılaştırmayla aynı). **Sözler (İsterler §4):** `app/lyrics.py` `section` →
+  Drive'daki `Scripts\analiz\analiz.py`'yi `importlib` ile yükler: `separate_vocals` (`sys.executable -m demucs
+  --two-stems=vocals`, geçici klasör, sonra silinir), `_singing_share` (vokal kökünde > −40 dBFS 0,5 sn blok oranı < %3 →
+  "enstrümantal", Whisper çalışmaz), `transcribe(vocals, "medium", language=None)` (asla large: bu GPU'da bozuk),
+  segmentler `stt.clean`'den geçer, `split_words_by_adlib` boşsa enstrümantal; satırlar `m:ss  metin [ad-lib]`,
+  `find_gaps` (≥ `DEFAULT_GAP_THRESHOLD`=20 sn) + `adlibs_in_gap`. Sonra `gc` + `torch.cuda.empty_cache`. analiz.py'ye
+  (Drive + birebir aynı W:\HourGlowWork\Scripts\analiz kopyası) `transcribe(..., language="en")` parametresi eklendi.
+  `analyze`'da hata → "Sözler çıkarılamadı" satırı, rapor yine yazılır. Palabras: ~28 sn (Demucs + medium, RTX 4060),
+  dil es, sözler doğru görünüyor; iki çalıştırma arasında bazı satırlar farklı (Whisper sıcaklık geri dönüşü + Demucs
+  rastgele kaydırma) → taslak. Whisper tek dil seçer (şarkı başı): İngilizce+Zulu amapiano'da Zulu kısımlar bozuk olabilir.
+  Demucs htdemucs modeli `~/.cache/torch/hub` (ilk kullanımda indi), Whisper `~/.cache/whisper/medium.pt` (vardı).
 - **Özel kelimeler (3.28):** `app/vocab.py`, ayar `vocabulary` (virgüllü, varsayılan "HourGlow"). Whisper `hotwords`'e eklenir
   (wake_check hariç) ve `/api/transcribe` her metinde `vocab.fix`: 1-3 kelimelik gruplar, sadeleştirme (Türkçe harf
   katlama, ğ→h, ou→a, ow→o) + ünsüz iskeleti (a e i o u h w v y atılır) eşit ve benzerlik ≥0,6 → terim (kesme işaretli ek
@@ -732,7 +743,9 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   kabul testi kullanıcıda: "Hepsini yeniden analiz et"). Kalan bölümler: 6 (BPM çapraz), 4 (söz çıkarma), 2 (tek komut).
   3.47 kabul testi kullanıcıda geçti.
 - **2026-10-02 (3.48):** İsterler bölüm 6 (BPM çapraz, hg_bpm.py) + kullanıcı isteği: SES YÜKSEKLİĞİ'nde değerlendirme yok.
-  Kabul testi bekleniyor. Kalan: 4 (söz çıkarma), 2 (tek komut).
+  Kabul testi kullanıcıda geçti.
+- **2026-10-02 (3.49):** Tempo bir ondalık + İsterler bölüm 4 (sözler). Kabul testi bekleniyor. Kalan: 2 (tek komut akışı
+  ve adım adım ilerleme).
 
 ## Sıradaki fikirler
 

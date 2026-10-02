@@ -282,6 +282,9 @@ dosyanın yanına aynı adla bir **"….analiz.txt"** raporu yazarım (ör. `sar
   **Tempo iki kaynaklı** (3.48): kendi ölçümüm ve HourGlow'un `hg_bpm.py` aracı (birincil, kararlılık puanıyla) yan yana;
   fark 2 BPM'den fazlaysa UYARI (biri ötekinin yarısı/iki katıysa söylerim), kararlılık 0,7'nin altındaysa "Moises'te elle
   doğrula" notu.
+  **Sözler** (3.49, raporun en sonunda): vokali ayırıp (Demucs) sözleri yazıya çeviririm (Whisper medium, ekran kartında);
+  dili kendim bulurum, her satırın başlangıç zamanını (dakika:saniye) ve 20 saniyeden uzun vokalsiz aralıkları yazarım.
+  Sözsüz parçada "enstrümantal, söz yok". Bu bir taslaktır; resmi söz metni Suno'dan alınır. Şarkı başına ~30 sn sürer.
 - **Resim** (jpg, png, webp, bmp, gif, tiff): çözünürlük ve en-boy oranı (albüm kapağına uygun mu), çekim bilgileri (EXIF;
   konum bilgisi varsa uyarır), parlaklık, kontrast, doygunluk, keskinlik, renk sıcaklığı, baskın renkler (renk kodlarıyla) ve
   yapay zekânın resimde gördükleri (ne var, atmosfer, resimdeki yazılar, hangi tarz müziğe kapak olur).

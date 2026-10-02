@@ -11,6 +11,7 @@ suggested compression for more dynamics); the report is measurements only, in a 
 3.47: a TARGET CHECK section right after DOSYA compares the measurements with the HourGlow mastering rules (TARGETS).
 3.48: SES YÜKSEKLİĞİ shows values only (verdicts live in HEDEF KONTROLÜ); the tempo is cross-checked with HourGlow's
 hg_bpm.py (BPM_DIFF_MAX, BPM_STABLE_MIN; Asiye_Isterler.txt §6).
+3.49: SÖZLER at the end — lyrics.py, with HourGlow's analiz.py (Demucs + Whisper medium; §4).
 Pictures: size, format, EXIF (camera, date, settings), brightness, contrast, saturation, sharpness, dominant colors,
 warm/cool, and what the model sees in it (description, mood, text in the picture).
 """
@@ -24,7 +25,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from . import config, identity, llm
+from . import config, identity, llm, lyrics
 
 log = logging.getLogger("asistan.analysis")
 
@@ -425,10 +426,10 @@ def music_report(path: Path) -> tuple[list[str], dict]:
     centroid = float(librosa.feature.spectral_centroid(y=y, sr=ANALYSIS_RATE).mean())
     flatness = float(librosa.feature.spectral_flatness(y=y).mean())
     onset_rate = len(librosa.onset.onset_detect(y=y, sr=ANALYSIS_RATE)) / max(duration, 1)
-    facts.update(tempo=round(tempo), key=key_tr, brightness=round(centroid), duration=round(duration))
+    facts.update(tempo=round(tempo), key=key_tr, brightness=round(centroid), duration=round(duration), seconds=duration)
     bpm_lines, facts["bpm_warning"] = bpm_cross_check(tempo, y, ANALYSIS_RATE)
     lines += ["", "MÜZİKAL ÖZELLİKLER",
-              f"  Tempo (Asiye, librosa beat_track): {round(tempo)} BPM"
+              f"  Tempo (Asiye, librosa beat_track): {_num(tempo)} BPM"
               + (f" (yarısı {round(tempo / 2)} / iki katı {round(tempo * 2)} de olabilir)" if tempo > 150 or tempo < 70
                  else ""),
               *bpm_lines,
@@ -569,7 +570,16 @@ async def analyze(path: Path, model: str) -> str:
     header = [f"Yerel Asistan analiz raporu — {datetime.now():%d.%m.%Y %H:%M}", "=" * 60, ""]
     if kind == "music":
         lines, facts = await run_in_threadpool(music_report, path)
+        try:  # 3.49: SÖZLER is the last section (Asiye_Isterler.txt §3, §4); a failure here must not lose the report
+            words, sung = await run_in_threadpool(lyrics.section, path, facts["seconds"], folder())
+        except Exception as e:
+            log.exception("Sözler çıkarılamadı: %s", path.name)
+            words, sung = ["SÖZLER", lyrics.NOTE, f"  Sözler çıkarılamadı: {e}"], {}
+        lines += [""] + words
         summary = (f"🎵 {path.name}: {_time(facts.get('duration', 0))}, {facts.get('tempo')} BPM, {facts.get('key')}"
+                   + (", enstrümantal" if sung.get("instrumental") else
+                      f", sözler: {lyrics.LANGUAGES.get(sung['language'], sung['language'])}" if sung.get("language")
+                      else "")
                    + (f", {_num(facts['lufs'])} LUFS" if "lufs" in facts else "")
                    + (f" — hedef kontrolü: {facts['warnings']} uyarı" if facts.get("warnings") else " — hedefler tamam")
                    + (" — BPM'ler uyuşmuyor (raporda)" if facts.get("bpm_warning") else ""))
