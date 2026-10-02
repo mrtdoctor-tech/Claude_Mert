@@ -17,6 +17,7 @@ import gc
 import importlib.util
 import json
 import logging
+import math
 import os
 import shutil
 import subprocess
@@ -54,12 +55,23 @@ def _time(seconds: float) -> str:
     return f"{seconds // 60}:{seconds % 60:02d}"
 
 
-def _singing_share(path: str) -> float:
-    import numpy as np
+def _vocal_track(path: str):
     import soundfile
 
     audio, rate = soundfile.read(path, dtype="float32", always_2d=True)
-    mono = audio.mean(axis=1)
+    return audio.mean(axis=1), rate
+
+
+def _level_db(mono, rate: int, start: float, end: float) -> float:
+    import numpy as np
+
+    part = mono[int(start * rate):max(int(end * rate), int(start * rate) + 1)]
+    return 20 * math.log10(max(float(np.sqrt(np.mean(part ** 2))) if part.size else 0.0, 1e-9))
+
+
+def _singing_share(mono, rate: int) -> float:
+    import numpy as np
+
     step = rate // 2
     blocks = [float(np.sqrt(np.mean(mono[i:i + step] ** 2))) for i in range(0, mono.size - step + 1, step)]
     if not blocks:
@@ -191,9 +203,9 @@ def align(left: list[str], right: list[str]) -> list[tuple[int | None, int | Non
     return pairs[::-1]
 
 
-def suno_lines(suno: list[tuple[str | None, str]], heard: list[dict], hg) -> tuple[list[str], str]:
-    """SÖZLER body for a Suno text: section headers, "m:ss  line" (or "?:??"), and the sung/written differences.
-    Returns (lines, "timed/total")."""
+def first_pass(suno: list[tuple[str | None, str]], heard: list[dict], hg) -> dict:
+    """9a (3.52): Suno's words aligned IN ORDER with Whisper's words. Per Suno line: its time (None when it did not
+    line up), the Whisper words it covers (span) and whether they differ from the text."""
     keys, owner = [], []  # every Suno word with the number of its line
     for number, (_, text) in enumerate(suno):
         for key in _fold(text, hg).split():
@@ -206,31 +218,140 @@ def suno_lines(suno: list[tuple[str | None, str]], heard: list[dict], hg) -> tup
             extra.append(j)
         else:
             per_line[owner[i]].append((i, j, s))
-    times, differences = [], []
-    for number, (_, text) in enumerate(suno):
+    times, spans, differs = [], [], []
+    for number in range(len(suno)):
         pairs = per_line[number]
         sure = sum(1 for _, j, s in pairs if j is not None and s >= NEAR_WORD)
         heard_at = [j for _, j, _ in pairs if j is not None]
         if not pairs or sure < max(1, (len(pairs) + 1) // 2):
             times.append(None)
+            spans.append(None)
+            differs.append(False)
             continue
-        times.append(heard[heard_at[0]]["start"])
         span = range(heard_at[0], heard_at[-1] + 1)
+        times.append(heard[heard_at[0]]["start"])
+        spans.append(span)
         inserted = [j for j in extra if j in span and heard[j]["key"] not in hg.ADLIB_TOKENS]
-        if inserted or any(j is None or heard[j]["key"] != keys[i] for i, j, _ in pairs):
-            differences.append((times[-1], text, " ".join(heard[j]["word"] for j in span)))
-    timed = sum(1 for t in times if t is not None)
-    lines = [f"  Eşleşme: {timed}/{len(suno)} dize zamanlandı" + ("" if timed == len(suno) else
-                                                                   " (\"?:??\" = Whisper'da bulunamadı, zaman uydurulmadı)")]
+        differs.append(bool(inserted) or any(j is None or heard[j]["key"] != keys[i] for i, j, _ in pairs))
+    return {"times": times, "spans": spans, "differs": differs}
+
+
+# 9b (3.54): what the first pass left over is not thrown away. Suno may sing a line twice, move a line into the outro
+# or skip one, so the order of the Suno text alone cannot be trusted; what is heard in the WAV decides.
+RUN_BREAK = 2.0    # seconds of silence that end a run of left-over Whisper words
+LINE_MATCH = 0.75  # left-over words vs a Suno line (folded, joined): this similar or more = that line
+
+
+def _adlib(run: list[int], heard: list[dict], hg) -> bool:
+    """Only ad-lib syllables ("oh", "yeah") or one word repeated ("la la la"): stays an ad-lib, not a line."""
+    keys = [heard[j]["key"] for j in run]
+    return not set(keys) - set(hg.ADLIB_TOKENS) or len(set(keys)) == 1
+
+
+def _leftover_runs(heard: list[dict], spans: list, hg) -> list[list[int]]:
+    """Whisper words outside every placed line (words inside a placed line are its differences), in runs."""
+    used = {j for span in spans if span for j in span}
+    runs, current = [], []
+    for j in range(len(heard)):
+        if j in used or (current and heard[j]["start"] - heard[current[-1]]["start"] > RUN_BREAK):
+            if current:
+                runs.append(current)
+            current = []
+        if j not in used:
+            current.append(j)
+    if current:
+        runs.append(current)
+    return [r for r in runs if not _adlib(r, heard, hg)]
+
+
+def _read_run(run: list[int], heard: list[dict], line_keys: list[str], hg) -> list[tuple]:
+    """Splits a left-over run into Suno lines matched WITHOUT the order condition: ("suno", line number, first word,
+    last word); words that match no Suno line: ("other", first word, last word)."""
+    import difflib
+
+    found, pos, loose = [], 0, []
+
+    def flush():
+        if loose and not _adlib(loose, heard, hg):
+            found.append(("other", loose[0], loose[-1]))
+        loose.clear()
+
+    while pos < len(run):
+        best = None
+        for number, key in enumerate(line_keys):
+            size = len(key.split())
+            for width in (size - 1, size, size + 1):
+                if width < 1 or pos + width > len(run):
+                    continue
+                said = " ".join(heard[j]["key"] for j in run[pos:pos + width])
+                score = difflib.SequenceMatcher(None, said, key).ratio()
+                if score >= LINE_MATCH and (best is None or (score, width) > best[:2]):
+                    best = (score, width, number)
+        if best:
+            flush()
+            found.append(("suno", best[2], run[pos], run[pos + best[1] - 1]))
+            pos += best[1]
+            continue
+        if loose and heard[run[pos]]["start"] - heard[loose[-1]]["start"] > RUN_BREAK:
+            flush()
+        loose.append(run[pos])
+        pos += 1
+    flush()
+    return found
+
+
+def suno_lines(suno: list[tuple[str | None, str]], heard: list[dict], hg) -> tuple[list[str], dict]:
+    """SÖZLER body for a Suno text: lines in sung order with Suno's spelling and the second-pass marks, the lines never
+    sung and the sung/written differences. Returns (lines, counts)."""
+    first = first_pass(suno, heard, hg)
+    times, spans = list(first["times"]), first["spans"]
+
+    def said(a: int, b: int) -> str:
+        return " ".join(heard[j]["word"] for j in range(a, b + 1))
+
+    entries = [(t, suno[n][1], "", suno[n][0]) for n, t in enumerate(times) if t is not None]
+    differences = [(times[n], suno[n][1], said(spans[n][0], spans[n][-1]))
+                   for n in range(len(suno)) if first["differs"][n]]
+    line_keys = [_fold(text, hg) for _, text in suno]
+    repeats = others = 0
+    for run in _leftover_runs(heard, spans, hg):
+        for piece in _read_run(run, heard, line_keys, hg):
+            if piece[0] == "other":
+                entries.append((heard[piece[1]]["start"], said(piece[1], piece[2]), "SUNO METNİNDE YOK (Whisper)", None))
+                others += 1
+                continue
+            _, number, a, b = piece
+            part, text = suno[number]
+            start = heard[a]["start"]
+            where = f"Suno [{part}] dizesi" if part else "Suno dizesi"
+            if times[number] is None:  # the first pass could not place it: it was sung here instead
+                times[number] = start
+                mark = "YER DEĞİŞTİ: " + where
+            else:
+                mark = "TEKRAR: " + where
+            entries.append((start, text, mark, None))
+            repeats += 1
+            if " ".join(heard[j]["key"] for j in range(a, b + 1)) != line_keys[number]:
+                differences.append((start, text, said(a, b)))
+    entries.sort(key=lambda e: e[0])
+    differences.sort(key=lambda d: d[0])
+    unsung = [n for n, t in enumerate(times) if t is None]
+    counts = {"lines": len(suno), "timed": len(suno) - len(unsung), "repeats": repeats, "others": others,
+              "unsung": len(unsung)}
+    lines = [f"  Özet: {len(suno)} Suno dizesi — {counts['timed']} zamanlandı; {repeats} tekrar/yer değişti, "
+             f"{others} Suno metninde yok, {len(unsung)} söylenmedi"]
     current = object()
-    for (part, text), start in zip(suno, times):
-        if part != current:
+    for start, text, mark, part in entries:
+        if not mark and part != current:  # headers follow the first-pass lines; second-pass lines carry their mark
             lines += ["", f"  [{part}]"] if part else [""]
             current = part
-        lines.append(f"  {_time(start) if start is not None else '?:??'}  {text}")
+        lines.append(f"  {_time(start)}  " + (f"{text:<30}  << {mark}" if mark else text))
+    lines += ["", "  SÖYLENMEDİ (Suno metninde var, WAV'da duyulmadı)"]
+    lines += [f"    [{suno[n][0]}] {suno[n][1]}" if suno[n][0] else f"    {suno[n][1]}" for n in unsung] or ["    yok"]
     lines += ["", "  SÖYLENEN / YAZILAN FARKLARI (bilgi: ya Whisper hatası ya da Suno şarkıda sözü değiştirmiş)"]
-    lines += [f"    {_time(t)}  Suno: \"{text}\"   Whisper: \"{said}\"" for t, text, said in differences] or ["    yok"]
-    return lines, f"{timed}/{len(suno)}"
+    lines += [f"    {_time(t)}  Suno: \"{text}\"   Whisper: \"{heard_text}\"" for t, text, heard_text in differences] \
+        or ["    yok"]
+    return lines, counts
 
 
 def _section(path: Path, duration: float, folder: Path | None) -> tuple[list[str], dict]:
@@ -243,7 +364,8 @@ def _section(path: Path, duration: float, folder: Path | None) -> tuple[list[str
         if not vocals:
             lines.append("  Vokal ayrılamadı (Demucs), sözler çıkarılmadı: tam mix'te Whisper söz uyduruyor.")
             return lines, info
-        share = _singing_share(vocals)
+        mono, rate = _vocal_track(vocals)
+        share = _singing_share(mono, rate)
         if share < VOCAL_MIN_SHARE:
             info["instrumental"] = True
             lines.append(f"  Enstrümantal, söz yok (ayrılan vokal kanalında ses olan süre: %{round(share * 100)}).")
@@ -256,11 +378,17 @@ def _section(path: Path, duration: float, folder: Path | None) -> tuple[list[str
         _free_gpu()
 
     code = result.get("language") or ""
-    segments = []
+    segments, dropped = [], []
     for seg in result.get("segments", []):
         text = stt.clean(seg.get("text", ""))  # "Thanks for watching", "Altyazı M.K." …
-        if text:
-            segments.append((seg, text))
+        if not text:
+            continue
+        # 3.54: words written where the vocal stem is silent are Whisper's own (Palabras de Sal 2: "Palabras de sal me
+        # dejan aquí" at 3:03, stem -82 dB, no_speech_prob 0.97 — just inside Whisper's own keep rule)
+        if _level_db(mono, rate, seg["start"], seg["end"]) < VOCAL_LEVEL_DB:
+            dropped.append((seg["start"], text))
+            continue
+        segments.append((seg, text))
     lyric_words, _ = hg.split_words_by_adlib({"segments": [s for s, _ in segments]})
     if not lyric_words:
         info["instrumental"] = True
@@ -270,13 +398,14 @@ def _section(path: Path, duration: float, folder: Path | None) -> tuple[list[str
     kept = {"segments": [s for s, _ in segments]}
     language = (f"  Dil: {LANGUAGES.get(code, code or 'bilinmiyor')} ({code}, Whisper algıladı; şarkının başına bakar, "
                 "karışık dilli şarkıda diğer dil yanlış yazılabilir)")
+    notes = [f"  Not: vokal kanalı sessizken Whisper'ın yazdığı parça atıldı: {_time(t)} \"{text}\"" for t, text in dropped]
     suno = suno_path(path)
     if suno.is_file():  # 3.52 (§9): Suno's official text, Whisper's times
-        lines = ["SÖZLER", "  Kaynak: Suno metni (resmi); zamanlar Whisper'dan", language]
+        lines = ["SÖZLER", "  Kaynak: söyleniş sırası ve zaman WAV'dan (Whisper), yazım Suno'dan", language, *notes]
         body, info["suno"] = suno_lines(read_suno(suno), whisper_words(kept, hg), hg)
         lines += body
     else:
-        lines += [language, f"  Model: whisper-{MODEL}, izole vokal (Demucs)", ""]
+        lines += [language, *notes, f"  Model: whisper-{MODEL}, izole vokal (Demucs)", ""]
         for seg, text in segments:
             lines.append(f"  {_time(seg['start'])}  {text}" + ("  [ad-lib]" if hg.is_adlib_segment(seg) else ""))
 

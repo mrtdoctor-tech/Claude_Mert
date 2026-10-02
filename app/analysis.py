@@ -569,6 +569,15 @@ def _color_name(r: int, g: int, b: int) -> str:
 
 # One file
 
+def _suno_note(counts: dict | None) -> str:
+    """3.54: " (Suno 56/56, 8 tekrar/yer değişti)" for the chat summary; "" without a .suno.txt."""
+    if not counts:
+        return ""
+    found = [(counts["repeats"], "tekrar/yer değişti"), (counts["others"], "Suno metninde yok"),
+             (counts["unsung"], "söylenmedi")]
+    return f" (Suno {counts['timed']}/{counts['lines']}" + "".join(f", {n} {label}" for n, label in found if n) + ")"
+
+
 async def analyze(path: Path, model: str, step=lambda name: None) -> str:
     """Write the report next to the file; returns a one-line summary for the chat. step(name): a stage starts (it may
     be called from a worker thread)."""
@@ -590,6 +599,7 @@ async def analyze(path: Path, model: str, step=lambda name: None) -> str:
                    + (", enstrümantal" if sung.get("instrumental") else
                       f", sözler: {lyrics.LANGUAGES.get(sung['language'], sung['language'])}" if sung.get("language")
                       else "")
+                   + _suno_note(sung.get("suno"))
                    + (f", {_num(facts['lufs'])} LUFS" if "lufs" in facts else "")
                    + (f" — hedef kontrolü: {facts['warnings']} uyarı" if facts.get("warnings") else " — hedefler tamam")
                    + (" — BPM'ler uyuşmuyor (raporda)" if facts.get("bpm_warning") else ""))

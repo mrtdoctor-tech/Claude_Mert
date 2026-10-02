@@ -320,6 +320,17 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   farklı / eksik ya da arada ad-lib olmayan fazladan Whisper kelimesi. `waiting_files`: .suno.txt rapordan yeniyse şarkı
   yeniden işlenir. Canlı test: 56/56, bölüm başları kabul testiyle birebir, farklar Bésame/Désame + miel/mi, ikinci
   çalıştırmada 56 dize aynı (tek zaman farkı 2:08→2:07), .suno.txt kaldırılınca taslak geri geldi.
+  3.54 (İsterler §9b, ikinci geçiş): `first_pass` (9a, değişmedi) → yerleşen dizelerin Whisper aralıkları dışındaki
+  kelimeler `_leftover_runs` (2 sn sessizlik böler; yalnız ad-lib ya da tek kelime tekrarı = ad-lib, atlanır) →
+  `_read_run`: SIRASIZ, her konumda tüm Suno dizeleri (genişlik k−1…k+1, benzerlik ≥0,75, en iyi) → eşleşen: 9a'da
+  "?:??" idiyse YER DEĞİŞTİ (dize oraya taşınır), değilse TEKRAR; eşleşmeyen kelimeler SUNO METNİNDE YOK (Whisper
+  metni). Satırlar zamana göre; başlıklar 9a satırlarından. "SÖYLENMEDİ" listesi, "Özet:" satırı; sohbet özetinde
+  `_suno_note`. Ayrıca **sessiz parça filtresi**: Whisper segmentinde vokal kökü < −40 dBFS → atılır, rapora "Not: …
+  atıldı" (Palabras sonunda 3:03 "Palabras de sal me dejan aquí": kök −82 dB, no_speech_prob 0,97, avg_logprob −0,96 →
+  Whisper'ın kendi kuralı (−1,0) tutuyordu; 3 denemenin 3'ünde vardı, canlı akışta bazen). Canlı sapma testleri
+  (geçici değiştirilmiş .suno.txt, sonra `shutil.copy2` + `os.utime` ile asıl dosya ve zamanı geri, sha256 aynı):
+  Chorus bloğu silindi → 8 TEKRAR 0:53–1:09; "Tengo tu nombre/metido en la voz" silindi → 1:19 SUNO METNİNDE YOK
+  (İsterler "0:19" diyor, şarkıda 1:19); olmayan dize eklendi → SÖYLENMEDİ; asıl → 0/0/0. Betik: scratchpad live9b.py.
   Curl ile canlı test: Türkçe karakterli mesajı `--data-binary @dosya.json` (UTF-8) ile gönder; komut satırında bozuluyor.
   Demucs ilk denemede de hemen çalıştı (modeli daha önce analiz.py için inmiş; yeri doğrulanmadı), Whisper
   `~/.cache/whisper/medium.pt` (vardı).
@@ -775,7 +786,13 @@ konuşulanları hatırlayan ve yeni sohbetlerde de unutmayan kişisel yapay zek�
   Asiye'de "Asiye klasörünü analiz et." (yeni dosya yok cevabı) ve "Hepsini yeniden analiz et." ile test edildi (sohbet
   id 81, 82 eklendi); kabul testi maddelerinin hepsi raporda. Kullanıcı onayladı; büyük harfe göre satır bölme istemedi.
 - **2026-10-02 (3.52):** İsterler bölüm 9 (Suno sözleriyle eşleme). Canlı Asiye'de kabul testi geçti (sohbetler 83 ve
-  sonrası eklendi; test sırasında .suno.txt geçici olarak taşındı ve geri kondu). Kullanıcı onayı bekleniyor.
+  sonrası eklendi; test sırasında .suno.txt geçici olarak taşındı ve geri kondu). **Hata:** İsterler'e 3.52 notunu
+  yazarken kullanıcının 20:40'taki §9 revizyonunun üstüne yazdım (dosyayı başta okuyup sonda yazdım) → artık yazmadan
+  hemen önce yeniden oku.
+- **2026-10-02 (3.54):** İsterler §9b (ikinci geçiş) + sessiz parça filtresi; sapma testleri canlı Asiye'de geçti.
+  (3.53 yalnızca test sırasında canlı sunucuda göründü; kullanıcıya giden sürüm 3.54.) Kullanıcı onayı bekleniyor.
+  **Uyarı:** yorumlardaki sürümü `sed 's/3\.53/3.54/g'` ile değiştirirken analysis.py'deki `MINOR` ton profilindeki 3.53
+  de değişti (commit'ten önce fark edilip geri alındı). Sürüm numarasını toplu değiştirme; satırı tek tek düzelt.
 
 ## Sıradaki fikirler
 

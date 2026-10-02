@@ -288,7 +288,9 @@ dosyanın yanına aynı adla bir **"….analiz.txt"** raporu yazarım (ör. `sar
   **Suno metniyle** (3.52): şarkının yanına aynı adla `.suno.txt` koy (ör. `Sarki.wav` → `Sarki.suno.txt`; Suno'daki
   metni olduğu gibi yapıştır, [Verse 1] gibi satırlar bölüm adı). O zaman SÖZLER Suno'nun metnini dize dize, her dizenin
   başlangıç zamanıyla yazar; bulunamayan dizeye zaman uydurmaz ("?:??"); Whisper'ın farklı duyduklarını "söylenen /
-  yazılan farkları" olarak listeler. `.suno.txt`'yi ekleyince ya da değiştirince "Asiye klasörünü analiz et" yeter. Şarkı başına ~30 sn sürer.
+  yazılan farkları" olarak listeler. Sıra ve zaman şarkıda gerçekten duyulandan gelir (3.54): Suno bir dizeyi tekrar
+  söylemişse ya da yerini değiştirmişse "TEKRAR / YER DEĞİŞTİ", metinde olmayan bir söyleniş "SUNO METNİNDE YOK",
+  hiç söylenmeyen dize "SÖYLENMEDİ" diye işaretlenir. `.suno.txt`'yi ekleyince ya da değiştirince "Asiye klasörünü analiz et" yeter. Şarkı başına ~30 sn sürer.
 - **Resim** (jpg, png, webp, bmp, gif, tiff): çözünürlük ve en-boy oranı (albüm kapağına uygun mu), çekim bilgileri (EXIF;
   konum bilgisi varsa uyarır), parlaklık, kontrast, doygunluk, keskinlik, renk sıcaklığı, baskın renkler (renk kodlarıyla) ve
   yapay zekânın resimde gördükleri (ne var, atmosfer, resimdeki yazılar, hangi tarz müziğe kapak olur).
